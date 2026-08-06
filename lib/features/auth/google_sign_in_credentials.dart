@@ -1,6 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../providers/auth_providers.dart';
 
+import '../../features/auth/providers/auth_providers.dart';
 import '../../config/auth_config.dart' as auth_config;
 import '../../services/app_logger.dart';
 

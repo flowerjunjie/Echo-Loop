@@ -221,7 +221,7 @@ class _AnnotationContentViewState extends ConsumerState<AnnotationContentView> {
       audioItemId: audioItemId,
       dao: ref.read(audioItemDaoProvider),
       api: ref.read(transcriptionApiClientProvider),
-      accessToken: ref.read(supabaseSessionProvider).valueOrNull?.accessToken,
+      accessToken: ref.read(authSessionProvider)?.accessToken,
     );
     if (mounted && widget.audioItemId == audioItemId) {
       setState(() => _wordTimestamps = words);
@@ -315,10 +315,7 @@ class _AnnotationContentViewState extends ConsumerState<AnnotationContentView> {
     final endMs = widget.sentenceEndMs ?? 0;
     final ai = widget.aiNotifier;
     if (ai == null) return;
-    final accessToken = ref
-        .read(supabaseSessionProvider)
-        .valueOrNull
-        ?.accessToken;
+    final accessToken = ref.read(authSessionProvider)?.accessToken;
 
     ref.read(usageTrackerProvider).record(UsageEvent.senseGroupTapped);
 
@@ -812,10 +809,7 @@ class _AnnotationContentViewState extends ConsumerState<AnnotationContentView> {
     final cachedAnalysis = autoExpand
         ? ai?.getCachedAnalysis(widget.text, targetLanguage: nativeLanguage)
         : null;
-    final accessToken = ref
-        .watch(supabaseSessionProvider)
-        .valueOrNull
-        ?.accessToken;
+    final accessToken = ref.watch(authSessionProvider)?.accessToken;
     final shouldAutoLoadSentenceAi =
         widget.autoLoadSentenceAi &&
         accessToken != null &&

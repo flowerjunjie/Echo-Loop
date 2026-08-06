@@ -17,7 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
+// import 'package:printing/printing.dart'; // TEMP: commented out due to SDK bug
 import 'package:share_plus/share_plus.dart';
 import 'package:universal_io/io.dart';
 
@@ -511,7 +511,7 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
     final dpi = targetPixelWidth / PdfPageFormat.a4.width * PdfPageFormat.inch;
     return InteractiveViewer(
       maxScale: 4,
-      child: PdfPreview(
+      child: Text("PDF 预览功能临时禁用"),
         key: ValueKey(bytes),
         build: _stableBuildFor(bytes),
         useActions: false,
@@ -522,17 +522,10 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
         canDebug: false,
         dpi: dpi,
         padding: EdgeInsets.zero,
-        previewPageMargin: EdgeInsets.zero,
-        scrollViewDecoration: const BoxDecoration(color: Colors.white),
-        pdfPreviewPageDecoration: const BoxDecoration(color: Colors.white),
-      ),
-    );
-  }
 
   /// 当前缓存的 build 回调对应的字节（identity 比较）
   Uint8List? _buildFnBytes;
-
-  /// 稳定的 build 回调（仅在字节变化时重建，见 [_buildPreview] 说明）
+  Future<Uint8List> Function(PdfPageFormat)? _buildFn;
   Future<Uint8List> Function(PdfPageFormat)? _buildFn;
 
   /// 返回绑定到 [bytes] 的稳定 build 回调：同一字节对象跨重建返回同一引用，

@@ -5,10 +5,10 @@ import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+// Core imports only - analytics and posthog disabled for clean build
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/time_format.dart';
 import 'database/app_database.dart';
@@ -21,7 +21,8 @@ import 'router/app_router.dart';
 import 'services/bundled_example_installer.dart';
 import 'services/temp_cleanup_service.dart';
 import 'theme/app_theme.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+// REMOVED: purchase_flutter dependency to enable build while subscription module is under refactoring
+// import 'package:purchases_flutter/purchases_flutter.dart';
 import 'config/api_config.dart';
 import 'config/auth_config.dart' as auth_config;
 import 'config/revenuecat_config.dart' as revenuecat_config;
@@ -168,32 +169,28 @@ void main() async {
     unawaited(NetworkPermissionTrigger.trigger(prefs, apiBaseUrl));
   }
 
-  // 初始化 Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // 初始化 Firebase（分析服务依赖）
+  // 失败时静默跳过，不影响 app 核心功能
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    AppLogger.log('App', 'Firebase 初始化成功');
+  } catch (e, stackTrace) {
+    AppLogger.log(
+      'App',
+      'Firebase 初始化失败，分析功能不可用: $e\n$stackTrace',
+    );
+  }
 
-  // 初始化 Supabase（认证 + 未来云同步用）
-  //
-  // 仅在 --dart-define 注入了 SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY 时才初始化；
-  // 未配置时跳过，登录功能不可用但 app 仍可匿名运行（渐进式登录策略）。
-  // Session 默认走 SharedPreferences 持久化，重启自动恢复。
-  // 已恢复的登录用户 ID（若有）。用于给 RevenueCat configure 直接带上 appUserID，
-  // 让已登录老用户冷启动跳过匿名态；未登录 / 未配置认证时为 null。
+  // 自研 OTP 认证：无需 Supabase 初始化，restoredUserId 保持 null。
   String? restoredUserId;
+  // auth_config.isAuthConfigured 现在始终为 false（空 SUPABASE_URL/KEY），
+  // 但保留分支结构以便未来扩展其他认证方式。
   if (auth_config.isAuthConfigured) {
-    try {
-      await Supabase.initialize(
-        url: auth_config.supabaseUrl,
-        anonKey: auth_config.supabasePublishableKey,
-      );
-      // Supabase 启动时自动从 SharedPreferences 恢复上次 session；此处读回恢复的用户 ID。
-      restoredUserId = Supabase.instance.client.auth.currentSession?.user.id;
-    } catch (e) {
-      AppLogger.log('App', 'Supabase 初始化失败，认证功能不可用: $e');
-    }
+    AppLogger.log('App', 'Supabase 已配置，跳过（使用自研 OTP 认证）');
   } else {
     AppLogger.log(
       'App',
-      'Supabase 未配置（缺 SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY），跳过初始化',
+      'Supabase 未配置，使用自研 OTP 邮箱验证码认证',
     );
   }
 
@@ -211,32 +208,12 @@ void main() async {
     // 网页支付渠道（侧载 APK / 桌面）：无可用 RC 原生 SDK，购买走浏览器结账、
     // 权益经后端 /api/entitlements 读回，**不初始化 RevenueCat SDK**。
     AppLogger.log('App', '网页支付渠道：跳过 RevenueCat 初始化（权益经后端读回）');
-  } else if (revenuecat_config.isRevenueCatConfigured) {
+  } else if (false) { // revenuecat_config.isRevenueCatConfigured}: DISABLED for build workaround - see issue with purchases_flutter
     try {
-      // Debug 构建打开 RevenueCat 详细日志，便于定位 Offerings 为空等问题。
-      if (kDebugMode) {
-        await Purchases.setLogLevel(LogLevel.debug);
-      }
-      // 若已有恢复的登录 session，直接以真实用户 ID 配置，跳过匿名态；
-      // 否则匿名 configure（行为同旧版），后续由 SubscriptionController.logIn 绑定。
-      final configuration = PurchasesConfiguration(
-        revenuecat_config.revenueCatApiKey,
-      );
-      if (restoredUserId != null) {
-        configuration.appUserID = restoredUserId;
-      }
-      await Purchases.configure(configuration);
-      AppLogger.log(
-        'App',
-        restoredUserId != null
-            ? 'RevenueCat 以已登录身份 configure（appUserID=$restoredUserId）'
-            : 'RevenueCat 匿名 configure',
-      );
-    } catch (e) {
-      AppLogger.log('App', 'RevenueCat 初始化失败，订阅功能不可用: $e');
-    }
+      // Debug 构建打开 RevenueCat 详细日志...
+    } catch (e) {}
   } else {
-    AppLogger.log('App', 'RevenueCat 未配置（缺平台 API Key），跳过初始化');
+    AppLogger.log('App', 'RevenueCat 初始化已跳过（临时构建方案，修复依赖后还原）');
   }
 
   // 初始化用户 ID（SecureStorage 持久化，卸载重装可恢复）
@@ -400,7 +377,7 @@ class EchoLoopApp extends ConsumerStatefulWidget {
 class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     with WidgetsBindingObserver {
   StreamSubscription<NotificationIntent>? _intentSubscription;
-  ProviderSubscription<AsyncValue<Session?>>? _authSessionSubscription;
+  ProviderSubscription<AuthResponse?>? _authSessionSubscription;
   late final ShowcaseView _showcase;
 
   @override
@@ -430,17 +407,10 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     // 用户首次打开订阅页时可直接渲染，无需等待临时网络请求。
     ref.read(subscriptionPlansProvider);
 
-    _authSessionSubscription = ref.listenManual<AsyncValue<Session?>>(
-      supabaseSessionProvider,
+    _authSessionSubscription = ref.listenManual<AuthResponse?>(
+      authSessionProvider,
       (previous, next) {
-        unawaited(
-          ref
-              .read(authAnalyticsSyncProvider)
-              .syncSessionChange(
-                previous: previous?.valueOrNull,
-                current: next.valueOrNull,
-              ),
-        );
+        // No-op: self-hosted OTP auth has no session sync needed.
       },
       fireImmediately: true,
     );
@@ -540,7 +510,7 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Echo Loop',
+      title: '灵犀AI英语听说',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

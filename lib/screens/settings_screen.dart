@@ -130,18 +130,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   /// 构建账号分组：登录入口 + 订阅入口（登录 item 下方）。
   Widget _buildAccountSection(BuildContext context, AppLocalizations l10n) {
-    final session = ref.watch(supabaseSessionProvider).valueOrNull;
-    final isSignedIn = session != null;
-    final accountSubtitle = session == null
-        ? null
-        : switch (authDisplayProviderForSession(session)) {
-            AuthDisplayProvider.apple => l10n.authSignedInWithApple,
-            AuthDisplayProvider.google => l10n.authSignedInWithGoogle,
-            AuthDisplayProvider.email ||
-            AuthDisplayProvider.unknown => compactAccountListIdentifier(
-              session.user.email ?? session.user.id,
-            ),
-          };
+    final authResponse = ref.watch(authSessionProvider);
+    final isSignedIn = authResponse?.userId != null;
+    final String? accountSubtitle = isSignedIn
+        ? (authResponse!.email != null
+            ? compactAccountListIdentifier(authResponse.email!)
+            : compactAccountListIdentifier(authResponse.userId!))
+        : null;
 
     return _buildSection(
       context,

@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp 企业管理平台</title>
+  <style>
+    :root {
+      --bg: #0f1923;
+      --surface: #1a2733;
+      --surface2: #243447;
+      --primary: #25d366;
+      --primary-dark: #128c7e;
+      --accent: #00a8e8;
+      --text: #e8f0f2;
+      --text-dim: #8899a6;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #2d4a5e;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    a { color: var(--primary); text-decoration: none; }
+
+    /* Login */
+    .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-box { background: var(--surface); padding: 40px; border-radius: 12px; width: 380px; border: 1px solid var(--border); }
+    .login-box h1 { text-align: center; margin-bottom: 8px; color: var(--primary); }
+    .login-box p { text-align: center; color: var(--text-dim); margin-bottom: 24px; font-size: 14px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-dim); }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text); font-size: 14px; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+    .btn {
+      padding: 10px 20px; border: none; border-radius: var(--radius); cursor: pointer;
+      font-size: 14px; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #000; }
+    .btn-primary:hover { background: #20bd5a; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-full { width: 100%; }
+    .error-msg { color: var(--danger); font-size: 13px; margin-top: 8px; text-align: center; }
+
+    /* Layout */
+    .app-layout { display: flex; height: 100vh; }
+    .sidebar {
+      width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-header h2 { font-size: 16px; color: var(--primary); }
+    .sidebar-header small { font-size: 11px; color: var(--text-dim); }
+    .nav-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+      cursor: pointer; color: var(--text-dim); transition: all 0.15s; font-size: 14px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--surface2); color: var(--primary); border-right: 3px solid var(--primary); }
+    .nav-item .icon { width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
+
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar {
+      height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0;
+    }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-user { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim); }
+    .content-area { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* Cards */
+    .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 20px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .stat-card .label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+    .stat-card .value.warn { color: var(--warning); }
+    .stat-card .value.danger { color: var(--danger); }
+    .stat-card .value.accent { color: var(--accent); }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 16px; background: var(--surface2); color: var(--text-dim); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover td { background: var(--surface2); }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    }
+    .badge-connected { background: #065f46; color: #34d399; }
+    .badge-idle { background: var(--surface2); color: var(--text-dim); }
+    .badge-connecting { background: #78350f; color: #fbbf24; }
+    .badge-banned { background: #7f1d1d; color: #f87171; }
+    .badge-error { background: #4c1d95; color: #a78bfa; }
+    .badge-running { background: #1e3a5f; color: #60a5fa; }
+    .badge-completed { background: #065f46; color: #34d399; }
+    .badge-failed { background: #7f1d1d; color: #f87171; }
+    .badge-pending { background: #78350f; color: #fbbf24; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 15px; }
+    .modal-close { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: var(--radius); font-size: 13px; animation: slideIn 0.3s; }
+    .toast-success { background: #065f46; color: #34d399; border: 1px solid #34d399; }
+    .toast-error { background: #7f1d1d; color: #f87171; border: 1px solid #f87171; }
+    .toast-info { background: #1e3a5f; color: #60a5fa; border: 1px solid #60a5fa; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* Progress bar */
+    .progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+    .progress-bar .fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+
+    /* Hidden */
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,25,35,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.loading-overlay .spinner { width: 40px; height: 40px; border-width: 3px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .hidden { display: none !important; }
+
+    /* Chat history */
+    .chat-list { max-height: 400px; overflow-y: auto; }
+    .chat-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+    .chat-item:hover { background: var(--surface2); }
+    .chat-item .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .chat-item .info { flex: 1; min-width: 0; }
+    .chat-item .name { font-size: 14px; font-weight: 600; }
+    .chat-item .last-msg { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-item .count { font-size: 11px; color: var(--text-dim); }
+
+    .msg-bubble { padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; max-width: 80%; font-size: 13px; line-height: 1.5; }
+    .msg-bubble.sent { background: var(--primary-dark); color: white; margin-left: auto; }
+    .msg-bubble.received { background: var(--surface2); }
+    .msg-bubble .translated { color: var(--accent); font-size: 12px; margin-top: 4px; font-style: italic; }
+    .msg-time { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text-dim); border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab:hover { color: var(--text); }
+
+    /* Search */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 13px; }
+    .search-bar input:focus { border-color: var(--primary); outline: none; }
+
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-8 { margin-bottom: 8px; }
+    .text-dim { color: var(--text-dim); }
+    .text-sm { font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay hidden"><div class="spinner"></div></div>
+  <div id="app">
+  <!-- Login Page -->
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <h1>WhatsApp 管理平台</h1>
+      <p>企业级批量会话管理 · 反检测 · 翻译</p>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="loginUsername" placeholder="admin" value="admin">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPassword" placeholder="密码" value="admin123">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">登 录</button>
+      <div id="loginError" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="app-layout hidden">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>WA Platform</h2>
+        <small>v2.0 企业管理版</small>
+      </div>
+      <nav class="nav-menu">
+        <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span> 仪表盘</div>
+        <div class="nav-item" data-page="accounts"><span class="icon">👤</span> 账户管理</div>
+        <div class="nav-item" data-page="batch"><span class="icon">⚡</span> 批量任务</div>
+        <div class="nav-item" data-page="devices"><span class="icon">📱</span> 设备配置</div>
+        <div class="nav-item" data-page="translation"><span class="icon">🌐</span> 翻译设置</div>
+        <div class="nav-item" data-page="history"><span class="icon">💬</span> 聊天历史</div>
+        <div class="nav-item" data-page="users"><span class="icon">🔑</span> 子账号管理</div>
+        <div class="nav-item" data-page="audit"><span class="icon">📋</span> 审计日志</div>
+      </nav>
+      <div class="sidebar-footer">
+        <div id="userBadge"></div>
+        <button class="btn btn-sm btn-secondary mt-8" onclick="doLogout()" style="width:100%">退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="topbar">
+        <div class="topbar-title" id="pageTitle">仪表盘</div>
+        <div class="topbar-user">
+          <span id="topbarUser"></span>
+          <span id="wsStatus" style="color:var(--text-dim)">⚪</span>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- Dashboard -->
+        <div id="page-dashboard" class="page active">
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="card">
+            <div class="card-header"><h3>最近动态</h3></div>
+            <div class="card-body">
+              <div id="recentActivity" class="text-dim text-sm">暂无数据</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accounts -->
+        <div id="page-accounts" class="page">
+          <div class="flex-between mb-8">
+            <div class="search-bar" style="margin:0;flex:2">
+              <input id="accountSearch" placeholder="搜索账户..." oninput="renderAccounts()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showAddAccountModal()">+ 添加账户</button>
+            <button class="btn btn-secondary btn-sm" onclick="showBatchLoginModal()">⚡ 批量导入</button>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>状态</th><th>ID</th><th>名称</th><th>手机</th><th>设备</th><th>消息数</th><th>分配给</th><th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="accountTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Batch Tasks -->
+        <div id="page-batch" class="page">
+          <div class="flex-between mb-8">
+            <span class="text-dim text-sm">管理批量登录、发消息、聊天农场等任务</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="showBatchLoginModal()">📥 批量登录</button>
+              <button class="btn btn-secondary btn-sm" onclick="showSendMsgModal()">📤 批量发消息</button>
+              <button class="btn btn-secondary btn-sm" onclick="showChatFarmModal()">🌾 聊天农场</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>任务名</th><th>类型</th><th>状态</th><th>进度</th><th>成功/失败</th><th>创建时间</th></tr>
+                  </thead>
+                  <tbody id="taskTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Devices -->
+        <div id="page-devices" class="page">
+          <div class="flex-between mb-8">
+            <span class="text-dim text-sm">设备指纹配置，模拟真实设备环境防封号</span>
+            <button class="btn btn-primary btn-sm" onclick="generateDevices()">+ 批量生成设备</button>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>名称</th><th>浏览器标识</th><th>平台</th><th>模型</th><th>分辨率</th><th>语言</th><th>操作</th></tr>
+                  </thead>
+                  <tbody id="deviceTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Translation -->
+        <div id="page-translation" class="page">
+          <div class="card">
+            <div class="card-header"><h3>翻译配置</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>翻译开关</label>
+                <select id="trEnabled" onchange="saveTranslationConfig()">
+                  <option value="true">启用</option>
+                  <option value="false">禁用</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>翻译渠道</label>
+                <select id="trProvider" onchange="saveTranslationConfig()">
+                  <option value="google">Google Translate（免费）</option>
+                  <option value="deepl">DeepL（高质量）</option>
+                  <option value="openai">OpenAI GPT-4o-mini</option>
+                  <option value="deepseek">DeepSeek（国内可用）</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>目标语言</label>
+                <select id="trLang" onchange="saveTranslationConfig()">
+                  <option value="zh">中文（简体）</option>
+                  <option value="en">English</option>
+                  <option value="ja">日本語</option>
+                  <option value="ko">한국어</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="ru">Русский</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>API Key（仅 DeepL/OpenAI/DeepSeek 需要）</label>
+                <input type="password" id="trApiKey" placeholder="输入 API Key">
+              </div>
+              <button class="btn btn-primary btn-sm mt-8" onclick="testTranslation()">测试翻译</button>
+              <div id="trTestResult" class="mt-8 text-sm text-dim"></div>
+            </div>
+          </div>
+          <div class="card mt-16">
+            <div class="card-header"><h3>翻译测试</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <textarea id="trTestText" rows="3" placeholder="输入要翻译的文本..."></textarea>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="testTranslation()">翻译</button>
+              <div id="trResult" class="mt-8"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div id="page-history" class="page">
+          <div class="form-group" style="max-width:400px">
+            <label>选择账户</label>
+            <select id="historyAccount" onchange="loadConversations()"></select>
+          </div>
+          <div class="flex-between mb-8 mt-16">
+            <span class="text-dim text-sm" id="historyInfo">选择账户查看对话列表</span>
+            <button class="btn btn-secondary btn-sm" onclick="exportHistory()">📥 导出记录</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>对话列表</h3></div>
+            <div class="card-body p-0">
+              <div class="chat-list" id="conversationList">
+                <div class="text-dim text-sm" style="padding:20px;text-align:center">请先选择账户</div>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-16 hidden" id="chatDetailCard">
+            <div class="card-header">
+              <h3 id="chatDetailTitle">聊天详情</h3>
+              <button class="btn btn-sm btn-secondary" onclick="closeChatDetail()">✕</button>
+            </div>
+            <div class="card-body" style="max-height:400px;overflow-y:auto" id="chatDetailBody"></div>
+          </div>
+        </div>
+
+        <!-- Users -->
+        <div id="page-users" class="page">
+          <div class="flex-between mb-8">
+            <span class="text-dim text-sm">管理子账号和权限分配</span>
+            <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">+ 创建子账号</button>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>权限</th><th>最后登录</th><th>操作</th></tr></thead>
+                  <tbody id="userTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit -->
+        <div id="page-audit" class="page">
+          <div class="card">
+            <div class="card-header"><h3>操作审计日志</h3></div>
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>目标</th><th>详情</th></tr></thead>
+                  <tbody id="auditTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">标题</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<script>
+// ─── 全局状态 ────────────────────────────────────────────────
+let token = localStorage.getItem('wa_token');
+let currentUser = null;
+let ws = null;
+let currentAccountId = null;
+let currentJid = null;
+
+const API = 'http://localhost:3456/api';
+
+// ─── 认证 ────────────────────────────────────────────────────
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      token = data.data.token;
+      currentUser = data.data.user;
+      localStorage.setItem('wa_token', token);
+      showMainApp();
+    } else {
+      document.getElementById('loginError').textContent = data.error || '登录失败';
+    }
+  } catch (err) {
+    document.getElementById('loginError').textContent = '连接服务器失败';
+  }
+}
+
+function doLogout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('wa_token');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+}
+
+function showMainApp() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('topbarUser').textContent = `${currentUser.name} (${currentUser.username})`;
+  connectWS();
+  refreshAll();
+}
+
+// ─── WebSocket ───────────────────────────────────────────────
+
+function connectWS() {
+  if (ws) { ws.close(); ws = null; }
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}/ws?token=${token}`);
+  ws.onopen = () => {
+    document.getElementById('wsStatus').textContent = '🟢';
+  };
+  ws.onclose = () => {
+    document.getElementById('wsStatus').textContent = '⚪';
+    setTimeout(connectWS, 3000);
+  };
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'pong') return;
+      showToast(JSON.stringify(msg), 'info');
+    } catch {}
+  };
+}
+
+// ─── API 工具 ────────────────────────────────────────────────
+
+async function api(method, path, body = null) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`${API}${path}`, opts);
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: '网络错误', raw: String(err) };
+  }
+}
+
+async function refreshAll() {
+  await Promise.all([loadStats(), loadAccounts(), loadTasks(), loadDevices(), loadTranslation(), loadUsers(), loadAudit()]);
+}
+
+// ─── 仪表盘 ──────────────────────────────────────────────────
+
+async function loadStats() {
+  const data = await api('GET', '/stats');
+  if (!data.success) return;
+  const s = data.data;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="label">总账户数</div><div class="value">${s.totalAccounts}</div></div>
+    <div class="stat-card"><div class="label">在线账户</div><div class="value accent">${s.connectedAccounts}</div></div>
+    <div class="stat-card"><div class="label">封禁账户</div><div class="value danger">${s.bannedAccounts}</div></div>
+    <div class="stat-card"><div class="label">消息总数</div><div class="value">${s.totalMessages.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="label">活跃任务</div><div class="value warn">${s.activeTasks}</div></div>
+    <div class="stat-card"><div class="label">子账号数</div><div class="value">${s.subUsers}</div></div>
+  `;
+}
+
+// ─── 账户管理 ────────────────────────────────────────────────
+
+async function loadAccounts() {
+  const data = await api('GET', '/accounts');
+  if (!data.success) return;
+  renderAccounts(data.data);
+}
+
+function renderAccounts(list) {
+  list = list || [];
+  const search = (document.getElementById('accountSearch')?.value || '').toLowerCase();
+  const filtered = list.filter(a => a.name.toLowerCase().includes(search) || a.phone.includes(search));
+  const tbody = document.getElementById('accountTable');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map(a => `
+    <tr>
+      <td><span class="badge badge-${a.status}">${statusLabel(a.status)}</span></td>
+      <td style="font-size:11px;color:var(--text-dim)">${a.id.slice(0,12)}</td>
+      <td><strong>${esc(a.name)}</strong></td>
+      <td>${esc(a.phone)}</td>
+      <td style="font-size:11px">${esc(a.deviceConfigId ? a.deviceConfigId.slice(0,8) : '-')}</td>
+      <td>${a.messageCount}</td>
+      <td style="font-size:11px">${esc(a.assignedTo || '-')}</td>
+      <td>
+        ${a.status === 'idle' || a.status === 'disconnected'
+          ? `<button class="btn btn-sm btn-primary" onclick="connectAccount('${a.id}')">连接</button>`
+          : a.status === 'connected'
+          ? `<button class="btn btn-sm btn-secondary" onclick="disconnectAccount('${a.id}')">断开</button>`
+          : ''}
+        <button class="btn btn-sm btn-danger" onclick="deleteAccount('${a.id}')" style="margin-left:4px">删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function statusLabel(s) {
+  const map = { idle: '空闲', connecting: '连接中', connected: '在线', disconnected: '已断开', banned: '封禁', error: '错误' };
+  return map[s] || s;
+}
+
+async function connectAccount(id) {
+  const data = await api('POST', `/accounts/${id}/connect`);
+  if (data.success) { toast('连接请求已发送', 'success'); loadAccounts(); }
+  else toast(data.error, 'error');
+}
+
+async function disconnectAccount(id) {
+  await api('POST', `/accounts/${id}/disconnect`);
+  loadAccounts();
+}
+
+async function deleteAccount(id) {
+  if (!confirm('确认删除此账户？')) return;
+  await api('DELETE', `/accounts/${id}`);
+  toast('账户已删除', 'success');
+  loadAccounts();
+}
+
+// ─── 批量登录 ────────────────────────────────────────────────
+
+function showBatchLoginModal() {
+  // Load available devices into selector
+  api('GET', '/devices').then(r => {
+    const devices = r.data || [];
+    const opts = '<option value="">不指定（使用账户默认）</option>' +
+      devices.map(d => `<option value="${d.id}">${d.name} (${d.platform})</option>`).join('');
+    openModal('批量导入账户', `
+      <div class="form-group">
+        <label>任务名称</label>
+        <input id="batchLoginName" value="批量导入">
+      </div>
+      <div class="form-group">
+        <label>导出文件路径（每行一个）</label>
+        <textarea id="batchLoginFiles" rows="4" placeholder="E:/doc/account1.txt&#10;E:/doc/account2.txt"></textarea>
+      </div>
+      <div class="form-group">
+        <label>设备配置（自动轮询分配）</label>
+        <select id="batchLoginDevice" size="3" style="height:120px">${opts}</select>
+        <small class="text-dim" style="display:block;margin-top:4px">选中多个可按住Ctrl，系统将轮询分配给各账户</small>
+      </div>
+      <div class="form-group">
+        <label>并发数</label>
+        <input type="number" id="batchLoginConcurrent" value="3" min="1" max="20">
+      </div>
+      <div class="form-group">
+        <label>自动连接</label>
+        <select id="batchLoginAutoConnect"><option value="true">是</option><option value="false">否</option></select>
+      </div>
+    `, () => doBatchLogin());
+  });
+}
+
+async function doBatchLogin() {
+  const files = document.getElementById('batchLoginFiles').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!files.length) { toast('请填入文件路径', 'error'); return; }
+  // Get selected device configs (supports multi-select)
+  const deviceSelect = document.getElementById('batchLoginDevice');
+  const selectedDevices = Array.from(deviceSelect.selectedOptions).map(o => o.value).filter(Boolean);
+  const data = await api('POST', '/tasks/login', {
+    name: document.getElementById('batchLoginName').value,
+    exportFiles: files,
+    deviceConfigs: selectedDevices,
+    concurrent: parseInt(document.getElementById('batchLoginConcurrent').value) || 3,
+    autoConnect: document.getElementById('batchLoginAutoConnect').value === 'true',
+  });
+  if (data.success) { toast('任务已创建', 'success'); closeModal(); loadTasks(); }
+  else toast(data.error, 'error');
+}
+
+// ─── 批量发消息 ──────────────────────────────────────────────
+
+function showSendMsgModal() {
+  loadAccounts().then(() => {
+    const accounts = api('GET', '/accounts').then(r => r.data || []);
+    // Just open the modal now
+    openModal('批量发送消息', `
+      <div class="form-group">
+        <label>任务名称</label>
+        <input id="sendMsgName" value="批量发送">
+      </div>
+      <div class="form-group">
+        <label>目标账户（逗号分隔ID）</label>
+        <input id="sendMsgAccounts" placeholder="acct-xxx, acct-yyy">
+      </div>
+      <div class="form-group">
+        <label>目标号码（每行一个）</label>
+        <textarea id="sendMsgTargets" rows="4" placeholder="8613800138001&#10;8613900139002"></textarea>
+      </div>
+      <div class="form-group">
+        <label>消息内容</label>
+        <textarea id="sendMsgContent" rows="3" placeholder="输入要发送的消息..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>发送间隔（毫秒）</label>
+        <input type="number" id="sendMsgDelay" value="3000">
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="sendMsgRandom" checked> 随机化延迟（防检测）</label>
+      </div>
+    `, () => doSendMsg());
+  });
+}
+
+async function doSendMsg() {
+  const accountIds = document.getElementById('sendMsgAccounts').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const targetJids = document.getElementById('sendMsgTargets').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const message = document.getElementById('sendMsgContent').value.trim();
+  if (!accountIds.length || !targetJids.length || !message) { toast('请填写完整信息', 'error'); return; }
+  const data = await api('POST', '/tasks/send_message', {
+    name: document.getElementById('sendMsgName').value,
+    accountIds, targetJids, message,
+    delayMs: parseInt(document.getElementById('sendMsgDelay').value) || 2000,
+    randomized: document.getElementById('sendMsgRandom').checked,
+  });
+  if (data.success) { toast('任务已创建', 'success'); closeModal(); loadTasks(); }
+  else toast(data.error, 'error');
+}
+
+// ─── 聊天农场 ────────────────────────────────────────────────
+
+function showChatFarmModal() {
+  openModal('聊天农场', `
+    <div class="form-group">
+      <label>任务名称</label>
+      <input id="farmName" value="聊天农场">
+    </div>
+    <div class="form-group">
+      <label>目标账户（逗号分隔）</label>
+      <input id="farmAccounts" placeholder="acct-xxx, acct-yyy">
+    </div>
+    <div class="form-group">
+      <label>目标号码（每行一个）</label>
+      <textarea id="farmTargets" rows="4" placeholder="8613800138001&#10;8613900139002"></textarea>
+    </div>
+    <div class="form-group">
+      <label>消息库（每行一条）</label>
+      <textarea id="farmMessages" rows="5" placeholder="你好&#10;最近在忙什么？&#10;方便聊几句吗？"></textarea>
+    </div>
+  `, () => doChatFarm());
+}
+
+async function doChatFarm() {
+  const accountIds = document.getElementById('farmAccounts').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const targetJids = document.getElementById('farmTargets').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const messages = document.getElementById('farmMessages').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!accountIds.length || !targetJids.length || !messages.length) { toast('请填写完整信息', 'error'); return; }
+  const data = await api('POST', '/tasks/chat_farm', {
+    name: document.getElementById('farmName').value,
+    accountIds, targetJids, messages,
+  });
+  if (data.success) { toast('任务已创建', 'success'); closeModal(); loadTasks(); }
+  else toast(data.error, 'error');
+}
+
+// ─── 任务列表 ────────────────────────────────────────────────
+
+async function loadTasks() {
+  const data = await api('GET', '/tasks');
+  if (!data.success) return;
+  const tbody = document.getElementById('taskTable');
+  tbody.innerHTML = (data.data || []).map(t => `
+    <tr>
+      <td><strong>${esc(t.name)}</strong></td>
+      <td><span class="text-dim text-sm">${taskTypeLabel(t.type)}</span></td>
+      <td><span class="badge badge-${t.status}">${statusLabel(t.status)}</span></td>
+      <td>
+        <div class="progress-bar"><div class="fill" style="width:${t.progress}%"></div></div>
+        <span class="text-sm text-dim">${t.progress}%</span>
+      </td>
+      <td class="text-sm">${t.success}/${t.failed}</td>
+      <td class="text-sm text-dim">${new Date(t.created_at).toLocaleString()}</td>
+    </tr>
+  `).join('');
+}
+
+function taskTypeLabel(t) {
+  const map = { login: '批量登录', send_message: '批量发消息', chat_farm: '聊天农场', sync_history: '历史同步', migrate_accounts: '账号迁移' };
+  return map[t] || t;
+}
+
+// ─── 设备配置 ────────────────────────────────────────────────
+
+async function loadDevices() {
+  const data = await api('GET', '/devices');
+  if (!data.success) return;
+  const tbody = document.getElementById('deviceTable');
+  tbody.innerHTML = (data.data || []).map(d => `
+    <tr>
+      <td><strong>${esc(d.name)}</strong></td>
+      <td style="font-size:11px">${esc(d.browser?.[0] || '-')} / ${esc(d.browser?.[2] || '-')}</td>
+      <td>${esc(d.platform)}</td>
+      <td>${esc(d.model)}</td>
+      <td>${d.screen_width}×${d.screen_height}</td>
+      <td>${esc(d.locale)}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteDevice('${d.id}')">删除</button></td>
+    </tr>
+  `).join('');
+}
+
+async function generateDevices() {
+  const data = await api('POST', '/devices/generate', { count: 5 });
+  if (data.success) { toast(`已生成 ${data.data.length} 个设备配置`, 'success'); loadDevices(); }
+  else toast(data.error, 'error');
+}
+
+async function deleteDevice(id) {
+  if (!confirm('确认删除此设备配置？')) return;
+  await api('DELETE', `/devices/${id}`);
+  toast('已删除', 'success');
+  loadDevices();
+}
+
+// ─── 翻译设置 ────────────────────────────────────────────────
+
+async function loadTranslation() {
+  const data = await api('GET', '/translation/config');
+  if (!data.success) return;
+  const cfg = data.data;
+  document.getElementById('trEnabled').value = String(cfg.enabled);
+  document.getElementById('trProvider').value = cfg.provider;
+  document.getElementById('trLang').value = cfg.targetLang;
+}
+
+async function saveTranslationConfig() {
+  const cfg = {
+    enabled: document.getElementById('trEnabled').value === 'true',
+    provider: document.getElementById('trProvider').value,
+    targetLang: document.getElementById('trLang').value,
+  };
+  const key = document.getElementById('trApiKey').value.trim();
+  if (key && ['deepl', 'openai', 'deepseek'].includes(cfg.provider)) {
+    await api('POST', `/translation/providers/${cfg.provider}/key`, { key });
+  }
+  await api('PUT', '/translation/config', cfg);
+  toast('翻译配置已保存', 'success');
+}
+
+async function testTranslation() {
+  const text = document.getElementById('trTestText').value || 'Hello, how are you?';
+  const data = await api('POST', '/translation/translate', { text });
+  if (data.success) {
+    document.getElementById('trResult').innerHTML = `<div class="msg-bubble received"><strong>原文：</strong>${esc(text)}<br><strong>译文：</strong>${esc(data.data.translated)}</div>`;
+  } else {
+    document.getElementById('trResult').innerHTML = `<span class="text-dim">${data.error}</span>`;
+  }
+}
+
+// ─── 聊天历史 ────────────────────────────────────────────────
+
+async function loadConversations() {
+  const accountId = document.getElementById('historyAccount').value;
+  if (!accountId) return;
+  currentAccountId = accountId;
+  const data = await api('GET', `/accounts/${accountId}/conversations`);
+  if (!data.success) return;
+  const list = document.getElementById('conversationList');
+  if (!data.data.length) {
+    list.innerHTML = '<div class="text-dim text-sm" style="padding:20px;text-align:center">暂无对话记录</div>';
+    return;
+  }
+  list.innerHTML = data.data.map(c => `
+    <div class="chat-item" onclick="loadChat('${c.jid}')">
+      <div class="avatar">${c.isGroup ? '👥' : '💬'}</div>
+      <div class="info">
+        <div class="name">${esc(c.name || c.jid.split('@')[0])}</div>
+        <div class="last-msg">${c.messageCount} 条消息${c.isGroup ? ' (群聊)' : ''}</div>
+      </div>
+      <div class="count">${c.unreadCount > 0 ? `<span style="color:var(--primary)">${c.unreadCount}</span>` : ''}</div>
+    </div>
+  `).join('');
+  document.getElementById('historyInfo').textContent = `共 ${data.data.length} 个对话`;
+}
+
+async function loadChat(jid) {
+  currentJid = jid;
+  const data = await api('GET', `/accounts/${currentAccountId}/history?jid=${encodeURIComponent(jid)}&limit=100`);
+  if (!data.success) return;
+  const msgs = (data.data || []).reverse();
+  document.getElementById('chatDetailTitle').textContent = jid.split('@')[0];
+  document.getElementById('chatDetailBody').innerHTML = msgs.map(m => `
+    <div class="msg-bubble ${m.fromMe ? 'sent' : 'received'}">
+      ${esc(m.body)}
+      ${m.translatedBody ? `<div class="translated">🌐 ${esc(m.translatedBody)}</div>` : ''}
+      <div class="msg-time">${new Date(m.timestamp * 1000).toLocaleString()}</div>
+    </div>
+  `).join('');
+  document.getElementById('chatDetailCard').classList.remove('hidden');
+}
+
+function closeChatDetail() {
+  document.getElementById('chatDetailCard').classList.add('hidden');
+}
+
+async function exportHistory() {
+  if (!currentAccountId) { toast('请先选择账户', 'error'); return; }
+  const format = confirm('选择 CSV 格式？点击"确定"导出CSV，点击"取消"导出JSON') ? 'csv' : 'json';
+  window.open(`${API}/accounts/${currentAccountId}/export?format=${format}`, '_blank');
+}
+
+// ─── 子账号管理 ──────────────────────────────────────────────
+
+async function loadUsers() {
+  const data = await api('GET', '/users');
+  if (!data.success) return;
+  const tbody = document.getElementById('userTable');
+  tbody.innerHTML = (data.data || []).map(u => `
+    <tr>
+      <td><strong>${esc(u.username)}</strong></td>
+      <td>${esc(u.name)}</td>
+      <td><span class="badge ${u.role === 'admin' ? 'badge-connected' : 'badge-idle'}">${u.role === 'admin' ? '管理员' : '子账号'}</span></td>
+      <td class="text-sm text-dim">${esc(JSON.stringify(u.permissions))}</td>
+      <td class="text-sm text-dim">${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-'}</td>
+      <td><button class="btn btn-sm btn-secondary" onclick="viewUserActivity('${u.id}')">活动</button></td>
+    </tr>
+  `).join('');
+}
+
+function showAddUserModal() {
+  openModal('创建子账号', `
+    <div class="form-group"><label>用户名</label><input id="newUsername"></div>
+    <div class="form-group"><label>密码</label><input type="password" id="newPassword"></div>
+    <div class="form-group"><label>姓名</label><input id="newName"></div>
+    <div class="form-group">
+      <label>角色</label>
+      <select id="newRole"><option value="sub">子账号</option><option value="admin">管理员</option></select>
+    </div>
+  `, () => doAddUser());
+}
+
+async function doAddUser() {
+  const data = await api('POST', '/auth/register', {
+    username: document.getElementById('newUsername').value,
+    password: document.getElementById('newPassword').value,
+    name: document.getElementById('newName').value,
+    role: document.getElementById('newRole').value,
+  });
+  if (data.success) { toast('子账号已创建', 'success'); closeModal(); loadUsers(); }
+  else toast(data.error, 'error');
+}
+
+async function viewUserActivity(userId) {
+  const data = await api('GET', `/users/${userId}/activity`);
+  if (!data.success) return;
+  const logs = data.data || [];
+  let html = '<div class="text-sm" style="max-height:300px;overflow-y:auto">';
+  if (!logs.length) { html += '<div class="text-dim">暂无活动记录</div>'; }
+  else {
+    html += '<table><thead><tr><th>时间</th><th>操作</th><th>详情</th></tr></thead><tbody>';
+    html += logs.map(l => `<tr><td class="text-sm text-dim">${new Date(l.created_at).toLocaleString()}</td><td>${esc(l.action)}</td><td class="text-dim text-sm">${esc(l.details || '-')}</td></tr>`).join('');
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  openModal('用户活动 — ' + userId.slice(0,8), html);
+}
+
+// ─── 审计日志 ────────────────────────────────────────────────
+
+async function loadAudit() {
+  const data = await api('GET', '/audit');
+  if (!data.success) return;
+  const tbody = document.getElementById('auditTable');
+  tbody.innerHTML = (data.data || []).slice(0, 50).map(l => `
+    <tr>
+      <td class="text-sm text-dim">${new Date(l.created_at).toLocaleString()}</td>
+      <td class="text-sm">${esc(l.user_id || 'system')}</td>
+      <td><span class="badge badge-idle">${esc(l.action)}</span></td>
+      <td class="text-sm">${esc(l.target_type || '-')} / ${esc(l.target_id || '-')}</td>
+      <td class="text-sm text-dim">${esc(l.details || '-')}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── 添加账户弹窗 ────────────────────────────────────────────
+
+function showAddAccountModal() {
+  openModal('添加账户', `
+    <div class="form-group"><label>账户名称</label><input id="accName"></div>
+    <div class="form-group"><label>手机号码</label><input id="accPhone"></div>
+    <div class="form-group"><label>导出文件路径</label><input id="accFile" placeholder="E:/doc/xxx.txt"></div>
+    <div class="form-group"><label>设备配置（可选）</label><select id="accDevice"><option value="">默认</option></select></div>
+  `, () => doAddAccount());
+}
+
+async function doAddAccount() {
+  const data = await api('POST', '/accounts', {
+    name: document.getElementById('accName').value,
+    phone: document.getElementById('accPhone').value,
+    exportFile: document.getElementById('accFile').value,
+    deviceConfigId: document.getElementById('accDevice').value,
+  });
+  if (data.success) { toast('账户已添加', 'success'); closeModal(); loadAccounts(); }
+  else toast(data.error, 'error');
+}
+
+// ─── 通用工具 ────────────────────────────────────────────────
+
+function openModal(title, bodyHtml, onConfirm = null) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = onConfirm
+    ? '<button class="btn btn-secondary btn-sm" onclick="closeModal()">取消</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="modalConfirm()">' + (onConfirm._label || '确认') + '</button>'
+    : '<button class="btn btn-secondary btn-sm" onclick="closeModal()">关闭</button>';
+  document.getElementById('modalOverlay').classList.add('active');
+  if (onConfirm) { window._modalConfirm = onConfirm; }
+}
+
+function modalConfirm() {
+  if (window._modalConfirm) window._modalConfirm();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  window._modalConfirm = null;
+}
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function showLoading() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── 导航 ────────────────────────────────────────────────────
+
+const pageTitles = {
+  dashboard: '仪表盘', accounts: '账户管理', batch: '批量任务',
+  devices: '设备配置', translation: '翻译设置', history: '聊天历史',
+  users: '子账号管理', audit: '审计日志',
+};
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${page}`).classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+    if (page === 'history') populateHistoryAccounts();
+  });
+});
+
+async function populateHistoryAccounts() {
+  const data = await api('GET', '/accounts');
+  const sel = document.getElementById('historyAccount');
+  sel.innerHTML = '<option value="">-- 选择账户 --</option>' +
+    (data.data || []).map(a => `<option value="${a.id}">${esc(a.name)} (${esc(a.phone)})</option>`).join('');
+}
+
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    var s = document.getElementById('accountSearch');
+    if (s) s.focus();
+  }
+  if (e.key === 'Escape') closeModal();
+});
+// ─── 初始化 ──────────────────────────────────────────────────
+
+if (token) {
+  showMainApp();
+}
+</script></body>
+</html>

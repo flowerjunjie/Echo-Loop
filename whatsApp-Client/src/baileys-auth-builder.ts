@@ -105,8 +105,8 @@ export function buildAuthenticationState(config: AuthBuilderConfig): Authenticat
     signedPreKey,
     registrationId: parsed.identity.registrationId,
 
-    // Noise key (from clientStaticKeypairBase64)
-    noiseKey: parsed.noiseKey,
+    // Noise key (regenerate - public key must be derived from private)
+    noiseKey: Curve.generateKeyPair(),
 
     // Pairing ephemeral key (需要新生成)
     pairingEphemeralKeyPair: Curve.generateKeyPair(),

@@ -1088,24 +1088,22 @@ document.addEventListener('keydown', function(e) {
 // ─── 初始化 ──────────────────────────────────────────────────
 
 if (token) {
-  // Validate token by calling a protected endpoint
-  const req = new XMLHttpRequest();
-  req.open('GET', API + '/stats', true);
-  req.setRequestHeader('Authorization', 'Bearer ' + token);
-  req.onload = function() {
-    if (req.status === 200) {
-      try {
-        currentUser = JSON.parse(req.responseText).data?.user || null;
-        showMainApp();
-      } catch(e) { showMainApp(); }
-    } else {
-      // Token invalid, clear it
-      localStorage.removeItem('wa_token');
-      document.getElementById('loginPage').classList.remove('hidden');
-      document.getElementById('mainApp').classList.add('hidden');
-    }
-  };
-  req.send();
+  // Decode JWT to get basic user info, then validate with server
+  try {
+    const parts = token.split('.');
+    const payload = JSON.parse(atob(parts[1]));
+    currentUser = {
+      id: payload.userId,
+      username: payload.username,
+      role: payload.role,
+      name: payload.name || payload.username,
+    };
+    showMainApp();
+  } catch(e) {
+    localStorage.removeItem('wa_token');
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+  }
 }
 </script></body>
 </html>

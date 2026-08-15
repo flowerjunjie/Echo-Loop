@@ -1088,7 +1088,24 @@ document.addEventListener('keydown', function(e) {
 // ─── 初始化 ──────────────────────────────────────────────────
 
 if (token) {
-  showMainApp();
+  // Validate token by calling a protected endpoint
+  const req = new XMLHttpRequest();
+  req.open('GET', API + '/stats', true);
+  req.setRequestHeader('Authorization', 'Bearer ' + token);
+  req.onload = function() {
+    if (req.status === 200) {
+      try {
+        currentUser = JSON.parse(req.responseText).data?.user || null;
+        showMainApp();
+      } catch(e) { showMainApp(); }
+    } else {
+      // Token invalid, clear it
+      localStorage.removeItem('wa_token');
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
+    }
+  };
+  req.send();
 }
 </script></body>
 </html>

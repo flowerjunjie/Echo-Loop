@@ -50,7 +50,7 @@ import { startTaskPolling, stopTaskPolling } from '../workers/batch-worker';
 import { buildAuthenticationState } from '../baileys-auth-builder';
 import { loadExport } from '../export-loader';
 import { parseWhatsAppExport } from '../key-parser';
-import { generateDeviceProfile, setProxyList, proxyList, addProxy } from '../services/device-spoof';
+import { generateDeviceProfile, setProxyList, proxyList, addProxy, getRandomProxy } from '../services/device-spoof';
 import { setTranslationConfig, getTranslationConfig, setProviderApiKey } from '../services/translation';
 import { storeMessages } from '../services/chat-history';
 import { createBackup, listBackups, deleteBackup, restoreBackup } from '../services/backup';
@@ -103,6 +103,12 @@ app.use(express.json({ limit: '10mb' }));
 initDb();
 startTaskPolling(3000);
 setupWebSocket();
+
+// Auto-configure local SOCKS5 proxy if available (common in China)
+const { getRandomProxy, addProxy } = require('../services/device-spoof');
+const localProxy = process.env.WA_PROXY_URL || 'socks5://127.0.0.1:10808';
+addProxy({ url: localProxy, type: 'socks5', ip: '127.0.0.1', country: 'local' });
+logger.info(`[Server] Proxy configured: ${localProxy}`);
 
 // ─── Auth 中间件 ─────────────────────────────────────────────
 
@@ -211,6 +217,13 @@ app.post('/api/accounts/:id/connect', authMiddleware, requireAdmin, async (req, 
     const config: any = { authState };
     const deviceConfig = getDeviceConfig(account.deviceConfigId);
     if (deviceConfig) config.deviceConfig = deviceConfig;
+
+    // Auto-assign proxy if available
+    const proxy = getRandomProxy();
+    if (proxy) {
+      config.proxyUrl = proxy.url;
+      proxy.lastUsedAt = Date.now();
+    }
 
     await sessionManager.connect(account, config);
     res.json({ success: true, data: { accountId: id, status: 'connecting' } });

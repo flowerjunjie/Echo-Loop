@@ -1088,10 +1088,11 @@ document.addEventListener('keydown', function(e) {
 // ─── 初始化 ──────────────────────────────────────────────────
 
 if (token) {
-  // Decode JWT to get basic user info, then validate with server
+  // Decode JWT locally to get user info (JWT is unsigned but valid for session)
   try {
     const parts = token.split('.');
-    const payload = JSON.parse(atob(parts[1]));
+    const jsonPart = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(window.atob(jsonPart));
     currentUser = {
       id: payload.userId,
       username: payload.username,

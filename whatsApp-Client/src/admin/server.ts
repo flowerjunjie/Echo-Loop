@@ -104,11 +104,16 @@ initDb();
 startTaskPolling(3000);
 setupWebSocket();
 
-// Auto-configure local SOCKS5 proxy if available (common in China)
-const { getRandomProxy, addProxy } = require('../services/device-spoof');
-const localProxy = process.env.WA_PROXY_URL || 'socks5://127.0.0.1:10808';
-addProxy({ url: localProxy, type: 'socks5', ip: '127.0.0.1', country: 'local' });
-logger.info(`[Server] Proxy configured: ${localProxy}`);
+// Auto-configure proxy if configured (WA_PROXY_URL env var)
+// Set WA_PROXY_URL=disabled to connect directly
+const { addProxy } = require('../services/device-spoof');
+const envProxy = process.env.WA_PROXY_URL;
+if (envProxy && envProxy.toLowerCase() !== 'disabled') {
+  addProxy({ url: envProxy, type: 'socks5', ip: '127.0.0.1', country: 'env' });
+  logger.info(`[Server] Proxy configured: ${envProxy}`);
+} else {
+  logger.info('[Server] No proxy configured, connecting directly');
+}
 
 // ─── Auth 中间件 ─────────────────────────────────────────────
 
@@ -708,10 +713,10 @@ export function removeClient(ws: WebSocket, userId?: string): void {
   }
 }
 function broadcastClose(): void {
-  for (const client of connectedClients) {
+  for (const client of allClients) {
     try { client.close(1001, 'Server shutting down'); } catch {}
   }
-  connectedClients.clear();
+  allClients.clear();
 }
 
 process.on('SIGINT', () => {

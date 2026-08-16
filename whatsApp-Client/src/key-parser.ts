@@ -344,11 +344,20 @@ export function parseWhatsAppExport(data: WhatsAppExportData): ParsedExport {
     signedPreKey.prekey_id
   );
 
-  // Parse all pre-keys
-  const parsedPreKeys: ParsedPreKey[] = preKeys.map((pk) => {
+  // Parse all pre-keys (skip short/incomplete entries missing the privkey marker)
+  const parsedPreKeys: ParsedPreKey[] = [];
+  let skippedShortPreKeys = 0;
+  for (const pk of preKeys) {
     const buf = Buffer.from(pk.hexKey, 'hex');
-    return parsePreKey(buf, pk.prekey_id, pk.id);
-  });
+    try {
+      parsedPreKeys.push(parsePreKey(buf, pk.prekey_id, pk.id));
+    } catch (err) {
+      skippedShortPreKeys++;
+    }
+  }
+  if (skippedShortPreKeys > 0) {
+    console.warn(`[KeyParser] Skipped ${skippedShortPreKeys} incomplete preKeys (short/invalid format)`);
+  }
 
   // Calculate pre-key range
   const preKeyIds = parsedPreKeys.map((pk) => pk.preKeyId);

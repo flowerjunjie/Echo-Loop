@@ -20,6 +20,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import http from 'http';
+import * as fs from 'fs';
+import multer from 'multer';
 import path from 'path';
 import { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
@@ -90,6 +92,54 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// ─── 密钥文件上传 ────────────────────────────────────────────
+
+const UPLOAD_DIR = path.join(process.cwd(), 'acount');
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'text/plain' || file.originalname.endsWith('.txt') || file.originalname.endsWith('.json')) {
+      cb(null, true);
+    } else {
+      cb(new Error('仅支持 .txt / .json 文件'));
+    }
+  },
+});
+
+app.post('/api/upload/export', authMiddleware, requireAdmin, upload.single('file'), (req, res) => {
+  try {
+    const file = (req as any).file;
+    if (!file) { res.status(400).json({ success: false, error: '未选择文件' }); return; }
+    const ext = path.extname(file.originalname) || '.txt';
+    const filename = `whatsapp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}${ext}`;
+    const dest = path.join(UPLOAD_DIR, filename);
+    fs.writeFileSync(dest, file.buffer);
+    logger.info(`[Upload] Export file saved: ${filename} (${file.size} bytes)`);
+    res.json({ success: true, data: { path: dest, filename } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err instanceof Error ? err.message : '上传失败' });
+  }
+});
+
+app.get('/api/upload/list', authMiddleware, (req, res) => {
+  try {
+    const files = fs.readdirSync(UPLOAD_DIR)
+      .filter(f => f.endsWith('.txt') || f.endsWith('.json'))
+      .map(f => {
+        const stat = fs.statSync(path.join(UPLOAD_DIR, f));
+        return { filename: f, size: stat.size, modified: stat.mtimeMs };
+      })
+      .sort((a, b) => b.modified - a.modified);
+    res.json({ success: true, data: files });
+  } catch (err) {
+    res.json({ success: true, data: [] });
+  }
+});
 
 // ─── 初始化 ──────────────────────────────────────────────────
 

@@ -1,0 +1,51 @@
+{
+  "name": "whatsapp-business-platform",
+  "version": "2.0.0",
+  "description": "WhatsApp 企业级自动化平台 — 批量登录·聊天管理·翻译·反检测",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "dev:admin": "tsx src/admin/server.ts",
+    "start:admin": "tsx src/admin/server.ts",
+    "test": "tsx test/run.ts",
+    "migrate": "tsx src/db/migrate.ts",
+    "worker": "tsx src/workers/batch-worker.ts",
+    "start:all": "concurrently \"npm run dev\" \"npm run dev:admin\" \"npm run worker\""
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.0",
+    "@grpc/proto-loader": "^0.7.13",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/uuid": "^10.0.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "axios": "^1.19.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "concurrently": "^9.1.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "puppeteer-core": "^24.0.0",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.5",
+    "socks-proxy-agent": "^10.1.0",
+    "uuid": "^14.0.1",
+    "winston": "^3.19.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.0.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

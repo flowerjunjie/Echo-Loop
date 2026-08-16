@@ -12,6 +12,9 @@
 import makeWASocket, { fetchLatestBaileysVersion, DisconnectReason } from '@whiskeysockets/baileys';
 import type { WASocket } from '@whiskeysockets/baileys';
 import type { AuthenticationState } from '@whiskeysockets/baileys/lib/Types/Auth';
+import { useMultiFileAuthState } from '@whiskeysockets/baileys/lib/Utils/use-multi-file-auth-state';
+import * as path from 'path';
+import * as fs from 'fs';
 import type { WhatsAppAccount, ChatMessage, BatchSendMessageParam } from '../types';
 import type { DeviceConfig } from '../types';
 import { logger } from '../logger';
@@ -21,9 +24,11 @@ import { buildConnectionConfig } from './device-spoof';
 import { updateAccountStatus, updateAccountConnection, addMessageToAccount } from '../db';
 
 export interface SessionConfig {
-  authState: AuthenticationState;
+  authState?: AuthenticationState;
+  phoneNumber?: string; // 配对码登录：提供手机号
   deviceConfig?: DeviceConfig;
   proxyUrl?: string;
+  testMode?: boolean; // 测试模式：不连接WhatsApp，模拟成功
 }
 
 export interface SessionEventHandlers {
@@ -121,6 +126,19 @@ export class SessionManager {
     }));
   }
 
+  getPairingSession(accountId: string): { pairingCode: string | undefined; phoneNumber: string } | null {
+    const session = this.sessions.get(accountId);
+    if (!session || !session.phoneNumber) return null;
+    return {
+      pairingCode: session.pairingCode,
+      phoneNumber: session.phoneNumber,
+    };
+  }
+
+  getSession(accountId: string): any {
+    return this.sessions.get(accountId) || null;
+  }
+
   /** 消息处理：翻译 + 存储 */
   private handleMessage(msg: ChatMessage): void {
     const tConfig = getTranslationConfig();
@@ -146,9 +164,12 @@ class WASession {
   lastError: string | null = null;
   onStatusChange?: (status: WhatsAppAccount['status'], error?: string) => void;
   onMessage?: (msg: ChatMessage) => void;
-  private authState: AuthenticationState;
+  private authState: AuthenticationState | undefined;
+  private phoneNumber?: string;
+  public pairingCode?: string; // 公开供外部查询
   private deviceConfig?: DeviceConfig;
   private proxyUrl?: string;
+  private testMode = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -156,11 +177,129 @@ class WASession {
   constructor(account: WhatsAppAccount, config: SessionConfig) {
     this.accountId = account.id;
     this.authState = config.authState;
+    this.phoneNumber = config.phoneNumber;
     this.deviceConfig = config.deviceConfig;
     this.proxyUrl = config.proxyUrl;
+    this.testMode = config.testMode || false;
+  }
+
+  /** 配对码登录模式 */
+  private async connectWithPairingCode(): Promise<void> {
+    if (!this.phoneNumber) {
+      throw new Error('phoneNumber is required for pairing code login');
+    }
+
+    // 创建认证状态存储目录
+    const authDir = path.join(process.cwd(), 'auth_data', this.accountId);
+    if (!fs.existsSync(authDir)) fs.mkdirSync(authDir, { recursive: true });
+
+    logger.info(`[Session ${this.accountId}] Starting pairing code login for ${this.phoneNumber}`);
+
+    const { version } = await fetchLatestBaileysVersion();
+    const authState = await useMultiFileAuthState(authDir);
+
+    // 确保凭证已初始化
+    if (!authState.state.creds.me) {
+      const cleanPhone = this.phoneNumber.replace(/^\+?86/, '');
+      authState.state.creds.me = {
+        id: `${cleanPhone}@s.whatsapp.net`,
+        name: 'Pairing',
+        verifiedName: '',
+      };
+      authState.state.creds.registered = false;
+      await authState.saveCreds();
+    }
+
+    // 配对码模式代理支持
+    if (this.proxyUrl) {
+      const proto = this.proxyUrl.split('://')[0] || 'http';
+      if (proto === 'socks5' || proto === 'socks4') {
+        (this.socket as any) = makeWASocket({
+          auth: authState.state,
+          browser: ['WhatsApp', 'Android', '17.0'] as any,
+          version,
+          connectTimeoutMs: 30000,
+          keepAliveIntervalMs: 30000,
+          getMessage: async () => undefined,
+          agent: new (await import('socks-proxy-agent')).SocksProxyAgent(this.proxyUrl),
+        });
+      } else {
+        (this.socket as any) = makeWASocket({
+          auth: authState.state,
+          browser: ['WhatsApp', 'Android', '17.0'] as any,
+          version,
+          connectTimeoutMs: 30000,
+          keepAliveIntervalMs: 30000,
+          getMessage: async () => undefined,
+          agent: new (await import('http-proxy-agent')).HttpProxyAgent(this.proxyUrl),
+        });
+      }
+    } else {
+      this.socket = makeWASocket({
+        auth: authState.state,
+        browser: ['WhatsApp', 'Android', '17.0'] as any,
+        version,
+        connectTimeoutMs: 30000,
+        keepAliveIntervalMs: 30000,
+        getMessage: async () => undefined,
+      });
+    }
+
+    // 监听配对成功事件（isNewLogin 表示配对成功，需要重新连接）
+    const isNewLoginPromise = new Promise<void>((resolve) => {
+      this.socket!.ev.on('connection.update', (update) => {
+        if (update.isNewLogin) {
+          logger.info(`[Session ${this.accountId}] Pairing successful, waiting for reconnection...`);
+          resolve();
+        }
+      });
+    });
+
+    this.setupListeners();
+
+    // 请求配对码
+    try {
+      const pairingCode = await this.socket.requestPairingCode(this.phoneNumber);
+      logger.info(`[Session ${this.accountId}] Pairing code generated: ${pairingCode}`);
+      logger.info(`[Session ${this.accountId}] Session pairingCode field set to: ${this.pairingCode}`);
+      this.pairingCode = pairingCode; // 保存配对码供查询
+
+      // 通知上层配对码已生成
+      this.eventHandlers.onPairingCode?.(this.accountId, pairingCode);
+
+      // 广播配对码事件
+      this.wsBroadcast?.('pairing_code', { accountId: this.accountId, code: pairingCode });
+    } catch (err) {
+      logger.error(`[Session ${this.accountId}] Failed to get pairing code:`, err);
+      this.lastError = err instanceof Error ? err.message : 'Failed to get pairing code';
+      this.onStatusChange?.('error', this.lastError);
+      return;
+    }
+
+    // 等待配对成功
+    await isNewLoginPromise;
+    logger.info(`[Session ${this.accountId}] Pairing completed, waiting for connection...`);
+    // 注意：Baileys 会在配对成功后自动重新连接，我们不需要手动 reconnect
+    // 连接状态会由 connection.update 事件的 'open' 分支处理
   }
 
   async connect(): Promise<void> {
+    // Test mode: simulate successful connection without actual WhatsApp connection
+    if (this.testMode) {
+      logger.info(`[Session ${this.accountId}] Test mode: simulating connection`);
+      this.isConnected = true;
+      this.lastError = null;
+      this.reconnectAttempts = 0;
+      this.onStatusChange?.('connected');
+      return;
+    }
+
+    // 配对码登录模式
+    if (this.phoneNumber && !this.authState) {
+      await this.connectWithPairingCode();
+      return;
+    }
+
     const { version } = await fetchLatestBaileysVersion();
     const connConfig: any = {
       auth: this.authState,
@@ -171,10 +310,20 @@ class WASession {
       getMessage: async () => undefined,
     };
 
-    // Proxy support (Baileys 7.x uses 'agent' instead of 'httpOpts')
+    // Proxy support - auto-detect protocol
     if (this.proxyUrl) {
-      const { SocksProxyAgent } = await import('socks-proxy-agent');
-      connConfig.agent = new SocksProxyAgent(this.proxyUrl);
+      const proto = this.proxyUrl.split('://')[0] || 'http';
+      try {
+        if (proto === 'socks5' || proto === 'socks4') {
+          const { SocksProxyAgent } = await import('socks-proxy-agent');
+          connConfig.agent = new SocksProxyAgent(this.proxyUrl);
+        } else {
+          const { HttpProxyAgent } = await import('http-proxy-agent');
+          connConfig.agent = new HttpProxyAgent(this.proxyUrl);
+        }
+      } catch (e) {
+        logger.warn(`[Session ${this.accountId}] Proxy agent error: ${e.message}`);
+      }
     }
 
     this.socket = makeWASocket(connConfig);
@@ -235,6 +384,27 @@ class WASession {
 
     this.socket.ev.on('creds.update', (creds) => {
       logger.debug(`[Session ${this.accountId}] Creds updated: me=${creds.me?.id}`);
+    });
+
+    // 监听联系人更新
+    this.socket.ev.on('contacts.upsert', (contacts: any[]) => {
+      for (const contact of contacts) {
+        logger.debug(`[Session ${this.accountId}] Contact: ${contact.id} = ${contact.notify || contact.name || ''}`);
+      }
+      // 广播联系人事件
+      this.wsBroadcast?.('contacts_update', { accountId: this.accountId, contacts });
+    });
+
+    this.socket.ev.on('chats.upsert', (chats: any[]) => {
+      for (const chat of chats) {
+        logger.debug(`[Session ${this.accountId}] Chat: ${chat.id}`);
+      }
+    });
+
+    this.socket.ev.on('chats.update', (updates: any[]) => {
+      for (const chat of updates) {
+        logger.debug(`[Session ${this.accountId}] Chat update: ${chat.id}`);
+      }
     });
 
     this.socket.ev.on('messages.upsert', ({ messages }) => {
@@ -320,6 +490,12 @@ class WASession {
   }
 
   async sendMessage(to: string, content: string): Promise<string> {
+    if (this.testMode) {
+      // Test mode: simulate successful send
+      const messageId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      logger.info(`[Session ${this.accountId}] Test mode: sent message to ${to}`);
+      return messageId;
+    }
     if (!this.socket || !this.isConnected) {
       throw new Error(`Account not connected: ${this.accountId}`);
     }
@@ -329,9 +505,6 @@ class WASession {
   }
 
   async batchSend(param: BatchSendMessageParam): Promise<{ success: number; failed: number }> {
-    if (!this.socket || !this.isConnected) {
-      throw new Error(`Account not connected: ${this.accountId}`);
-    }
     let success = 0;
     let failed = 0;
     const jids = param.targetJids || [];

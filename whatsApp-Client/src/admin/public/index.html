@@ -90,6 +90,10 @@
     .stat-card .value.warn { color: var(--warning); }
     .stat-card .value.danger { color: var(--danger); }
     .stat-card .value.accent { color: var(--accent); }
+    .stat-card .value.tier-a { color: #fbbf24; }
+    .stat-card .value.tier-b { color: #60a5fa; }
+    .stat-card .value.tier-c { color: #9ca3af; }
+    .tier-grid { display: flex; gap: 8px; }
 
     /* Tables */
     .table-wrap { overflow-x: auto; }
@@ -109,6 +113,11 @@
     .badge-completed { background: #065f46; color: #34d399; }
     .badge-failed { background: #7f1d1d; color: #f87171; }
     .badge-pending { background: #78350f; color: #fbbf24; }
+    .badge-tier-A { background: #92400e; color: #fbbf24; }
+    .badge-tier-B { background: #1e3a5f; color: #60a5fa; }
+    .badge-tier-C { background: #374151; color: #9ca3af; }
+    .badge-pairing { background: #1e3a5f; color: #fbbf24; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
     /* Modal */
     .modal-overlay {
@@ -228,9 +237,11 @@
       <nav class="nav-menu">
         <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span> 仪表盘</div>
         <div class="nav-item" data-page="accounts"><span class="icon">👤</span> 账户管理</div>
+        <div class="nav-item" data-page="contacts"><span class="icon">📒</span> 联系人</div>
         <div class="nav-item" data-page="batch"><span class="icon">⚡</span> 批量任务</div>
         <div class="nav-item" data-page="devices"><span class="icon">📱</span> 设备配置</div>
-        <div class="nav-item" data-page="translation"><span class="icon">🌐</span> 翻译设置</div>
+        <div class="nav-item" data-page="proxy"><span class="icon">🌐</span> 代理配置</div>
+        <div class="nav-item" data-page="translation"><span class="icon">🔤</span> 翻译设置</div>
         <div class="nav-item" data-page="history"><span class="icon">💬</span> 聊天历史</div>
         <div class="nav-item" data-page="users"><span class="icon">🔑</span> 子账号管理</div>
         <div class="nav-item" data-page="audit"><span class="icon">📋</span> 审计日志</div>
@@ -268,8 +279,16 @@
             <div class="search-bar" style="margin:0;flex:2">
               <input id="accountSearch" placeholder="搜索账户..." oninput="renderAccounts()">
             </div>
-            <button class="btn btn-primary btn-sm" onclick="showAddAccountModal()">+ 添加账户</button>
-            <button class="btn btn-secondary btn-sm" onclick="showBatchLoginModal()">⚡ 批量导入</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="accountTierFilter" onchange="renderAccounts()" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px">
+                <option value="">全部层级</option>
+                <option value="A">Tier A</option>
+                <option value="B">Tier B</option>
+                <option value="C">Tier C</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="showAddAccountModal()">+ 添加账户</button>
+              <button class="btn btn-secondary btn-sm" onclick="showBatchLoginModal()">⚡ 批量导入</button>
+            </div>
           </div>
           <div class="card">
             <div class="card-body p-0">
@@ -277,7 +296,7 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>状态</th><th>ID</th><th>名称</th><th>手机</th><th>设备</th><th>消息数</th><th>分配给</th><th>操作</th>
+                      <th>状态</th><th>层级</th><th>ID</th><th>名称</th><th>手机</th><th>设备</th><th>消息数</th><th>分配给</th><th>操作</th>
                     </tr>
                   </thead>
                   <tbody id="accountTable"></tbody>
@@ -327,6 +346,34 @@
                   <tbody id="deviceTable"></tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proxy -->
+        <div id="page-proxy" class="page">
+          <div class="flex-between mb-8">
+            <span class="text-dim text-sm">配置代理以访问 WhatsApp 服务器</span>
+            <button class="btn btn-primary btn-sm" onclick="showAddProxyModal()">+ 添加代理</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>代理列表</h3></div>
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>类型</th><th>地址</th><th>国家</th><th>最后使用</th><th>操作</th></tr>
+                  </thead>
+                  <tbody id="proxyTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>网络诊断</h3></div>
+            <div class="card-body">
+              <button class="btn btn-secondary btn-sm" onclick="testWhatsAppConnectivity()">测试 WhatsApp 连接</button>
+              <pre id="connectivityResult" class="text-dim text-sm" style="margin-top:12px; white-space:pre-wrap">点击测试...</pre>
             </div>
           </div>
         </div>
@@ -445,6 +492,33 @@
             </div>
           </div>
         </div>
+
+        <!-- Contacts -->
+        <div id="page-contacts" class="page">
+          <div class="flex-between mb-8">
+            <div class="search-bar" style="margin:0;flex:2">
+              <input id="contactSearch" placeholder="搜索联系人..." oninput="renderContacts()">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="contactAccountFilter" onchange="renderContacts()" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px">
+                <option value="">全部账户</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="syncAllContacts()">🔄 同步联系人</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>账户</th><th>ID</th><th>名称</th><th>推送时间</th></tr>
+                  </thead>
+                  <tbody id="contactTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -534,7 +608,18 @@ function connectWS() {
     try {
       const msg = JSON.parse(e.data);
       if (msg.type === 'pong') return;
-      showToast(JSON.stringify(msg), 'info');
+      if (msg.type === 'pairing_code') {
+        const el = document.getElementById('pairingCodeDisplay');
+        if (el) el.textContent = msg.payload.code;
+        toast(`配对码已生成: ${msg.payload.code}`, 'success');
+      } else if (msg.type === 'account_status_change') {
+        if (msg.payload.status === 'connected') {
+          toast(`${msg.payload.accountId} 已连接`, 'success');
+          loadAccounts();
+        }
+      } else {
+        showToast(JSON.stringify(msg), 'info');
+      }
     } catch {}
   };
 }
@@ -565,6 +650,12 @@ async function loadStats() {
   const data = await api('GET', '/stats');
   if (!data.success) return;
   const s = data.data;
+  // Fetch tier stats
+  let tierData = { a: 0, b: 0, c: 0 };
+  try {
+    const tr = await api('GET', '/accounts/tiers/stats');
+    if (tr.success) tierData = tr.data;
+  } catch {}
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card"><div class="label">总账户数</div><div class="value">${s.totalAccounts}</div></div>
     <div class="stat-card"><div class="label">在线账户</div><div class="value accent">${s.connectedAccounts}</div></div>
@@ -572,6 +663,11 @@ async function loadStats() {
     <div class="stat-card"><div class="label">消息总数</div><div class="value">${s.totalMessages.toLocaleString()}</div></div>
     <div class="stat-card"><div class="label">活跃任务</div><div class="value warn">${s.activeTasks}</div></div>
     <div class="stat-card"><div class="label">子账号数</div><div class="value">${s.subUsers}</div></div>
+    <div class="stat-card"><div class="label">账户层级分布</div><div class="tier-grid">
+      <span class="badge badge-tier-A" style="font-size:18px;min-width:32px;text-align:center">${tierData.a}</span>
+      <span class="badge badge-tier-B" style="font-size:18px;min-width:32px;text-align:center">${tierData.b}</span>
+      <span class="badge badge-tier-C" style="font-size:18px;min-width:32px;text-align:center">${tierData.c}</span>
+    </div></div>
   `;
 }
 
@@ -586,12 +682,17 @@ async function loadAccounts() {
 function renderAccounts(list) {
   list = list || [];
   const search = (document.getElementById('accountSearch')?.value || '').toLowerCase();
-  const filtered = list.filter(a => a.name.toLowerCase().includes(search) || a.phone.includes(search));
+  const tierFilter = document.getElementById('accountTierFilter')?.value || '';
+  const filtered = list.filter(a =>
+    (a.name.toLowerCase().includes(search) || a.phone.includes(search)) &&
+    (!tierFilter || a.tier === tierFilter)
+  );
   const tbody = document.getElementById('accountTable');
   if (!tbody) return;
   tbody.innerHTML = filtered.map(a => `
     <tr>
       <td><span class="badge badge-${a.status}">${statusLabel(a.status)}</span></td>
+      <td><span class="badge badge-tier-${a.tier}">${a.tier}</span></td>
       <td style="font-size:11px;color:var(--text-dim)">${a.id.slice(0,12)}</td>
       <td><strong>${esc(a.name)}</strong></td>
       <td>${esc(a.phone)}</td>
@@ -604,6 +705,9 @@ function renderAccounts(list) {
           : a.status === 'connected'
           ? `<button class="btn btn-sm btn-secondary" onclick="disconnectAccount('${a.id}')">断开</button>`
           : ''}
+        <button class="btn btn-sm btn-success" onclick="showPairingModal('${a.id}','${esc(a.phone)}')" style="margin-left:4px" title="配对码登录">📱</button>
+        <button class="btn btn-sm btn-secondary" onclick="showEditAccountModal('${a.id}','${esc(a.name)}','${esc(a.phone)}','${a.tier}')" style="margin-left:4px" title="编辑">✏️</button>
+        <button class="btn btn-sm btn-secondary" onclick="showSetTierModal('${a.id}','${a.tier}')" style="margin-left:4px">层级</button>
         <button class="btn btn-sm btn-danger" onclick="deleteAccount('${a.id}')" style="margin-left:4px">删除</button>
       </td>
     </tr>
@@ -611,7 +715,7 @@ function renderAccounts(list) {
 }
 
 function statusLabel(s) {
-  const map = { idle: '空闲', connecting: '连接中', connected: '在线', disconnected: '已断开', banned: '封禁', error: '错误' };
+  const map = { idle: '空闲', connecting: '连接中', connected: '在线', disconnected: '已断开', banned: '封禁', error: '错误', pairing: '配对中' };
   return map[s] || s;
 }
 
@@ -619,6 +723,64 @@ async function connectAccount(id) {
   const data = await api('POST', `/accounts/${id}/connect`);
   if (data.success) { toast('连接请求已发送', 'success'); loadAccounts(); }
   else toast(data.error, 'error');
+}
+
+// 配对码登录弹窗
+async function showPairingModal(accountId, phone) {
+  openModal('配对码登录', `
+    <div class="form-group">
+      <label>手机号码</label>
+      <input id="pairingPhone" value="${phone || ''}" placeholder="如: 8613800138000">
+      <p class="text-dim text-sm">输入手机号，系统将生成配对码供WhatsApp验证</p>
+    </div>
+    <div class="form-group">
+      <label>代理（可选）</label>
+      <input id="pairingProxy" placeholder="如: socks5://127.0.0.1:1080">
+      <p class="text-dim text-sm">如果无法直连WhatsApp，请配置代理地址</p>
+    </div>
+    <div id="pairingCodeArea" style="display:none; text-align:center; padding:20px; background:var(--bg); border-radius:var(--radius)">
+      <p class="text-dim">配对码：</p>
+      <p style="font-size:36px; font-weight:bold; color:var(--primary); letter-spacing:8px" id="pairingCodeDisplay"></p>
+      <p class="text-dim text-sm" style="margin-top:12px">请在WhatsApp中輸入此配对码完成验证</p>
+    </div>
+  `, () => doPairing(accountId));
+}
+
+async function doPairing(accountId) {
+  const phone = document.getElementById('pairingPhone').value.trim();
+  const proxyUrl = document.getElementById('pairingProxy').value.trim();
+  if (!phone) { toast('请输入手机号', 'error'); return; }
+  try {
+    const data = await api('POST', '/accounts/pair', { id: accountId, phoneNumber: phone, proxyUrl: proxyUrl || undefined });
+    if (data.success) {
+      toast('配对码已生成，请在WhatsApp中验证', 'success');
+      // 显示配对码
+      document.getElementById('pairingCodeArea').style.display = 'block';
+      // 轮询获取配对码
+      pollPairingCode(data.data.accountId || accountId);
+      closeModal();
+      loadAccounts();
+    } else {
+      toast(data.error, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function pollPairingCode(accountId) {
+  const maxPolls = 120; // 最多轮询2分钟
+  let count = 0;
+  const interval = setInterval(async () => {
+    count++;
+    try {
+      const data = await api('GET', `/accounts/${accountId}/pairing-code`);
+      if (data.success && data.data.code) {
+        document.getElementById('pairingCodeDisplay').textContent = data.data.code;
+      }
+      if (count >= maxPolls) clearInterval(interval);
+    } catch {}
+  }, 2000);
 }
 
 async function disconnectAccount(id) {
@@ -631,6 +793,30 @@ async function deleteAccount(id) {
   await api('DELETE', `/accounts/${id}`);
   toast('账户已删除', 'success');
   loadAccounts();
+}
+
+async function showSetTierModal(id, currentTier) {
+  openModal('设置层级', `
+    <div class="form-group">
+      <label>账户 ${id.slice(0, 12)}</label>
+      <p class="text-dim text-sm">当前层级: <span class="badge badge-tier-${currentTier}">${currentTier}</span></p>
+    </div>
+    <div class="form-group">
+      <label>选择新层级</label>
+      <select id="setTierSelect">
+        <option value="A" ${currentTier === 'A' ? 'selected' : ''}>Tier A (高优先)</option>
+        <option value="B" ${currentTier === 'B' ? 'selected' : ''}>Tier B (默认)</option>
+        <option value="C" ${currentTier === 'C' ? 'selected' : ''}>Tier C (低优先)</option>
+      </select>
+    </div>
+  `, () => doSetTier(id));
+}
+
+async function doSetTier(id) {
+  const tier = document.getElementById('setTierSelect').value;
+  const data = await api('POST', `/accounts/${id}/tier`, { tier });
+  if (data.success) { toast(`层级已设为 ${tier}`, 'success'); loadAccounts(); closeModal(); }
+  else toast(data.error, 'error');
 }
 
 // ─── 批量登录 ────────────────────────────────────────────────
@@ -995,6 +1181,10 @@ function showAddAccountModal() {
     <div class="form-group"><label>手机号码</label><input id="accPhone"></div>
     <div class="form-group"><label>导出文件路径</label><input id="accFile" placeholder="E:/doc/xxx.txt"></div>
     <div class="form-group"><label>设备配置（可选）</label><select id="accDevice"><option value="">默认</option></select></div>
+    <div class="form-group">
+      <label>层级</label>
+      <select id="accTier"><option value="B" selected>Tier B (默认)</option><option value="A">Tier A</option><option value="C">Tier C</option></select>
+    </div>
   `, () => doAddAccount());
 }
 
@@ -1004,8 +1194,39 @@ async function doAddAccount() {
     phone: document.getElementById('accPhone').value,
     exportFile: document.getElementById('accFile').value,
     deviceConfigId: document.getElementById('accDevice').value,
+    tier: document.getElementById('accTier').value,
   });
   if (data.success) { toast('账户已添加', 'success'); closeModal(); loadAccounts(); }
+  else toast(data.error, 'error');
+}
+
+// ─── 编辑账户弹窗 ─────────────────────────────────────────────
+
+function showEditAccountModal(id, name, phone, tier) {
+  openModal('编辑账户', `
+    <input type="hidden" id="editAccountId" value="${id}">
+    <div class="form-group"><label>账户名称</label><input id="editAccName" value="${name}"></div>
+    <div class="form-group"><label>手机号码</label><input id="editAccPhone" value="${phone}"></div>
+    <div class="form-group"><label>代理地址</label><input id="editAccProxy" placeholder="如: http://127.0.0.1:10808" value=""></div>
+    <div class="form-group">
+      <label>层级</label>
+      <select id="editAccTier">
+        <option value="A" ${tier === 'A' ? 'selected' : ''}>Tier A (高优先)</option>
+        <option value="B" ${tier === 'B' ? 'selected' : ''}>Tier B (默认)</option>
+        <option value="C" ${tier === 'C' ? 'selected' : ''}>Tier C (低优先)</option>
+      </select>
+    </div>
+  `, () => doEditAccount(id));
+}
+
+async function doEditAccount(id) {
+  const data = await api('PUT', `/accounts/${id}`, {
+    name: document.getElementById('editAccName').value,
+    phone: document.getElementById('editAccPhone').value,
+    tier: document.getElementById('editAccTier').value,
+    proxyUrl: document.getElementById('editAccProxy').value.trim() || undefined,
+  });
+  if (data.success) { toast('账户已更新', 'success'); closeModal(); loadAccounts(); }
   else toast(data.error, 'error');
 }
 
@@ -1051,8 +1272,8 @@ function esc(s) {
 // ─── 导航 ────────────────────────────────────────────────────
 
 const pageTitles = {
-  dashboard: '仪表盘', accounts: '账户管理', batch: '批量任务',
-  devices: '设备配置', translation: '翻译设置', history: '聊天历史',
+  dashboard: '仪表盘', accounts: '账户管理', contacts: '联系人', batch: '批量任务',
+  devices: '设备配置', proxy: '代理配置', translation: '翻译设置', history: '聊天历史',
   users: '子账号管理', audit: '审计日志',
 };
 
@@ -1065,6 +1286,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.getElementById(`page-${page}`).classList.add('active');
     document.getElementById('pageTitle').textContent = pageTitles[page] || page;
     if (page === 'history') populateHistoryAccounts();
+    if (page === 'contacts') loadContacts();
+    if (page === 'proxy') loadProxies();
   });
 });
 
@@ -1106,5 +1329,169 @@ if (token) {
     document.getElementById('mainApp').classList.add('hidden');
   }
 }
-</script></body>
-</html>
+
+// ─── 联系人页面 ──────────────────────────────────────────────
+
+let allContacts = [];
+let allAccountsList = [];
+
+async function loadContacts() {
+  // Load account list for filter
+  const accData = await api('GET', '/accounts');
+  allAccountsList = accData.data || [];
+  const filter = document.getElementById('contactAccountFilter');
+  if (filter) {
+    filter.innerHTML = '<option value="">全部账户</option>' +
+      allAccountsList.map(a => `<option value="${a.id}">${esc(a.name || a.phone)}</option>`).join('');
+  }
+  // Load contacts for each connected account
+  allContacts = [];
+  for (const acc of allAccountsList) {
+    try {
+      const data = await api('GET', `/accounts/${acc.id}/contacts`);
+      if (data.success && data.data) {
+        allContacts.push(...data.data.map(c => ({ ...c, accountId: acc.id, accountName: acc.name || acc.phone })));
+      }
+    } catch {}
+  }
+  renderContacts();
+}
+
+function renderContacts() {
+  const search = (document.getElementById('contactSearch')?.value || '').toLowerCase();
+  const accountFilter = document.getElementById('contactAccountFilter')?.value || '';
+  let filtered = allContacts;
+  if (search) filtered = filtered.filter(c =>
+    (c.notify || c.name || c.id).toLowerCase().includes(search)
+  );
+  if (accountFilter) filtered = filtered.filter(c => c.accountId === accountFilter);
+
+  const tbody = document.getElementById('contactTable');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.slice(0, 200).map(c => `
+    <tr>
+      <td class="text-sm text-dim">${esc(c.accountName || c.accountId?.slice(0,8))}</td>
+      <td style="font-size:11px;color:var(--text-dim)">${esc(c.id)}</td>
+      <td><strong>${esc(c.notify || c.name || c.id.replace(/@s\.whatsapp\.net/,''))}</strong></td>
+      <td class="text-sm text-dim">${c.firstCreatedAt ? new Date(c.firstCreatedAt * 1000).toLocaleString() : '-'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" class="text-dim text-center">暂无联系人数据，请先连接账户</td></tr>';
+}
+
+async function syncAllContacts() {
+  const selected = document.getElementById('contactAccountFilter')?.value || '';
+  const accounts = selected
+    ? allAccountsList.filter(a => a.id === selected)
+    : allAccountsList;
+  for (const acc of accounts) {
+    if (acc.status !== 'connected') {
+      toast(`${acc.name} 未连接，跳过`, 'warn');
+      continue;
+    }
+    try {
+      await api('POST', `/accounts/${acc.id}/sync-contacts`);
+      toast(`正在同步 ${acc.name} 的联系人...`, 'info');
+    } catch (e) {
+      toast(`${acc.name} 同步失败: ${e.message}`, 'error');
+    }
+  }
+}
+
+
+// ─── 代理管理 ────────────────────────────────────────────────
+
+let allProxies = [];
+
+async function loadProxies() {
+  const data = await api('GET', '/proxies');
+  allProxies = data.data || [];
+  renderProxies(allProxies);
+}
+
+function renderProxies(proxies) {
+  const tbody = document.getElementById('proxyTable');
+  if (!tbody) return;
+  tbody.innerHTML = proxies.map(p => `
+    <tr>
+      <td><span class="badge badge-idle">${p.type}</span></td>
+      <td style="font-family:monospace">${esc(p.url)}</td>
+      <td>${esc(p.country || '-')}</td>
+      <td class="text-sm text-dim">${p.lastUsedAt ? new Date(p.lastUsedAt).toLocaleString() : '从未'}</td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteProxy('${esc(p.url)}')">删除</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="text-dim text-center">暂无代理</td></tr>';
+}
+
+function showAddProxyModal() {
+  openModal('添加代理', `
+    <div class="form-group">
+      <label>代理地址</label>
+      <input id="proxyUrl" placeholder="socks5://127.0.0.1:1080 或 http://127.0.0.1:7890">
+    </div>
+    <div class="form-group">
+      <label>类型</label>
+      <select id="proxyType">
+        <option value="socks5">SOCKS5</option>
+        <option value="http">HTTP</option>
+        <option value="https">HTTPS</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>国家/地区</label>
+      <input id="proxyCountry" placeholder="如: JP, US, HK">
+    </div>
+  `, () => doAddProxy());
+}
+
+async function doAddProxy() {
+  const url = document.getElementById('proxyUrl').value.trim();
+  const type = document.getElementById('proxyType').value;
+  const country = document.getElementById('proxyCountry').value.trim();
+  if (!url) { toast('请输入代理地址', 'error'); return; }
+  try {
+    const data = await api('POST', '/proxies', { url, type, country: country || 'unknown' });
+    if (data.success) {
+      toast('代理已添加', 'success');
+      closeModal();
+      loadProxies();
+    } else {
+      toast(data.error, 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deleteProxy(url) {
+  if (!confirm('确认删除此代理？')) return;
+  // 删除所有匹配URL的代理
+  const toDelete = allProxies.filter(p => p.url === url);
+  for (const p of toDelete) {
+    try { await api('DELETE', `/proxies/${encodeURIComponent(p.url)}`); } catch {}
+  }
+  toast('代理已删除', 'success');
+  loadProxies();
+}
+
+async function testWhatsAppConnectivity() {
+  const resultEl = document.getElementById('connectivityResult');
+  resultEl.textContent = '测试中...';
+  try {
+    // 测试 DNS 解析
+    resultEl.textContent = '1. 测试 DNS 解析...\n';
+    const dnsStart = Date.now();
+    // 尝试连接 WhatsApp 服务器
+    const response = await fetch('https://s.whatsapp.net', { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(5000) });
+    resultEl.textContent += `   DNS 解析成功\n`;
+    resultEl.textContent += `2. 测试 HTTPS 连接...\n`;
+    resultEl.textContent += `   连接成功 (${Date.now() - dnsStart}ms)\n`;
+    resultEl.textContent += '\n✅ 网络正常，可直接连接 WhatsApp 服务器\n';
+  } catch (e) {
+    resultEl.textContent = `❌ 连接失败: ${e.message}\n\n请配置代理后重试。\n代理格式: socks5://IP:PORT`;
+  }
+}
+
+// ─── 通用工具 ────────────────────────────────────────────────
+

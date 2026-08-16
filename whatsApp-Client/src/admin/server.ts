@@ -34,18 +34,12 @@ import { initDb, closeDb, listAccounts, getAccount, insertAccount,
   updateAdminLastLogin, getChatHistory, getConversations,
   insertMessages, insertTask, getTask, listTasks,
   updateTaskProgress, getPlatformStats, logAudit, getAuditLogs,
-  assignAccount, removeAccount,
+  assignAccount, removeAccount, updateAccountTier, filterAccountsByTier, updateAccount,
 } from '../db';
 import { exportChatHistory } from '../services/chat-history';
 import { login, register, verifyToken, isAdmin, hasPermission } from '../auth';
 import { sessionManager } from '../services/session-manager';
 
-// WebSocket broadcast helper (inline to avoid circular deps)
-function wsBroadcast(event, payload) {
-  // Access connectedClients from wss (hack but works for now)
-  const msg = JSON.stringify({ type: event, payload, timestamp: Date.now() });
-  // We'll use a simpler approach: export from server and import in session-manager
-}
 import { startTaskPolling, stopTaskPolling } from '../workers/batch-worker';
 import { buildAuthenticationState } from '../baileys-auth-builder';
 import { loadExport } from '../export-loader';
@@ -56,7 +50,6 @@ import { storeMessages } from '../services/chat-history';
 import { createBackup, listBackups, deleteBackup, restoreBackup } from '../services/backup';
 import { scheduleTask, unscheduleTask, listScheduledTasks, getSchedulerStats } from '../services/scheduler';
 import { createTemplate, getTemplate, listTemplates, deleteTemplate, renderTemplate } from '../services/template';
-import { broadcastAll, broadcastToUser } from './server'; // circular, will fix
 import { translateText } from '../services/translation';
 
 const app = express();
@@ -103,6 +96,13 @@ app.use(express.json({ limit: '10mb' }));
 initDb();
 startTaskPolling(3000);
 setupWebSocket();
+// Wire session manager → WebSocket broadcast (no circular dep: called after wss is created)
+sessionManager.setWSBroadcast(broadcastAll);
+sessionManager.setHandlers({
+  onPairingCode: (accountId, code) => {
+    broadcastAll('pairing_code', { accountId, code });
+  },
+});
 
 // Auto-configure proxy if configured (WA_PROXY_URL env var)
 // Set WA_PROXY_URL=disabled to connect directly
@@ -176,6 +176,7 @@ app.get('/api/stats', generalLimiter, authMiddleware, (req, res) => {
 app.get('/api/accounts', authMiddleware, (req, res) => {
   const filters: any = {};
   if (req.query.status) filters.status = req.query.status;
+  if (req.query.tier) filters.tier = req.query.tier;
   if (!(req as any).user || (req as any).user.role === 'sub') {
     filters.assignedTo = (req as any).user.userId;
   }
@@ -186,10 +187,37 @@ app.get('/api/accounts', authMiddleware, (req, res) => {
 app.post('/api/accounts', authMiddleware, requireAdmin, async (req, res) => {
   try {
     const { name, phone, exportFile, deviceConfigId, assignedTo } = req.body;
+
+    let parsed = null;
+    let accountId = `acct-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+    // 配对码登录模式：不需要导出文件
+    if (!exportFile || exportFile === '') {
+      const account = {
+        id: accountId,
+        name: name || phone,
+        phone: phone || '',
+        exportFile: '',
+        status: 'idle',
+        deviceId: '',
+        deviceConfigId: deviceConfigId || '',
+        assignedTo: assignedTo || null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messageCount: 0,
+        tier: req.body.tier || 'B',
+      };
+      insertAccount(account);
+      logAudit({ userId: (req as any).user.userId, action: 'create_account', targetType: 'account', targetId: account.id, details: `Created account: ${account.name}${assignedTo ? ' → user ' + assignedTo : ''}` });
+      res.json({ success: true, data: account });
+      return;
+    }
+
+    // 传统密钥导出文件登录
     const exportData = await loadExport(exportFile);
-    const parsed = parseWhatsAppExport(exportData);
+    parsed = parseWhatsAppExport(exportData);
     const account = {
-      id: `acct-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: accountId,
       name: name || parsed.nickname || exportData.account,
       phone: phone || parsed.account,
       exportFile,
@@ -200,6 +228,7 @@ app.post('/api/accounts', authMiddleware, requireAdmin, async (req, res) => {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       messageCount: 0,
+      tier: req.body.tier || 'B',
     };
     insertAccount(account);
     logAudit({ userId: (req as any).user.userId, action: 'create_account', targetType: 'account', targetId: account.id, details: `Created account: ${account.name}${assignedTo ? ' → user ' + assignedTo : ''}` });
@@ -215,6 +244,18 @@ app.post('/api/accounts/:id/connect', authMiddleware, requireAdmin, async (req, 
     const account = getAccount(id);
     if (!account) { res.status(404).json({ success: false, error: '账户不存在' }); return; }
 
+    // 配对码登录模式
+    if (req.body.phoneNumber) {
+      const config: any = { phoneNumber: req.body.phoneNumber };
+      const deviceConfig = getDeviceConfig(account.deviceConfigId);
+      if (deviceConfig) config.deviceConfig = deviceConfig;
+
+      await sessionManager.connect(account, config);
+      res.json({ success: true, data: { accountId: id, status: 'pairing' } });
+      return;
+    }
+
+    // 传统密钥导出文件登录
     const exportData = await loadExport(account.exportFile);
     const parsed = parseWhatsAppExport(exportData);
     const authState = buildAuthenticationState({ parsed });
@@ -237,6 +278,72 @@ app.post('/api/accounts/:id/connect', authMiddleware, requireAdmin, async (req, 
   }
 });
 
+// 配对码登录 — 通过手机号请求配对码
+app.post('/api/accounts/pair', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const { id, phoneNumber, name, proxyUrl } = req.body;
+    if (!phoneNumber) {
+      res.status(400).json({ success: false, error: '缺少手机号' });
+      return;
+    }
+
+    // 如果账户不存在，先创建
+    let account = id ? getAccount(id) : null;
+    if (!account) {
+      account = {
+        id: `acct-${Date.now()}`,
+        name: name || phoneNumber,
+        phone: phoneNumber,
+        exportFile: '',
+        status: 'idle',
+        deviceId: '',
+        deviceConfigId: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messageCount: 0,
+        tier: 'B',
+      };
+      insertAccount(account);
+    } else {
+      account.phone = phoneNumber;
+      account.name = name || phoneNumber;
+      account.updatedAt = Date.now();
+    }
+
+    const config: any = { phoneNumber };
+    const deviceConfig = getDeviceConfig(account.deviceConfigId);
+    if (deviceConfig) config.deviceConfig = deviceConfig;
+
+    // 支持代理配置
+    if (proxyUrl) {
+      logger.info(`[Pair] Using proxy: ${proxyUrl}`);
+      config.proxyUrl = proxyUrl;
+    } else if (req.body.useProxy) {
+      // 使用随机代理
+      const proxy = getRandomProxy();
+      if (proxy) {
+        config.proxyUrl = proxy.url;
+        proxy.lastUsedAt = Date.now();
+      }
+    }
+
+    await sessionManager.connect(account, config);
+    res.json({ success: true, data: { accountId: account.id, status: 'pairing', phone: phoneNumber } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err instanceof Error ? err.message : '配对失败' });
+  }
+});
+
+// 获取配对码
+app.get('/api/accounts/:id/pairing-code', authMiddleware, (req, res) => {
+  const session = sessionManager.getPairingSession(req.params.id);
+  if (!session) {
+    res.json({ success: true, data: { code: null, status: 'not_started' } });
+    return;
+  }
+  res.json({ success: true, data: { code: session.pairingCode, status: 'waiting' } });
+});
+
 app.post('/api/accounts/:id/disconnect', authMiddleware, requireAdmin, async (req, res) => {
   try {
     await sessionManager.disconnect(req.params.id);
@@ -250,6 +357,28 @@ app.delete('/api/accounts/:id', authMiddleware, requireAdmin, (req, res) => {
   // Remove account from DB
   removeAccount(req.params.id);
   sessionManager.disconnect(req.params.id).catch(() => {});
+  res.json({ success: true });
+});
+
+// Tier stats
+app.get('/api/accounts/tiers/stats', authMiddleware, (req, res) => {
+  const a = listAccounts({ tier: 'A' }).length;
+  const b = listAccounts({ tier: 'B' }).length;
+  const c = listAccounts({ tier: 'C' }).length;
+  res.json({ success: true, data: { a, b, c } });
+});
+
+// Update tier
+app.post('/api/accounts/:id/tier', authMiddleware, requireAdmin, (req, res) => {
+  const { tier } = req.body;
+  if (!['A', 'B', 'C'].includes(tier)) {
+    res.status(400).json({ success: false, error: 'Invalid tier' });
+    return;
+  }
+  const account = getAccount(req.params.id);
+  if (!account) { res.status(404).json({ success: false, error: 'Account not found' }); return; }
+  updateAccountTier(req.params.id, tier);
+  logAudit({ userId: (req as any).user.userId, action: 'update_tier', targetType: 'account', targetId: req.params.id, details: `Tier set to ${tier}` });
   res.json({ success: true });
 });
 
@@ -356,6 +485,48 @@ app.get('/api/accounts/:id/export', authMiddleware, (req, res) => {
   res.setHeader('Content-Type', format === 'csv' ? 'text/csv' : 'application/json');
   res.setHeader('Content-Disposition', `attachment; filename="chat_history_${req.params.id}.${format}"`);
   res.send(content);
+});
+
+// ─── 联系人 ──────────────────────────────────────────────────
+
+// 在内存中缓存联系人，通过 WebSocket 事件更新
+const contactCache = new Map<string, any[]>();
+
+app.get('/api/accounts/:id/contacts', authMiddleware, (req, res) => {
+  const contacts = contactCache.get(req.params.id) || [];
+  res.json({ success: true, data: contacts });
+});
+
+app.post('/api/accounts/:id/sync-contacts', authMiddleware, requireAdmin, async (req, res) => {
+  const session = sessionManager.getSession(req.params.id);
+  if (!session || !session.isConnected) {
+    res.status(400).json({ success: false, error: '账户未连接' });
+    return;
+  }
+  // 触发联系人同步（通过 WebSocket 事件接收）
+  session.socket?.requestPlatformInfo().catch(() => {});
+  res.json({ success: true, message: '正在同步联系人...' });
+});
+
+// ─── 账户编辑 ────────────────────────────────────────────────
+
+app.put('/api/accounts/:id', authMiddleware, requireAdmin, (req, res) => {
+  try {
+    const account = getAccount(req.params.id);
+    if (!account) {
+      res.status(404).json({ success: false, error: '账户不存在' });
+      return;
+    }
+
+    const { name, phone, tier, deviceConfigId, assignedTo, proxyUrl } = req.body;
+
+    updateAccount(req.params.id, { name, phone, tier, deviceConfigId, assignedTo, proxyUrl });
+
+    logAudit({ userId: (req as any).user.userId, action: 'update_account', targetType: 'account', targetId: req.params.id, details: `Updated account: ${name || account.name}` });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err instanceof Error ? err.message : '更新失败' });
+  }
 });
 
 // ─── 翻译 ────────────────────────────────────────────────────
@@ -700,6 +871,13 @@ export function broadcastToUser(userId: string, event: string, payload: any): vo
 
 export function broadcastAll(event: string, payload: any): void {
   const msg = JSON.stringify({ type: event, payload, timestamp: Date.now() });
+  // Update contact cache when contacts are received
+  if (event === 'contacts_update') {
+    const { accountId, contacts } = payload;
+    if (accountId && contacts) {
+      contactCache.set(accountId, contacts);
+    }
+  }
   for (const ws of allClients) {
     if (ws.readyState === 1) ws.send(msg);
   }

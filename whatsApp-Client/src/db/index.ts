@@ -24,7 +24,7 @@ let db: Database.Database | null = null;
 
 // ─── 初始化 ──────────────────────────────────────────────────
 
-function getDb(): Database.Database {
+export function getDb(): Database.Database {
   if (!db) {
     const dir = path.dirname(DB_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -63,10 +63,21 @@ export function initDb(): void {
       assigned_to TEXT,
       message_count INTEGER NOT NULL DEFAULT 0,
       connection_id TEXT,
+      tier TEXT NOT NULL DEFAULT 'B',
+      proxy_url TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
       FOREIGN KEY (assigned_to) REFERENCES admin_users(id)
     );
+
+    // Migration: add proxy_url to accounts if not exists (SQLite 3.25+)
+    do {
+      const cols = d.prepare("PRAGMA table_info(accounts)").all() as any[];
+      if (!cols.some(c => c.name === 'proxy_url')) {
+        try { d.exec('ALTER TABLE accounts ADD COLUMN proxy_url TEXT'); } catch {}
+      }
+      break;
+    } while (false);
 
     CREATE TABLE IF NOT EXISTS device_configs (
       id TEXT PRIMARY KEY,
@@ -208,21 +219,21 @@ export function listAdminUsers(): AdminUser[] {
 
 // ─── 账户 CRUD ───────────────────────────────────────────────
 
-export function insertAccount(data: { id: string; name: string; phone: string; exportFile: string; deviceId?: string; deviceConfigId?: string; assignedTo?: string; lastError?: string; lastConnectedAt?: number; connectionId?: string; status?: WhatsAppAccount['status'] }): WhatsAppAccount {
+export function insertAccount(data: { id: string; name: string; phone: string; exportFile: string; deviceId?: string; deviceConfigId?: string; assignedTo?: string; lastError?: string; lastConnectedAt?: number; connectionId?: string; status?: WhatsAppAccount['status']; tier?: 'A' | 'B' | 'C'; proxyUrl?: string }): WhatsAppAccount {
   const d = getDb();
   const now = Date.now();
   const id = data.id;
   d.prepare(
     'INSERT INTO accounts (id, name, phone, export_file, status, device_id, device_config_id,' +
-    ' last_connected_at, last_error, assigned_to, message_count, connection_id, created_at, updated_at)' +
-    ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ' last_connected_at, last_error, assigned_to, message_count, connection_id, tier, proxy_url, created_at, updated_at)' +
+    ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     id, data.name, data.phone, data.exportFile,
     data.status || 'idle', data.deviceId, data.deviceConfigId,
     data.lastConnectedAt || null, data.lastError || null,
-    data.assignedTo || null, 0, data.connectionId || null, now, now
+    data.assignedTo || null, 0, data.connectionId || null, data.tier || 'B', data.proxyUrl || null, now, now
   );
-  return { ...data, status: data.status || 'idle', createdAt: now, updatedAt: now, messageCount: 0 } as WhatsAppAccount;
+  return { ...data, status: data.status || 'idle', createdAt: now, updatedAt: now, messageCount: 0, tier: data.tier || 'B' } as WhatsAppAccount;
 }
 
 export function updateAccountStatus(id: string, status: WhatsAppAccount['status'], error?: string): void {
@@ -259,16 +270,19 @@ export function getAccount(id: string): WhatsAppAccount | undefined {
     messageCount: row.message_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    tier: row.tier || 'B',
+    proxyUrl: row.proxy_url,
   };
 }
 
-export function listAccounts(filters?: { status?: string; assignedTo?: string }): WhatsAppAccount[] {
+export function listAccounts(filters?: { status?: string; assignedTo?: string; tier?: string }): WhatsAppAccount[] {
   const d = getDb();
   let sql = 'SELECT * FROM accounts';
   const params: any[] = [];
   const where: string[] = [];
   if (filters?.status) { where.push('status = ?'); params.push(filters.status); }
   if (filters?.assignedTo) { where.push('assigned_to = ?'); params.push(filters.assignedTo); }
+  if (filters?.tier) { where.push('tier = ?'); params.push(filters.tier); }
   if (where.length) sql += ' WHERE ' + where.join(' AND ');
   sql += ' ORDER BY created_at DESC';
   return (d.prepare(sql).all(...params) as any[]).map(r => ({
@@ -282,11 +296,39 @@ export function listAccounts(filters?: { status?: string; assignedTo?: string })
     messageCount: r.message_count,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    tier: r.tier || 'B',
+    proxyUrl: r.proxy_url,
   }));
 }
 
 export function assignAccount(accountId: string, userId: string): void {
   getDb().prepare('UPDATE accounts SET assigned_to = ?, updated_at = ? WHERE id = ?').run(userId, Date.now(), accountId);
+}
+
+export function updateAccountTier(id: string, tier: string): void {
+  getDb().prepare('UPDATE accounts SET tier = ?, updated_at = ? WHERE id = ?').run(tier, Date.now(), id);
+}
+
+export function updateAccount(id: string, data: { name?: string; phone?: string; tier?: string; deviceConfigId?: string; assignedTo?: string; proxyUrl?: string }): void {
+  const d = getDb();
+  const sets: string[] = [];
+  const params: any[] = [];
+  if (data.name !== undefined)     { sets.push('name = ?');           params.push(data.name); }
+  if (data.phone !== undefined)     { sets.push('phone = ?');          params.push(data.phone); }
+  if (data.tier !== undefined)      { sets.push('tier = ?');           params.push(data.tier); }
+  if (data.deviceConfigId !== undefined) { sets.push('device_config_id = ?'); params.push(data.deviceConfigId); }
+  if (data.assignedTo !== undefined) { sets.push('assigned_to = ?');    params.push(data.assignedTo); }
+  if (data.proxyUrl !== undefined)  { sets.push('proxy_url = ?');      params.push(data.proxyUrl); }
+  if (sets.length) {
+    sets.push('updated_at = ?');
+    params.push(Date.now());
+    params.push(id);
+    d.prepare(`UPDATE accounts SET ${sets.join(', ')} WHERE id = ?`).run(...params);
+  }
+}
+
+export function filterAccountsByTier(tier: string): WhatsAppAccount[] {
+  return listAccounts({ tier });
 }
 
 export function removeAccount(id: string): boolean {

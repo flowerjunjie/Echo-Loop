@@ -27,7 +27,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../logger';
 
 // ─── DB imports ──────────────────────────────────────────────
-import { initDb, closeDb, listAccounts, getAccount, insertAccount,
+import { initDb, closeDb, migrate, listAccounts, getAccount, insertAccount,
   updateAccountStatus, updateAccountConnection,
   listDeviceConfigs, getDeviceConfig, insertDeviceConfig, deleteDeviceConfig,
   listAdminUsers, createAdminUser, findAdminUserByUsername,
@@ -94,6 +94,7 @@ app.use(express.json({ limit: '10mb' }));
 // ─── 初始化 ──────────────────────────────────────────────────
 
 initDb();
+migrate();
 startTaskPolling(3000);
 setupWebSocket();
 // Wire session manager → WebSocket broadcast (no circular dep: called after wss is created)

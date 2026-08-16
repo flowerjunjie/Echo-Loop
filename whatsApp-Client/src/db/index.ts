@@ -70,15 +70,6 @@ export function initDb(): void {
       FOREIGN KEY (assigned_to) REFERENCES admin_users(id)
     );
 
-    // Migration: add proxy_url to accounts if not exists (SQLite 3.25+)
-    do {
-      const cols = d.prepare("PRAGMA table_info(accounts)").all() as any[];
-      if (!cols.some(c => c.name === 'proxy_url')) {
-        try { d.exec('ALTER TABLE accounts ADD COLUMN proxy_url TEXT'); } catch {}
-      }
-      break;
-    } while (false);
-
     CREATE TABLE IF NOT EXISTS device_configs (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -165,6 +156,16 @@ export function initDb(): void {
   }
 
   console.log(`[DB] Initialized at ${DB_PATH}`);
+}
+
+// ─── 迁移 ────────────────────────────────────────────────────
+
+export function migrate(): void {
+  const d = getDb();
+  const cols = d.prepare("PRAGMA table_info(accounts)").all() as any[];
+  if (!cols.some(c => c.name === 'proxy_url')) {
+    try { d.exec('ALTER TABLE accounts ADD COLUMN proxy_url TEXT'); } catch {}
+  }
 }
 
 export function closeDb(): void {

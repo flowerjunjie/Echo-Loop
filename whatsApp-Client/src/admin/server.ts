@@ -504,9 +504,14 @@ app.post('/api/accounts/:id/sync-contacts', authMiddleware, requireAdmin, async 
     res.status(400).json({ success: false, error: '账户未连接' });
     return;
   }
-  // 触发联系人同步（通过 WebSocket 事件接收）
-  session.socket?.requestPlatformInfo().catch(() => {});
-  res.json({ success: true, message: '正在同步联系人...' });
+  // 触发联系人同步（baileys 通过 contacts.upsert 事件推送）
+  try {
+    await (session.socket as any)?.resyncAppState(['regular_high', 'regular_low', 'critical_block', 'critical_unblock_low']);
+    res.json({ success: true, message: '正在同步联系人...' });
+  } catch (err) {
+    logger.warn(`[Server] Sync contacts failed for ${req.params.id}: ${err}`);
+    res.json({ success: true, message: '同步已触发，联系人将通过 WebSocket 推送' });
+  }
 });
 
 // ─── 账户编辑 ────────────────────────────────────────────────

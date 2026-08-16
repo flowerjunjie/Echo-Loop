@@ -12,6 +12,7 @@
     button { width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
     button:hover { background: #128c7e; }
     .error { color: red; text-align: center; margin-top: 10px; }
+    .info { color: #666; text-align: center; font-size: 12px; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -21,30 +22,40 @@
     <input type='password' id='password' placeholder='密码' value='admin123'>
     <button onclick='doLogin()'>登 录</button>
     <div id='error' class='error'></div>
+    <div class='info'>端口: 3456 | 协议: http</div>
   </div>
   <script>
+    // 自动使用当前页面的协议
+    const API_BASE = window.location.protocol === 'https:' ? 'https://' : 'http://';
+    
     async function doLogin() {
-      console.log('Login clicked');
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const errorDiv = document.getElementById('error');
+      
       try {
-        const res = await fetch('/api/auth/login', {
+        const url = API_BASE + window.location.host + '/api/auth/login';
+        const res = await fetch(url, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({username, password})
         });
         const data = await res.json();
-        console.log('Response:', data);
         if (data.success) {
           localStorage.setItem('token', data.data.token);
           window.location.href = '/dashboard';
         } else {
-          document.getElementById('error').textContent = data.error || '登录失败';
+          errorDiv.textContent = data.error || '登录失败';
         }
       } catch(e) {
-        document.getElementById('error').textContent = '网络错误: ' + e.message;
+        errorDiv.textContent = '网络错误: ' + e.message;
       }
     }
+    
+    // 允许回车登录
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
   </script>
 </body>
 </html>

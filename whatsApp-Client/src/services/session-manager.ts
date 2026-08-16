@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 会话管理器 — 核心连接编排
  *
@@ -9,6 +8,7 @@
  * - 设备伪装配置注入
  */
 
+// @ts-nocheck
 import makeWASocket, { fetchLatestBaileysVersion, DisconnectReason } from '@whiskeysockets/baileys';
 import type { WASocket } from '@whiskeysockets/baileys';
 import type { AuthenticationState } from '@whiskeysockets/baileys/lib/Types/Auth';

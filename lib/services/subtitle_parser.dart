@@ -1,6 +1,7 @@
 import 'package:universal_io/io.dart';
 import 'package:subtitle/subtitle.dart';
 import '../models/sentence.dart';
+import 'app_logger.dart';
 
 /// 字幕解析错误类型。
 ///
@@ -38,7 +39,7 @@ class SubtitleParser {
       final content = await file.readAsString();
       return parseSubtitleString(content, type: _getSubtitleType(filePath));
     } catch (e) {
-      print('Error parsing subtitle: $e');
+      AppLogger.log('SubtitleParse', 'Error parsing subtitle: $e');
       return [];
     }
   }
@@ -70,7 +71,7 @@ class SubtitleParser {
         );
       }).toList();
     } catch (e) {
-      print('Error parsing subtitle: $e');
+      AppLogger.log('SubtitleParse', 'Error parsing subtitle: $e');
       return [];
     }
   }

@@ -1,0 +1,42 @@
+name: Test
+
+on:
+  push:
+    branches: [main, code-fix]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+      - run: flutter pub get
+      - run: flutter analyze lib/ test/ packages/
+
+  test-vm:
+    name: VM Tests (Web + Auth)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+      - run: flutter pub get
+      - run: flutter test test/services/web/
+      - run: flutter test test/features/auth/auth_providers_test.dart
+
+  test-browser:
+    name: Browser Tests (Database)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+      - run: flutter pub get
+      - run: flutter test test/database/ --platform=chrome

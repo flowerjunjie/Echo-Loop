@@ -1,3 +1,4 @@
+@TestOn('browser')
 import 'dart:convert';
 
 import 'package:drift/native.dart';

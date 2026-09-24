@@ -1,7 +1,7 @@
 /// 语音合成（TTS）设置页。
 ///
-/// 合成引擎（平台 TTS / Echo Loop）+ 口音（美音 / 英音）；选中 Echo Loop 时在
-/// 「Echo Loop TTS」归属标题下用一张卡集中显示其专属子设置（模型下载状态 + 音色）。
+/// 合成引擎（平台 TTS / 灵犀AI英语听说）+ 口音（美音 / 英音）；选中 灵犀AI英语听说 时在
+/// 「灵犀AI英语听说 TTS」归属标题下用一张卡集中显示其专属子设置（模型下载状态 + 音色）。
 /// 音色按业界惯例收成单行（当前值 + 展开），点开用底部弹层选择，避免多音色平铺撑长
 /// 页面。切换立即生效（写 SP → 协调器热重配）。
 library;
@@ -45,7 +45,7 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
   void initState() {
     super.initState();
     // 进页时按引擎后台预热试听片段，使点击口音/音色可秒播：
-    // - Echo Loop：若模型未就绪（含上次失败）先确保下载，就绪则预热各音色；
+    // - 灵犀AI英语听说：若模型未就绪（含上次失败）先确保下载，就绪则预热各音色；
     // - 平台 TTS：预热美/英两个口音（无需模型，恒就绪）。
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -205,7 +205,7 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
           ),
 
           if (isEchoLoop) ...[
-            // Echo Loop（自然/Kokoro）专属：归属标题 + 一张卡（模型 + 音色单行）。
+            // 灵犀AI英语听说（自然/Kokoro）专属：归属标题 + 一张卡（模型 + 音色单行）。
             // 不显示独立口音——音色名已自带口音，选音色即定口音（见 _VoiceDisclosure）。
             const SizedBox(height: AppSpacing.m),
             _SectionLabel(text: l10n.ttsEngineEchoLoop),
@@ -260,14 +260,14 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
 
   void _onEngineChanged(TtsEngineKind? value) {
     if (value == null) return;
-    // 切换引擎先停掉正在试听的旧引擎发音（如 Apple 语音→Echo Loop），避免旧例子
+    // 切换引擎先停掉正在试听的旧引擎发音（如 Apple 语音→灵犀AI英语听说），避免旧例子
     // 继续播到尾。
     ref.read(ttsControllerProvider.notifier).stop();
     ref.read(ttsSettingsProvider.notifier).setEngine(value);
     if (value == TtsEngineKind.echoLoop) {
       final variant = ref.read(ttsSettingsProvider).kokoroVariant;
       ref.read(kokoroModelProvider.notifier).ensureDownloaded(variant);
-      // 切到 Echo Loop：立即预热各音色（与平台分支对称）。模型已就绪则即时开跑；
+      // 切到 灵犀AI英语听说：立即预热各音色（与平台分支对称）。模型已就绪则即时开跑；
       // 未就绪则此调用在 ready 门控提前返回，待下载完成 kokoroReady 翻转由
       // initState 的 listenManual 补触发——两条路径都覆盖，不留「已下载却不预热」空档。
       ref.read(ttsControllerProvider.notifier).prewarmVoicePreviews();
@@ -286,9 +286,9 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
   }
 }
 
-/// Echo Loop 模型选择列表：列出 fp32（高质量·推荐）/ int8（轻量）两个变体。
+/// 灵犀AI英语听说 模型选择列表：列出 fp32（高质量·推荐）/ int8（轻量）两个变体。
 ///
-/// 内嵌于 Echo Loop 归属卡（不包 Card）。每个变体可单选切换为「使用中」，点未下载变体
+/// 内嵌于 灵犀AI英语听说 归属卡（不包 Card）。每个变体可单选切换为「使用中」，点未下载变体
 /// 即下载并启用；非使用中的已下载变体可删除（正在用的不可删，对齐 ASR 约定）。
 class _ModelPicker extends ConsumerWidget {
   const _ModelPicker({required this.l10n, required this.theme});
@@ -626,7 +626,7 @@ String formatModelBytes(int bytes) {
 /// 音色「当前值 + 展开」单行：标题 + 当前音色（名称 · 性别）+ 雪佛龙；点开底部弹层选。
 ///
 /// 弹层按「美音 / 英音」分组列出全部 11 个音色。音色名自带口音，选中某音色即同时把
-/// 全局口音设为该音色的口音（见 [_openSheet]），故 Echo Loop 下无需单独的口音控件。
+/// 全局口音设为该音色的口音（见 [_openSheet]），故 灵犀AI英语听说 下无需单独的口音控件。
 class _VoiceDisclosure extends ConsumerWidget {
   const _VoiceDisclosure({required this.l10n});
 
@@ -1105,7 +1105,7 @@ class _PiperVoiceRow extends ConsumerWidget {
 /// 分组小标题。
 ///
 /// 与全局设置页（`settings_screen.dart` 的 `_buildSection`）保持一致：titleSmall +
-/// 品牌色 + 加粗。也用作「Echo Loop TTS」归属标题——点名其下子设置的所属引擎。
+/// 品牌色 + 加粗。也用作「灵犀AI英语听说 TTS」归属标题——点名其下子设置的所属引擎。
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.text, this.hint});
 

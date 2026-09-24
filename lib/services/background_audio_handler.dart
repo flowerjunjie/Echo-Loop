@@ -8,8 +8,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:just_audio/just_audio.dart' as ja;
 
 import '../utils/app_data_dir.dart';
+import '../../services/app_logger.dart';
 
-/// Echo Loop 全局后台播放控制器。
+/// 灵犀AI英语听说 全局后台播放控制器。
 ///
 /// 设计约束：
 /// 1. 系统媒体会话、锁屏/通知栏状态只认这一层；
@@ -199,7 +200,9 @@ class EchoLoopAudioHandler extends BaseAudioHandler with SeekHandler {
     if (player == null) return;
     try {
       if (player.playing) await player.pause();
-    } catch (_) {}
+    } catch (e) {
+    AppLogger.log('Cleanup', '$e');
+  }
   }
 
   /// 注册/清空后退、前进 N 秒回调（传 null 清空）。
@@ -282,8 +285,8 @@ class EchoLoopAudioHandler extends BaseAudioHandler with SeekHandler {
         id: id,
         title: title,
         // 系统播放控制面板副标题展示所属合集名（subtitle）；不再附加 album「Echo
-        // Loop」造成「合集 – Echo Loop」。无合集时回退显示 app 名「Echo Loop」。
-        artist: subtitle ?? 'Echo Loop',
+        // Loop」造成「合集 – 灵犀AI英语听说」。无合集时回退显示 app 名「灵犀AI英语听说」。
+        artist: subtitle ?? '灵犀AI英语听说',
         artUri: _artworkUri,
       ),
     );
@@ -454,7 +457,7 @@ Future<EchoLoopAudioHandler> initEchoLoopAudioHandler() async {
       builder: () => handler,
       config: AudioServiceConfig(
         androidNotificationChannelId: 'app.echoloop.audio',
-        androidNotificationChannelName: 'Echo Loop Playback',
+        androidNotificationChannelName: '灵犀AI英语听说 Playback',
         androidStopForegroundOnPause: false,
         // 通知 small icon：app logo 的白色剪影（Android 强制单色，彩色 logo 见封面图）。
         androidNotificationIcon: 'drawable/ic_stat_logo',

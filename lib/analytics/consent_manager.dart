@@ -19,8 +19,8 @@ class ConsentManager {
 
   /// 用户是否已同意数据采集
   ///
-  /// 本期默认 true（不弹窗），上线前改为默认 false + 弹窗。
-  bool get hasConsented => _prefs.getBool(_consentKey) ?? true;
+  /// 默认 false：未明确同意时不采集任何数据。
+  bool get hasConsented => _prefs.getBool(_consentKey) ?? false;
 
   /// 记录用户同意
   Future<void> grantConsent() async {

@@ -1,7 +1,7 @@
-/// 订阅身份：从 Supabase session 派生出权益对账所需的最小身份信息。
+/// 订阅身份：从认证 Session 派生出权益对账所需的最小身份信息。
 ///
-/// 把 [SubscriptionController] 与 Supabase 的 `Session` 类型解耦——controller 只依赖
-/// 这层轻量值对象，既符合「身份单一来源仍是 supabaseSessionProvider」，
+/// 把 [SubscriptionController] 与认证 Session 类型解耦——controller 只依赖
+/// 这层轻量值对象，既符合「身份单一来源仍是 authSessionProvider」，
 /// 又让 controller 可在测试中通过 override 本 provider 注入身份与切换事件，
 /// 无需构造完整 Session。
 library;
@@ -12,10 +12,10 @@ import '../../auth/providers/auth_providers.dart';
 
 /// 对账所需的用户身份快照。
 class SubscriptionIdentity {
-  /// Supabase user.id；匿名 / 未登录为 null。
+  /// 用户 ID；匿名 / 未登录为 null。
   final String? userId;
 
-  /// Supabase access token（用于后端鉴权）；未登录为 null。
+  /// Access token（用于后端鉴权）；未登录为 null。
   final String? accessToken;
 
   const SubscriptionIdentity({this.userId, this.accessToken});
@@ -37,12 +37,12 @@ class SubscriptionIdentity {
   int get hashCode => Object.hash(userId, accessToken);
 }
 
-/// 当前订阅身份（派生自 [supabaseSessionProvider]，身份单一来源不变）。
+/// 当前订阅身份（派生自 [authSessionProvider]，身份单一来源不变）。
 final subscriptionIdentityProvider = Provider<SubscriptionIdentity>((ref) {
-  final session = ref.watch(supabaseSessionProvider).valueOrNull;
-  if (session == null) return SubscriptionIdentity.anonymous;
+  final authResponse = ref.watch(authSessionProvider);
+  if (authResponse == null) return SubscriptionIdentity.anonymous;
   return SubscriptionIdentity(
-    userId: session.user.id,
-    accessToken: session.accessToken,
+    userId: authResponse.userId,
+    accessToken: authResponse.accessToken,
   );
 });

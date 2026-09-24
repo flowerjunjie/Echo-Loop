@@ -1,4 +1,4 @@
-/// Kokoro（Echo Loop TTS）模型下载、校验、缓存管理。
+/// Kokoro（灵犀AI英语听说 TTS）模型下载、校验、缓存管理。
 ///
 /// 与 Whisper 不同，Kokoro 含 `espeak-ng-data` 目录树，故托管为单个 `tar.gz`
 /// 归档：下载归档 → 校验整包 SHA-256 → 流式解包到模型目录 → 校验关键文件存在。
@@ -25,7 +25,11 @@ export '../asr/asr_model_manager.dart'
 export 'tts_engine.dart' show KokoroModelVariant;
 
 /// CDN 基础 URL。
-const _cdnBase = 'https://cdn.echo-loop.top';
+/// CDN 基础 URL，通过 --dart-define=MODEL_CDN_BASE_URL=https://xxx 注入。
+const _cdnBase = String.fromEnvironment(
+  'MODEL_CDN_BASE_URL',
+  defaultValue: 'https://echo-loop.top/model',
+);
 
 /// 默认（推荐）模型变体：fp32 未量化，速度/效果最佳。
 const kokoroDefaultVariant = KokoroModelVariant.fp32;
@@ -252,7 +256,9 @@ class KokoroModelManager {
       if (archiveFile.existsSync()) {
         try {
           await archiveFile.delete();
-        } catch (_) {}
+        } catch (e) {
+    AppLogger.log('TTS', '$e');
+  }
       }
     }
   }

@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod/riverpod.dart';
 
 import '../database/providers.dart';
 
@@ -31,7 +32,7 @@ class MonthDayRecord {
 /// 无记录的日期不在 map 中。
 @riverpod
 Future<Map<int, MonthDayRecord>> monthlyStudyRecords(
-  MonthlyStudyRecordsRef ref,
+  Ref ref,
   int year,
   int month,
 ) async {

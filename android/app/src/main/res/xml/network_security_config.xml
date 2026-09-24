@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 模型下载 CDN：允许 38.55.146.160 使用 HTTP -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">38.55.146.160</domain>
+    </domain-config>
+</network-security-config>

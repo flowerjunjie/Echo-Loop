@@ -7,7 +7,7 @@ part of 'lookup_controller.dart';
 // **************************************************************************
 
 String _$dictionaryLookupContextHash() =>
-    r'43f7097e39da82a4cf96c1f62fedbbea7a1e7fa1';
+    r'1309bcc026f4155762e69f77d18dfce2485c9b6c';
 
 /// 查词请求上下文（鉴权 + 目标语言），收敛为单一 provider 便于测试覆盖
 ///

@@ -19,7 +19,11 @@ import 'offline_asr_engine.dart';
 // ---------------------------------------------------------------------------
 
 /// CDN 基础 URL。
-const _cdnBase = 'https://cdn.echo-loop.top';
+/// CDN 基础 URL，通过 --dart-define=MODEL_CDN_BASE_URL=https://xxx 注入。
+const _cdnBase = String.fromEnvironment(
+  'MODEL_CDN_BASE_URL',
+  defaultValue: 'https://echo-loop.top/model',
+);
 
 /// 单个模型文件的固定元数据。
 class AsrModelFileSpec {
@@ -116,17 +120,17 @@ const _defaultModelFileRegistry = <String, AsrModelManifest>{
 final List<AsrModelInfo> availableModels = [
   const AsrModelInfo(
     id: 'whisper-tiny-en-int8',
-    displayName: 'Echo Loop AI (Fast)',
+    displayName: '灵犀AI (Fast)',
     type: AsrModelType.whisper,
   ),
   const AsrModelInfo(
     id: 'whisper-base-en-int8',
-    displayName: 'Echo Loop AI (Balanced)',
+    displayName: '灵犀AI (Balanced)',
     type: AsrModelType.whisper,
   ),
   const AsrModelInfo(
     id: 'whisper-small-en-int8',
-    displayName: 'Echo Loop AI (Accurate)',
+    displayName: '灵犀AI (Accurate)',
     type: AsrModelType.whisper,
   ),
 ];
@@ -384,13 +388,13 @@ class AsrModelManager {
 
   /// 清理不再可识别的旧模型目录。
   ///
-  /// 保留当前版本可选择的全部 Whisper 模型和共享 VAD；仅删除历史废弃目录。
+  /// 保留当前版本可选择的全部 Whisper 模型；VAD 模型已移除（native crash 面，
+  /// 见 §7.4），旧 silero-vad 目录允许被清理。
   Future<void> cleanupUnknownModels() async {
     final root = Directory(await _modelsRoot);
     if (!root.existsSync()) return;
 
     final knownModelIds = {
-      vadModelId,
       for (final model in availableModels) model.id,
     };
     await for (final entity in root.list()) {

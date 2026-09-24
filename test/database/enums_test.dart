@@ -1,3 +1,4 @@
+@TestOn('browser')
 /// 学习枚举测试
 ///
 /// 覆盖 `kRetellSubStages` 常量集合 / `isRetellSubStage` 工具函数 /

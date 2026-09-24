@@ -151,7 +151,6 @@ class _ToastOverlayState extends State<_ToastOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final theme = widget.theme;
 
     return Positioned(
       bottom: MediaQuery.of(context).viewInsets.bottom + 80,

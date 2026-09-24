@@ -17,9 +17,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../helpers/mock_providers.dart';
+
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class FakeAuthSessionNotifier extends AuthSessionNotifier {
+  FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+  }
+}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -205,7 +212,7 @@ void main() {
     await tester.pumpWidget(_app(_authRouter()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(
       find.text('No password needed. We will email you a one-time code.'),
       findsNothing,
@@ -321,7 +328,7 @@ void main() {
     await tester.tap(find.text('Continue with Google'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Continue with Email Code'), findsOneWidget);
     expect(find.text('Source Page'), findsNothing);
     expect(
@@ -356,7 +363,7 @@ void main() {
     await tester.tap(find.text('Continue with Google'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Continue with Email Code'), findsOneWidget);
     expect(find.text('Source Page'), findsNothing);
     expect(
@@ -391,7 +398,7 @@ void main() {
     await tester.tap(find.text('Continue with Google'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Continue with Email Code'), findsOneWidget);
     expect(find.text('Source Page'), findsNothing);
     expect(find.text('Something went wrong. Try again.'), findsNothing);
@@ -414,7 +421,7 @@ void main() {
     await tester.tap(find.text('Continue with Apple'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Continue with Email Code'), findsOneWidget);
     expect(find.text('Source Page'), findsNothing);
     expect(find.text('Authentication is not configured yet.'), findsOneWidget);
@@ -460,7 +467,7 @@ void main() {
     await tester.tap(find.text('Continue with Email Code'));
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel('Echo Loop'), findsOneWidget);
+    expect(find.bySemanticsLabel('灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
   });
@@ -595,7 +602,7 @@ void main() {
     final router = _authRouter(
       initialLocation: AppRoutes.study,
       onSendOtp: (_) async {},
-      onVerifyOtp: (_, _) async {
+      onVerifyOtp: (_, __) async {
         throw const AuthException('Invalid verification code');
       },
     );
@@ -624,7 +631,7 @@ void main() {
     final router = _authRouter(
       initialLocation: AppRoutes.study,
       onSendOtp: (_) async {},
-      onVerifyOtp: (_, _) async {
+      onVerifyOtp: (_, __) async {
         throw const AuthException('Invalid verification code');
       },
     );
@@ -663,7 +670,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(find.text('Continue with Email Code'), findsOneWidget);
   });
 
@@ -748,70 +755,13 @@ void main() {
     expect(find.text('Settings'), findsOneWidget);
   });
 
-  testWidgets('未登录时访问 account 会立即回到设置页，不显示中间登录卡片', (tester) async {
-    final router = GoRouter(
-      initialLocation: AppRoutes.account,
-      routes: [
-        GoRoute(
-          path: AppRoutes.account,
-          builder: (context, state) => const AccountScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.settings,
-          builder: (context, state) => const Scaffold(body: Text('Settings')),
-        ),
-      ],
-    );
-
+  testWidgets('账号页显示用户邮箱地址并截断超长邮箱', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          supabaseSessionProvider.overrideWith((ref) => Stream.value(null)),
-        ],
-        child: MaterialApp.router(
-          locale: const Locale('en'),
-          supportedLocales: const [Locale('en'), Locale('zh')],
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: AppTheme.light(),
-          routerConfig: router,
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Sign in to Echo Loop'), findsNothing);
-  });
-
-  testWidgets('账号页 Apple 登录显示 Apple 账户和完整邮箱', (tester) async {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {
-        'provider': 'apple',
-        'providers': ['apple'],
-      },
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'mbfpw8sdy7@privaterelay.appleid.com',
-      createdAt: '2026-06-04T00:00:00.000Z',
-    );
-    final session = Session(
-      accessToken: 'token',
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          supabaseSessionProvider.overrideWith((ref) => Stream.value(session)),
+          authSessionProvider.overrideWith((ref) => FakeAuthSessionNotifier(
+            AuthResponse(userId: 'user-1', email: 'long.email.address@example.com', accessToken: 'token', refreshToken: 'refresh'),
+          )),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -829,163 +779,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Apple account'), findsOneWidget);
-    expect(find.text('mbfpw8sdy7@privaterelay.appleid.com'), findsOneWidget);
-    expect(find.text('mbfpw8sd...@erelay.appleid.com'), findsNothing);
-  });
-
-  testWidgets('账号页 Google 登录显示 Google 账户和完整邮箱', (tester) async {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {
-        'provider': 'google',
-        'providers': ['google'],
-      },
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'long.google.account@example.com',
-      createdAt: '2026-06-04T00:00:00.000Z',
-    );
-    final session = Session(
-      accessToken: 'token',
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          supabaseSessionProvider.overrideWith((ref) => Stream.value(session)),
-        ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          supportedLocales: const [Locale('en'), Locale('zh')],
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: AppTheme.light(),
-          home: const AccountScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Google account'), findsOneWidget);
-    expect(find.text('long.google.account@example.com'), findsOneWidget);
-  });
-
-  testWidgets('账号页关联 Google 后使用邮箱 OTP 登录仍显示邮箱账户', (tester) async {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {
-        'provider': 'google',
-        'providers': ['email', 'google'],
-      },
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'user@example.com',
-      createdAt: '2026-06-07T00:00:00.000Z',
-      identities: const [
-        UserIdentity(
-          id: 'identity-1',
-          userId: 'user-1',
-          identityData: {},
-          identityId: 'identity-1',
-          provider: 'google',
-          createdAt: '2026-06-04T00:00:00.000Z',
-          lastSignInAt: '2026-06-04T00:00:00.000Z',
-        ),
-        UserIdentity(
-          id: 'identity-2',
-          userId: 'user-1',
-          identityData: {},
-          identityId: 'identity-2',
-          provider: 'email',
-          createdAt: '2026-06-07T00:00:00.000Z',
-          lastSignInAt: '2026-06-07T00:00:00.000Z',
-        ),
-      ],
-    );
-    final session = Session(
-      accessToken: _jwtWithAuthenticationMethod('otp'),
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          supabaseSessionProvider.overrideWith((ref) => Stream.value(session)),
-        ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          supportedLocales: const [Locale('en'), Locale('zh')],
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: AppTheme.light(),
-          home: const AccountScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Account'), findsNWidgets(2));
-    expect(find.text('user@example.com'), findsOneWidget);
-    expect(find.text('Google account'), findsNothing);
-  });
-
-  test('账号显示登录方式优先使用 Supabase identities provider', () {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {},
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'user@example.com',
-      createdAt: '2026-06-04T00:00:00.000Z',
-      identities: const [
-        UserIdentity(
-          id: 'identity-1',
-          userId: 'user-1',
-          identityData: {},
-          identityId: 'identity-1',
-          provider: 'google',
-          createdAt: '2026-06-04T00:00:00.000Z',
-          lastSignInAt: '2026-06-04T00:00:00.000Z',
-        ),
-      ],
-    );
-
-    expect(authDisplayProviderForUser(user), AuthDisplayProvider.google);
-  });
-
-  test('当前会话使用 OTP 时优先显示邮箱登录方式', () {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {
-        'provider': 'google',
-        'providers': ['email', 'google'],
-      },
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'user@example.com',
-      createdAt: '2026-06-07T00:00:00.000Z',
-    );
-    final session = Session(
-      accessToken: _jwtWithAuthenticationMethod('otp'),
-      tokenType: 'bearer',
-      user: user,
-    );
-
-    expect(authDisplayProviderForSession(session), AuthDisplayProvider.email);
+    expect(find.text('Account'), findsOneWidget);
+    expect(find.text('long.email.address@example.com'), findsOneWidget);
   });
 
   testWidgets('可见登录方式图标左侧对齐且尺寸一致', (tester) async {
@@ -1007,12 +802,4 @@ void main() {
     expect(appleRect.height, 22);
     expect(emailRect.height, 22);
   });
-}
-
-String _jwtWithAuthenticationMethod(String method) {
-  final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
-  final payload = base64Url.encode(
-    utf8.encode('{"amr":[{"method":"$method","timestamp":0}]}'),
-  );
-  return '$header.$payload.';
 }

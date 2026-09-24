@@ -21,6 +21,12 @@ class OpenAudioLearningPlan extends NotificationIntent {
   const OpenAudioLearningPlan(this.audioId);
 }
 
+/// 打开邀请裂变页（来自 deep link）
+class OpenInvitePage extends NotificationIntent {
+  final String inviteCode;
+  const OpenInvitePage(this.inviteCode);
+}
+
 /// 通知点击到路由层的桥接器
 ///
 /// 插件回调不在 Widget 上下文内，先写入桥接器，再由 UI 层消费并导航。

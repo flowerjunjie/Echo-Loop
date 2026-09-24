@@ -1,4 +1,4 @@
-/// Piper VITS TTS 引擎（Echo Loop TTS 平衡档，本地 sherpa-onnx 推理）。
+/// Piper VITS TTS 引擎（灵犀AI英语听说 TTS 平衡档，本地 sherpa-onnx 推理）。
 ///
 /// 实现 [TtsEngine] 契约，接入统一 TTS 管线（合成→文件→缓存→播放），上层
 /// 协调器/缓存/播放器零改动。Piper **始终产文件**（无实时朗读）：
@@ -17,7 +17,8 @@ import 'package:path/path.dart' as p;
 
 import '../app_logger.dart';
 import 'piper_model_manager.dart' show PiperModelPaths;
-import 'piper_synthesizer.dart';
+import 'piper_synthesizer.dart'
+    if (dart.library.html) 'piper_synthesizer_web_stub.dart';
 import 'piper_voices.dart';
 import 'tts_engine.dart';
 

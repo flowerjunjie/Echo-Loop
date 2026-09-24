@@ -204,15 +204,15 @@ void main() {
 
     await tester.tap(find.text('约 10 分钟'));
     await tester.pumpAndSettle(const Duration(milliseconds: 600));
-    final githubTile = find.ancestor(
-      of: find.text('GitHub'),
+    final douyinTile = find.ancestor(
+      of: find.text('抖音'),
       matching: find.byType(SurveyChoiceTile),
     );
-    final githubIcon = find.descendant(
-      of: githubTile,
+    final douyinIcon = find.descendant(
+      of: douyinTile,
       matching: find.byType(FaIcon),
     );
-    expect(tester.widget<FaIcon>(githubIcon).color, colors.onSurface);
+    expect(tester.widget<FaIcon>(douyinIcon).color, colors.onSurface);
 
     await tester.tap(find.text('朋友推荐'));
     await tester.pumpAndSettle(const Duration(milliseconds: 600));

@@ -46,7 +46,7 @@ void main() {
       );
     });
 
-    test('选 Echo Loop 但未就绪 → 仍使用 Echo Loop，不回退平台', () {
+    test('选 灵犀AI英语听说 但未就绪 → 仍使用 灵犀AI英语听说，不回退平台', () {
       expect(
         effectiveTtsEngine(
           TtsEngineKind.echoLoop,
@@ -57,7 +57,7 @@ void main() {
       );
     });
 
-    test('选 Echo Loop 且已就绪 → Echo Loop', () {
+    test('选 灵犀AI英语听说 且已就绪 → 灵犀AI英语听说', () {
       expect(
         effectiveTtsEngine(
           TtsEngineKind.echoLoop,
@@ -104,7 +104,7 @@ void main() {
       );
     }
 
-    test('选 Echo Loop 但未就绪 → 控制器后台触发 ensureDownloaded', () async {
+    test('选 灵犀AI英语听说 但未就绪 → 控制器后台触发 ensureDownloaded', () async {
       SharedPreferences.setMockInitialValues({});
       final notifier = _CountingKokoroNotifier(KokoroModelsState.initial());
       final c = makeContainer(
@@ -132,7 +132,7 @@ void main() {
       expect(notifier.ensureCount, 0);
     });
 
-    test('Echo Loop 已就绪 → 不重复触发下载', () async {
+    test('灵犀AI英语听说 已就绪 → 不重复触发下载', () async {
       SharedPreferences.setMockInitialValues({});
       final notifier = _CountingKokoroNotifier(
         const KokoroModelsState({

@@ -8,6 +8,7 @@ import '../../models/audio_item.dart' as model;
 import '../../models/collection.dart' as model;
 import '../../models/sentence.dart' as model;
 import '../../services/subtitle_parser.dart';
+import '../../services/app_logger.dart';
 import '../app_database.dart';
 
 /// SP → Drift 一次性迁移标记 key
@@ -71,7 +72,7 @@ class SpToDriftMigration {
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.map((j) => model.AudioItem.fromJson(j)).toList();
     } catch (e) {
-      print('迁移：读取 audio_library 失败: $e');
+      AppLogger.log('Migration', '迁移：读取 audio_library 失败: $e');
       return [];
     }
   }
@@ -86,7 +87,7 @@ class SpToDriftMigration {
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.cast<Map<String, dynamic>>();
     } catch (e) {
-      print('迁移：读取 collections 失败: $e');
+      AppLogger.log('Migration', '迁移：读取 collections 失败: $e');
       return [];
     }
   }
@@ -178,7 +179,7 @@ class SpToDriftMigration {
         final List<dynamic> list = json.decode(jsonString);
         indices = list.cast<int>().toSet();
       } catch (e) {
-        print('迁移：读取 bookmarks_${item.id} 失败: $e');
+        AppLogger.log('Migration', '迁移：读取 bookmarks_${item.id} 失败: $e');
         continue;
       }
 
@@ -193,7 +194,7 @@ class SpToDriftMigration {
           final sentences = await _subtitleLoader(item.transcriptPath!);
           sentenceMap = {for (final s in sentences) s.index: s};
         } catch (e) {
-          print('迁移：解析字幕失败 (${item.name}): $e');
+          AppLogger.log('Migration', '迁移：解析字幕失败 (${item.name}): $e');
         }
       }
 
@@ -243,7 +244,7 @@ class SpToDriftMigration {
           ),
         );
       } catch (e) {
-        print('迁移：读取 playback_state_${item.id} 失败: $e');
+        AppLogger.log('Migration', '迁移：读取 playback_state_${item.id} 失败: $e');
       }
     }
   }

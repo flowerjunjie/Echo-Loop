@@ -27,7 +27,12 @@ export '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
 
 /// CDN 基础 URL（与 Kokoro 一致）。
-const _cdnBase = 'https://cdn.echo-loop.top';
+/// CDN 基础 URL，通过 --dart-define=MODEL_CDN_BASE_URL=https://xxx 注入。
+/// 未注入时 fallback 到开发环境 IP，生产构建必须替换为 HTTPS 域名。
+const _cdnBase = String.fromEnvironment(
+  'MODEL_CDN_BASE_URL',
+  defaultValue: 'https://echo-loop.top/model',
+);
 
 /// 解包后必须存在的关键文件名（在模型目录下递归定位）。
 const _piperTokensFile = 'tokens.txt';
@@ -192,7 +197,9 @@ class PiperModelManager {
       if (archiveFile.existsSync()) {
         try {
           await archiveFile.delete();
-        } catch (_) {}
+        } catch (e) {
+    AppLogger.log('TTS', '$e');
+  }
       }
     }
   }

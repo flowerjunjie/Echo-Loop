@@ -1,0 +1,30 @@
+# 更新 TASKS.md
+
+## 最新提交
+- b25d8513 fix: Web版学习流程修复 — 认证 + 音频库 + 详情页路由
+- 8b2fcad1 fix: 更新注释中的API路径描述
+- 8d3e734c docs: 更新TASKS.md记录激活码API修复 + 修复Landing APK下载链接
+
+## 本次修复详情
+
+### 问题
+Web版无法完成学习流程
+
+### 根因（三层）
+1. **数据层**: `AudioItemDaoStub` 返回空列表 → Web版无音频可学
+2. **认证层**: `WebAsrService` 无 Token → 转录请求 401 Unauthorized
+3. **路由层**: 缺少 `/audio/:id` 路由 → 合集点击音频 404 Not Found
+
+### 修复
+1. ✅ AudioItemDaoStub → AudioItemDaoWebImpl (lib/database/providers_web.dart +296/-32)
+2. ✅ WebAsrService 添加 Token 拦截器 (lib/services/web/web_asr_service.dart +24/-10)
+3. ✅ Provider 传递 session?.accessToken (lib/services/speech_practice_platform.dart +10/-3)
+4. ✅ 新建音频详情页 (lib/screens/audio_detail_screen.dart 400行)
+5. ✅ 注册 /audio/:id 路由 (lib/router/web_router.dart +9)
+
+### 状态
+- 代码已提交
+- 待构建部署（Flutter SDK 版本不匹配，需下载新版）
+
+### 构建指南
+见 docs/WEB_BUILD_INSTRUCTIONS.md

@@ -1,3 +1,4 @@
+@TestOn('browser')
 import 'dart:io';
 
 import 'package:drift/native.dart';

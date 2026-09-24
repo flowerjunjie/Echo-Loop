@@ -18,6 +18,7 @@ import '../database/providers.dart';
 import '../l10n/app_localizations.dart';
 import '../models/audio_item.dart';
 import '../providers/audio_library_provider.dart';
+import '../services/app_logger.dart';
 import '../services/audio_export_service.dart';
 import '../widgets/dialogs/export_audio_dialog.dart';
 import '../widgets/manage_subtitles_sheet.dart';
@@ -111,7 +112,9 @@ Future<void> exportAudioItem(
       if (tempTranscriptFile != null) {
         try {
           await tempTranscriptFile.delete();
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.log('AudioActions', '清理临时字幕文件失败: $e');
+        }
       }
     }
 
@@ -153,7 +156,9 @@ Future<void> exportAudioItem(
     // 5. 清理临时文件
     try {
       await File(exportPath).delete();
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.log('AudioActions', '清理导出临时文件失败: $e');
+    }
   } catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(

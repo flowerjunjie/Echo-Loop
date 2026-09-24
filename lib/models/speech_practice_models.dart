@@ -151,7 +151,14 @@ class SpeechPracticeStopResult {
   /// 临时录音文件路径。
   final String? filePath;
 
-  const SpeechPracticeStopResult({this.filePath});
+  /// Web 端直接返回的转录文本（非 null 时跳过文件路径依赖）。
+  ///
+  /// Web 平台无法写本地文件，转录结果通过 [WebAsrService] 直接返回，
+  /// 由 [SpeechPracticeStopResult.transcriptText] 携带到上层，
+  /// 避免 _doTranscribe 因 filePath == null 直接 return。
+  final String? transcriptText;
+
+  const SpeechPracticeStopResult({this.filePath, this.transcriptText});
 }
 
 /// 文本比对结果。

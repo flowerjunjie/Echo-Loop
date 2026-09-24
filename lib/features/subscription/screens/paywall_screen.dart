@@ -13,9 +13,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../router/app_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../analytics/analytics_providers.dart';
+import '../../../analytics/models/event_names.dart';
 import '../../../config/revenuecat_config.dart';
 import '../../../config/web_purchase_config.dart';
 import '../../../l10n/app_localizations.dart';
@@ -33,8 +36,19 @@ import '../utils/member_status.dart';
 import '../utils/plan_pricing.dart';
 
 /// 订阅计划介绍 + 购买页。
+///
+/// 标准移动订阅页：权益列表 + 平台本地化价格套餐 + 试用披露 + 自动续费披露 +
+/// 恢复购买 + 条款/隐私链接 + 管理订阅。查看无需登录；购买 / 恢复前统一走
+/// [ensureSignedInForAction] 要求登录（权益绑定 Supabase user_id）。
+///
+/// UI 只依赖 [SubscriptionPlan] DTO 与 [featureAccessProvider] 风格的状态读取，
+/// 不接触 RevenueCat 类型；购买 / 恢复经 [SubscriptionController] 集中入口。
 class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key});
+  /// 付费墙来源标识，用于埋点区分入口。
+  /// 可选值：'quota_exceeded'（额度超限）| 'upgrade_tapped'（手动升级）| 'subscription_screen'（订阅页）
+  final String source;
+
+  const PaywallScreen({super.key, this.source = 'subscription_screen'});
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -58,6 +72,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       if (!mounted) return;
       unawaited(
         ref.read(subscriptionPlansProvider.notifier).refresh(force: true),
+      );
+      // 上报付费墙展示事件（带来源参数）
+      ref.read(analyticsServiceProvider).track(
+        Events.paywallViewed,
+        {EventParams.paywallSource: widget.source},
       );
     });
   }
@@ -292,6 +311,42 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
             const SizedBox(height: 2),
             _LegalFooter(l10n: l10n),
+            const SizedBox(height: 8),
+            // 邀请裂变入口
+            TextButton(
+              onPressed: () => context.push(AppRoutes.invite),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.card_giftcard, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.inviteTitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            // 激活码入口
+            TextButton(
+              onPressed: () => context.push(AppRoutes.activationCode),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.key, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.activationTitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         );
       },
@@ -484,21 +539,54 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _purchase(SubscriptionPlan plan) async {
     // 购买前强制登录：权益需绑定 Supabase user_id（跨设备 / 可恢复）。
     if (!await _ensureSignedIn() || !mounted) return;
+    // 上报购买开始事件
+    ref.read(analyticsServiceProvider).track(Events.purchaseStarted);
     setState(() => _busy = true);
     try {
       await ref
           .read(subscriptionControllerProvider.notifier)
           .purchase(plan.planId);
       if (mounted && ref.read(subscriptionControllerProvider).isActive) {
+        // 上报购买成功（含套餐信息）
+        // 从价格字符串中提取金额和币种（简单解析，格式通常为 "$12.99"）
+        final priceMatch = RegExp(r'([\$€£])(\d+\.?\d*)').firstMatch(
+          plan.priceString,
+        );
+        final currency = priceMatch?.group(1) ?? 'CNY';
+        final amount = priceMatch?.group(2) ?? plan.priceString;
+        ref.read(analyticsServiceProvider).track(
+          Events.purchaseCompleted,
+          {
+            EventParams.planId: plan.planId,
+            EventParams.amount: amount,
+            EventParams.currency: currency,
+          },
+        );
         context.pop();
       }
     } on PurchaseException catch (e) {
-      if (!e.cancelled && mounted) {
-        _showMessage(AppLocalizations.of(context)!.premiumPurchaseFailed);
+      if (e.cancelled) {
+        // 用户主动取消，不上报错误
+        return;
       }
-    } catch (_) {
       if (mounted) {
-        _showMessage(AppLocalizations.of(context)!.premiumPurchaseFailed);
+        final l10n = AppLocalizations.of(context)!;
+        _showMessage(l10n.premiumPurchaseFailed);
+        // 上报购买失败（含错误描述）
+        ref.read(analyticsServiceProvider).track(
+          Events.purchaseFailed,
+          {EventParams.errorCode: e.message},
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        _showMessage(l10n.premiumPurchaseFailed);
+        // 上报购买失败
+        ref.read(analyticsServiceProvider).track(
+          Events.purchaseFailed,
+          {EventParams.errorCode: 'unexpected_error'},
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -545,7 +633,7 @@ class _Header extends StatelessWidget {
     final theme = Theme.of(context);
     return Column(
       children: [
-        // 顶部使用 Echo Loop 品牌 logo，较皇冠图标更贴近应用识别。
+        // 顶部使用 灵犀AI英语听说 品牌 logo，较皇冠图标更贴近应用识别。
         Container(
           width: 80,
           height: 80,
@@ -1254,13 +1342,13 @@ class _LegalFooter extends StatelessWidget {
         TextButton(
           style: buttonStyle,
           onPressed: () =>
-              launchUrl(Uri.parse('https://www.echo-loop.top/terms')),
+              launchUrl(Uri.parse('termsUrl')),
           child: Text(l10n.premiumTermsShort, style: style),
         ),
         TextButton(
           style: buttonStyle,
           onPressed: () =>
-              launchUrl(Uri.parse('https://www.echo-loop.top/privacy')),
+              launchUrl(Uri.parse('privacyUrl')),
           child: Text(l10n.premiumPrivacyShort, style: style),
         ),
       ],

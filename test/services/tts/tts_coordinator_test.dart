@@ -349,7 +349,7 @@ void main() {
       verify(() => player.playFileToEnd('/tmp/out.wav')).called(1);
     });
 
-    test('当前为平台引擎时，speakWith Echo Loop 会切到 Echo Loop 引擎合成', () async {
+    test('当前为平台引擎时，speakWith 灵犀AI英语听说 会切到 灵犀AI英语听说 引擎合成', () async {
       final platformEngine = MockTtsEngine();
       final echoEngine = MockTtsEngine();
       _stubEngine(platformEngine, filePath: '/tmp/platform.wav');

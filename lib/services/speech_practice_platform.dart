@@ -9,8 +9,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/speech_practice_models.dart';
+import '../features/auth/providers/auth_providers.dart';
 import '../providers/asr_engine_provider.dart';
 import '../providers/offline_asr_settings_provider.dart';
+// 条件导入：Web 平台使用真实实现，非 Web 平台（含测试）使用 stub。
+// 避免 dart:js_interop 被带入 VM 测试导致编译失败。
+import '../services/web/web_audio_recorder_stub.dart'
+    if (dart.library.html) '../services/web/web_audio_recorder.dart';
+import '../services/web/web_asr_service_stub.dart'
+    if (dart.library.html) '../services/web/web_asr_service.dart';
 import 'app_logger.dart';
 import 'asr/offline_asr_backend.dart';
 
@@ -24,6 +31,12 @@ import 'asr/offline_asr_backend.dart';
 /// - Echo Loop AI + 引擎就绪 → OfflineAsrBackend（离线转录）
 /// - Echo Loop AI + 引擎未就绪 → 平台后端（降级为纯录音）
 final speechPracticeBackendProvider = Provider<SpeechPracticeBackend>((ref) {
+  // Web平台使用Web后端
+  if (kIsWeb) {
+    final session = ref.watch(authSessionProvider);
+    return WebSpeechPracticeBackend(token: session?.accessToken);
+  }
+
   final s = ref.watch(offlineAsrSettingsProvider);
   final platform = SpeechPracticePlatform.instance;
 
@@ -331,5 +344,114 @@ class SpeechPracticePlatform implements SpeechPracticeBackend {
       'restricted' => SpeechPracticePermissionStatus.restricted,
       _ => SpeechPracticePermissionStatus.notDetermined,
     };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Web平台录音识别后端
+// ---------------------------------------------------------------------------
+
+/// Web平台录音识别后端
+///
+/// 使用Web Audio API + MediaRecorder进行录音，
+/// 通过echo-transcribe后端API进行转录。
+/// Web 平台录音识别后端
+///
+/// 使用 [WebAudioRecorderImpl] 录音（MediaRecorder API），
+/// 通过 [WebAsrService] 将 Base64 音频发送到 echo-transcribe 后端转录。
+/// 转录结果通过 [SpeechPracticeStopResult.transcriptText] 直接返回，
+/// 无需写本地文件。
+class WebSpeechPracticeBackend implements SpeechPracticeBackend {
+  WebSpeechPracticeBackend({String? token}) {
+    _transcriber = WebAsrService();
+  }
+
+  late final WebAsrService _transcriber;
+  final _recorder = WebAudioRecorderImpl();
+
+  @override
+  bool get isSupported => kIsWeb;
+
+  @override
+  Future<SpeechPracticePermissionState> getPermissionStatus() async {
+    return const SpeechPracticePermissionState();
+  }
+
+  @override
+  Future<SpeechPracticePermissionState> requestPermissions({
+    bool onlyMic = false,
+  }) async {
+    return getPermissionStatus();
+  }
+
+  @override
+  Stream<SpeechPracticeEvent> get events => const Stream.empty();
+
+  @override
+  Future<int> getDeviceRamBytes() async => 0;
+
+  @override
+  Future<void> setRecognitionEnabled(bool enabled) async {}
+
+  @override
+  Future<void> warmup({String locale = 'en-US'}) async {}
+
+  /// 开始录音会话（必须在用户手势上下文中调用）
+  ///
+  /// 请求麦克风权限并启动 MediaRecorder。
+  /// 返回固定 promptId 用于追踪会话。
+  @override
+  Future<String> startSession({
+    required String promptId,
+    String locale = 'en-US',
+  }) async {
+    try {
+      await _recorder.start();
+      AppLogger.log('WebBackend', '● startSession promptId=$promptId');
+    } catch (e) {
+      AppLogger.log('WebBackend', '✗ startSession 失败: $e');
+    }
+    return promptId;
+  }
+
+  /// 停止录音并转录
+  ///
+  /// 停止 MediaRecorder → 获取 Base64 音频 → 调用 WebAsrService 转录。
+  /// 转录文本通过 [SpeechPracticeStopResult.transcriptText] 返回，
+  /// 绕过 filePath 依赖，让 _doTranscribe 不走空结果分支。
+  @override
+  Future<SpeechPracticeStopResult> stopSession() async {
+    try {
+      final base64 = await _recorder.stopAsBase64();
+      if (base64.isEmpty) {
+        AppLogger.log('WebBackend', '⚠ stopSession 无音频数据');
+        return const SpeechPracticeStopResult(filePath: null);
+      }
+      final result = await _transcriber.transcribe(audioBase64: base64);
+      AppLogger.log(
+        'WebBackend',
+        '● stopSession text="${result.text}" duration=${result.durationMs}ms',
+      );
+      return SpeechPracticeStopResult(
+        filePath: null,
+        transcriptText: result.text,
+      );
+    } catch (e) {
+      AppLogger.log('WebBackend', '✗ stopSession 转录失败: $e');
+      return const SpeechPracticeStopResult(filePath: null);
+    }
+  }
+
+  @override
+  Future<void> cancelSession() async {
+    await _recorder.cancel();
+  }
+
+  @override
+  Future<void> deleteRecording(String filePath) async {}
+
+  @override
+  Future<void> shutdown() async {
+    await _recorder.cancel();
   }
 }

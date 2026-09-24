@@ -103,7 +103,7 @@ Future<void> showRetellBriefingSheet({
           pauseMultiplier: pauseMultiplier,
         ),
     defaultKeywordRatio: defaultKeywordRatio,
-    onStartPractice: (_, _, _) {},
+    onStartPractice: (x, y, z) {},
     onStartPracticeWithPlaybackSpeed:
         (targetDuration, pause, keywordRatio, playbackSpeed) {
           onStartPractice(targetDuration, pause, keywordRatio, playbackSpeed);

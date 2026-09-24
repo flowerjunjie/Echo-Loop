@@ -157,6 +157,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
   Timer? _transcriptStaleTimer;
 
   // ── 内部状态 ──
+  bool _disposed = false;
   bool _isStopping = false;
   bool _hasDetectedSpeech = false;
   String? _lastKnownTranscript;
@@ -194,6 +195,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
       onStateChange: _handleAppLifecycleChange,
     );
     ref.onDispose(() {
+      _disposed = true;
       lifecycleListener.dispose();
       _cancelAllTimers();
       _eventSub?.cancel();
@@ -238,6 +240,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     required String referenceText,
     Duration? referenceDuration,
   }) async {
+    if (_disposed) return;
     final backend = ref.read(speechPracticeBackendProvider);
     if (state.promptId == promptId && state.isActive) {
       AppLogger.log('RetellRec', '⏭ startRecording 跳过: 已在录音中 ($promptId)');
@@ -349,6 +352,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
 
   /// 取消当前录音
   Future<void> cancelActiveRecording() async {
+    if (_disposed) return;
     if (!_recordingService.isRecording) return;
 
     _cancelAllTimers();

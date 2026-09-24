@@ -86,21 +86,21 @@ void main() {
     localSizeBytes: 1024,
   );
 
-  testWidgets('渲染引擎与口音两组单选，Echo Loop 现为可选项', (tester) async {
+  testWidgets('渲染引擎与口音两组单选，灵犀AI英语听说 现为可选项', (tester) async {
     await tester.pumpWidget(_wrap(const TtsSettings()));
     await tester.pumpAndSettle();
 
     // 平台引擎显示名随宿主而变（Apple → Apple AI，其余 → System Speech）。
     expect(find.text(_platformEngineLabel), findsOneWidget);
-    // Echo Loop 现拆为两档可选：Balanced(Piper) / Advanced(Kokoro)。
-    expect(find.text('Echo Loop AI (Balanced)'), findsOneWidget);
-    expect(find.text('Echo Loop AI (Advanced)'), findsOneWidget);
+    // 灵犀AI英语听说 现拆为两档可选：Balanced(Piper) / Advanced(Kokoro)。
+    expect(find.text('灵犀AI英语听说 AI (Balanced)'), findsOneWidget);
+    expect(find.text('灵犀AI英语听说 AI (Advanced)'), findsOneWidget);
     expect(find.textContaining('Best sound quality'), findsOneWidget);
     expect(find.text('American'), findsOneWidget);
     expect(find.text('British'), findsOneWidget);
   });
 
-  testWidgets('选 Echo Loop → engine 更新为 echoLoop 且触发 ensureDownloaded', (
+  testWidgets('选 灵犀AI英语听说 → engine 更新为 echoLoop 且触发 ensureDownloaded', (
     tester,
   ) async {
     final notifier = _TestKokoroNotifier(const KokoroModelsState({}));
@@ -108,7 +108,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // echoLoop = Advanced 档（Kokoro）。
-    await tester.tap(find.text('Echo Loop AI (Advanced)'));
+    await tester.tap(find.text('灵犀AI英语听说 AI (Advanced)'));
     await tester.pumpAndSettle();
 
     expect(
@@ -118,7 +118,7 @@ void main() {
     expect(notifier.ensured, contains(KokoroModelVariant.fp32));
   });
 
-  testWidgets('Echo Loop → 显示两个模型变体（高质量带推荐徽标 / 轻量）', (tester) async {
+  testWidgets('灵犀AI英语听说 → 显示两个模型变体（高质量带推荐徽标 / 轻量）', (tester) async {
     await tester.pumpWidget(
       _wrap(const TtsSettings(engine: TtsEngineKind.echoLoop)),
     );
@@ -239,7 +239,7 @@ void main() {
     expect(find.text('American · Sarah · Female'), findsOneWidget);
     // 使用中（fp32 选中）不显删除（不删正在用的语音）；int8 未下载也无删除。
     expect(find.byTooltip('Delete model'), findsNothing);
-    // Echo Loop 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
+    // 灵犀AI英语听说 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
     expect(find.byType(Radio<String>), findsNothing);
     expect(find.text('American'), findsNothing);
     expect(find.text('British'), findsNothing);

@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵犀AI · 内容营销运营工具</title>
+<style>
+:root {
+  --bg: #06070d;
+  --surface: #0c0e17;
+  --surface2: #111420;
+  --card: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.12);
+  --text: #e8e8f0;
+  --text-s: #8888a8;
+  --text-m: #55556a;
+  --a: #3b82f6;
+  --b: #8b5cf6;
+  --pink: #ec4899;
+  --green: #22c55e;
+  --orange: #f97316;
+  --cyan: #06b6d4;
+  --gl-a: rgba(59,130,246,0.25);
+  --gl-b: rgba(139,92,246,0.25);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+  min-height: 100vh; overflow-x: hidden;
+}
+
+/* nav */
+.topbar {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  height: 56px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; background: rgba(6,7,13,0.85);
+  backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1rem; }
+.brand-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--a), var(--b));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900;
+}
+.tabs { display: flex; gap: 4px; }
+.tab {
+  padding: 7px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;
+  color: var(--text-s); cursor: pointer; transition: all 0.2s;
+  border: 1px solid transparent; background: transparent;
+}
+.tab:hover { color: var(--text); background: var(--card); }
+.tab.active { color: white; background: linear-gradient(135deg, var(--a), var(--b)); border-color: transparent; }
+
+/* layout */
+.main { padding-top: 72px; padding-bottom: 40px; max-width: 1280px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* cards */
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 16px;
+}
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-title { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.card-sub { font-size: 0.78rem; color: var(--text-m); margin-top: 2px; }
+
+/* stat grid */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--a), var(--b));
+}
+.stat-card.green::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.stat-card.orange::before { background: linear-gradient(90deg, var(--orange), var(--pink)); }
+.stat-card.pink::before { background: linear-gradient(90deg, var(--pink), var(--b)); }
+.stat-label { font-size: 0.75rem; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-value { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+.stat-change { font-size: 0.75rem; margin-top: 4px; }
+.stat-change.up { color: var(--green); }
+.stat-change.down { color: var(--pink); }
+
+/* calendar */
+.cal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cal-nav-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.cal-nav-btn:hover { background: var(--surface2); border-color: var(--border-hi); }
+.cal-month { font-size: 1rem; font-weight: 700; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-header {
+  text-align: center; font-size: 0.7rem; color: var(--text-m);
+  padding: 6px 0; font-weight: 600; text-transform: uppercase;
+}
+.cal-day {
+  aspect-ratio: 1; border-radius: var(--radius-sm); padding: 4px;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; transition: all 0.15s; min-height: 72px;
+  position: relative; overflow: hidden;
+}
+.cal-day:hover { border-color: var(--border-hi); background: var(--surface2); }
+.cal-day.today { border-color: var(--a); box-shadow: 0 0 12px var(--gl-a); }
+.cal-day.other-month { opacity: 0.3; }
+.cal-day-num { font-size: 0.72rem; font-weight: 600; color: var(--text-s); margin-bottom: 2px; }
+.cal-event {
+  font-size: 0.6rem; padding: 1px 4px; border-radius: 3px;
+  margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 500;
+}
+.cal-event.red { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.cal-event.blue { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.cal-event.green { background: rgba(34,197,94,0.2); color: #86efac; }
+.cal-event.purple { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+.cal-event.orange { background: rgba(249,115,22,0.2); color: #fdba74; }
+.cal-event.cyan { background: rgba(6,182,212,0.2); color: #67e8f9; }
+.cal-dot { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 2px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* event list in day detail */
+.day-detail { margin-top: 16px; padding: 16px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.day-detail-title { font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; }
+.day-event-item {
+  display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px;
+  margin-bottom: 4px; font-size: 0.82rem; cursor: pointer; transition: background 0.15s;
+}
+.day-event-item:hover { background: var(--card); }
+.day-event-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+/* copyable textarea */
+.copy-box {
+  width: 100%; min-height: 120px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px; color: var(--text); font-size: 0.85rem;
+  resize: vertical; font-family: inherit; line-height: 1.5;
+}
+.copy-box:focus { outline: none; border-color: var(--a); }
+
+/* buttons */
+.btn {
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text);
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border-hi); }
+.btn-primary { background: linear-gradient(135deg, var(--a), var(--b)); border-color: transparent; color: white; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+.btn-success { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text-s); }
+
+/* tags */
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 0.7rem; font-weight: 600;
+}
+.tag-xs { padding: 1px 6px; font-size: 0.65rem; }
+.tag-red { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.tag-blue { background: rgba(59,130,246,0.15); color: #93c5fd; }
+.tag-green { background: rgba(34,197,94,0.15); color: #86efac; }
+.tag-purple { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+.tag-orange { background: rgba(249,115,22,0.15); color: #fdba74; }
+
+/* copycard */
+.copycard-preview {
+  width: 100%; max-width: 380px; aspect-ratio: 3/4; border-radius: 16px;
+  background: linear-gradient(160deg, #0d0f1a 0%, #1a1030 50%, #0d1525 100%);
+  border: 1px solid var(--border); overflow: hidden; position: relative;
+  margin: 0 auto 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.copycard-preview .cc-topbar {
+  display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px;
+}
+.cc-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--a), var(--b));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.cc-name { font-size: 0.78rem; font-weight: 700; }
+.cc-platform { font-size: 0.65rem; color: var(--text-m); margin-left: auto; }
+.cc-body { padding: 8px 16px; }
+.cc-text { font-size: 0.82rem; line-height: 1.7; color: rgba(255,255,255,0.88); white-space: pre-wrap; }
+.cc-img-area { margin: 12px 16px; border-radius: 10px; overflow: hidden; background: var(--surface2); }
+.cc-img-area img { width: 100%; display: block; }
+.cc-placeholder { height: 140px; display: flex; align-items: center; justify-content: center; color: var(--text-m); font-size: 0.78rem; }
+.cc-footer { padding: 12px 16px 16px; }
+.cc-url { font-size: 0.72rem; color: var(--a); word-break: break-all; }
+.cc-hashtags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.cc-tag { padding: 2px 8px; border-radius: 10px; background: rgba(59,130,246,0.15); color: #93c5fd; font-size: 0.68rem; }
+.cc-watermark { position: absolute; bottom: 10px; right: 14px; font-size: 0.6rem; color: rgba(255,255,255,0.2); }
+
+/* form elements */
+.form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 140px; }
+.form-label { display: block; font-size: 0.75rem; color: var(--text-s); margin-bottom: 4px; font-weight: 600; }
+.form-select, .form-input {
+  width: 100%; padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+  font-size: 0.85rem; font-family: inherit;
+}
+.form-select:focus, .form-input:focus { outline: none; border-color: var(--a); }
+.form-select option { background: var(--surface); }
+
+/* tab sub-navigation */
+.sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.sub-tab {
+  padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+  color: var(--text-s); cursor: pointer; border: 1px solid var(--border);
+  background: transparent; transition: all 0.2s;
+}
+.sub-tab:hover { color: var(--text); background: var(--card); }
+.sub-tab.active { color: white; background: linear-gradient(135deg, var(--b), var(--pink)); border-color: transparent; }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--surface2); border: 1px solid var(--green); color: var(--green);
+  padding: 10px 20px; border-radius: 24px; font-size: 0.85rem; font-weight: 600;
+  z-index: 999; transition: transform 0.3s ease; pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* chart */
+.mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 8px; }
+.mini-bar {
+  flex: 1; border-radius: 2px 2px 0 0; min-height: 2px;
+  background: linear-gradient(to top, var(--a), var(--b));
+  transition: height 0.4s ease;
+}
+.mini-bar.green { background: linear-gradient(to top, var(--green), var(--cyan)); }
+
+/* referral table */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.ref-table th {
+  text-align: left; padding: 8px 12px; font-size: 0.72rem;
+  color: var(--text-m); text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border); font-weight: 600;
+}
+.ref-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.ref-table tr:hover td { background: var(--card); }
+.progress-bar-bg { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; min-width: 80px; }
+.progress-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--a), var(--b)); }
+
+/* responsive */
+@media (max-width: 640px) {
+  .topbar { padding: 0 12px; }
+  .tab { padding: 6px 10px; font-size: 0.78rem; }
+  .main { padding-left: 10px; padding-right: 10px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .cal-day { min-height: 56px; }
+  .cal-event { font-size: 0.55rem; }
+}
+
+/* scroll bar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-logo">灵</div>
+    <span>内容运营工具</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-page="calendar">📅 内容日历</button>
+    <button class="tab" data-page="share">🎨 分享卡片</button>
+    <button class="tab" data-page="dashboard">📊 数据看板</button>
+    <button class="tab" data-page="referral">🔗 裂变追踪</button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ==================== CALENDAR PAGE ==================== -->
+<div id="page-calendar" class="page active">
+  <div class="stats" id="cal-stats"></div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div>
+        <div class="card-title">30天内容排期</div>
+        <div class="card-sub">根据《30天社交媒体内容日历》生成，点击日期查看详情</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="cal-month-select" class="form-select" style="width:auto;padding:5px 10px;font-size:0.8rem;">
+          <option value="0">本月</option>
+          <option value="1">下月</option>
+          <option value="-1">上月</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="exportCalendar()">📥 导出排期</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div id="day-detail" class="day-detail" style="display:none;"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:0.72rem;color:var(--text-m);">图例：</span>
+      <span><span class="tag tag-red">小红书</span></span>
+      <span><span class="tag tag-blue">朋友圈</span></span>
+      <span><span class="tag tag-green">抖音</span></span>
+      <span><span class="tag tag-purple">公众号</span></span>
+      <span><span class="tag tag-orange">知乎</span></span>
+      <span><span class="tag tag-cyan" style="background:rgba(6,182,212,0.15);color:#67e8f9;">全平台</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">文案素材库</div><div class="card-sub">来自《全渠道文案库》</div></div>
+    <div class="sub-tabs" id="copy-tabs"></div>
+    <div id="copy-content"></div>
+  </div>
+</div>
+
+<!-- ==================== SHARE CARD PAGE ==================== -->
+<div id="page-share" class="page">
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:16px;">
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">一键生成分享卡片</div>
+            <div class="card-sub">选择文案模板，自动生成适合各平台的分享卡片</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">平台</label>
+            <select id="card-platform" class="form-select" onchange="onCardPlatformChange()">
+              <option value="wechat">微信朋友圈</option>
+              <option value="xiaohongshu">小红书</option>
+              <option value="douyin">抖音</option>
+              <option value="zhihu">知乎</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">文案类型</label>
+            <select id="card-template" class="form-select" onchange="updateCardPreview()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">链接</label>
+            <input id="card-url" class="form-input" value="http://38.55.146.160:8100" oninput="updateCardPreview()">
+          </div>
+        </div>
+        <div class="form-row" id="card-hashtag-row" style="display:none;">
+          <div class="form-group" style="flex:3;">
+            <label class="form-label">话题标签（空格分隔）</label>
+            <input id="card-hashtags" class="form-input" placeholder="#英语学习 #AI工具" oninput="updateCardPreview()">
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="copyCardText()">📋 复制文案</button>
+          <button class="btn btn-ghost" onclick="downloadCard()" style="margin-left:8px;">💾 下载卡片图片</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><div class="card-title">快速文案模板</div></div>
+        <div id="quick-templates"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="position:sticky;top:72px;">
+        <div class="card-title" style="margin-bottom:12px;">卡片预览</div>
+        <div class="copycard-preview" id="card-preview">
+          <div class="cc-topbar">
+            <div class="cc-avatar">灵</div>
+            <div class="cc-name">灵犀AI英语听说</div>
+            <div class="cc-platform" id="cc-platform-label">朋友圈</div>
+          </div>
+          <div class="cc-body">
+            <div class="cc-text" id="cc-text">选择模板开始预览...</div>
+          </div>
+          <div class="cc-img-area" id="cc-img-area">
+            <div class="cc-placeholder">📸 产品截图区</div>
+          </div>
+          <div class="cc-footer">
+            <div class="cc-url" id="cc-url">http://38.55.146.160:8100</div>
+            <div class="cc-hashtags" id="cc-hashtags"></div>
+          </div>
+          <div class="cc-watermark">灵犀AI英语听说</div>
+        </div>
+        <div style="text-align:center;margin-top:12px;">
+          <button class="btn btn-success btn-sm" onclick="showScreenshotPicker()">🖼️ 切换截图</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- screenshot picker modal -->
+  <div id="screenshot-picker" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;" onclick="closeScreenshotPicker(event)">
+    <div style="background:var(--surface);border-radius:16px;padding:20px;max-width:600px;width:90%;" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-weight:700;">选择产品截图</div>
+        <button class="btn btn-ghost btn-sm" onclick="closeScreenshotPicker()">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="screenshot-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DASHBOARD PAGE ==================== -->
+<div id="page-dashboard" class="page">
+  <div class="stats" id="dash-stats"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title">近7日 DAU 趋势</div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshDashData()">🔄 刷新</button>
+      </div>
+      <div class="mini-chart" id="chart-dau"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:0.7rem;color:var(--text-m);" id="chart-dau-labels"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title">近7日 新增用户</div>
+      </div>
+      <div class="mini-chart green" id="chart-signup"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:0.7rem;color:var(--text-m);" id="chart-signup-labels"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div>
+        <div class="card-title">数据录入面板</div>
+        <div class="card-sub">手动录入每日数据，自动持久化到本地存储</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="clearDashData()">🗑️ 清除数据</button>
+        <button class="btn btn-primary btn-sm" onclick="saveDashData()">💾 保存数据</button>
+      </div>
+    </div>
+    <div class="form-row" style="flex-wrap:nowrap;align-items:end;">
+      <div class="form-group" style="min-width:120px;">
+        <label class="form-label">日期</label>
+        <input type="date" id="dash-date" class="form-input">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">DAU</label>
+        <input type="number" id="dash-dau" class="form-input" value="0" min="0">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">新增</label>
+        <input type="number" id="dash-new" class="form-input" value="0" min="0">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">付费用户</label>
+        <input type="number" id="dash-paid" class="form-input" value="0" min="0">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">月收入(¥)</label>
+        <input type="number" id="dash-revenue" class="form-input" value="0" min="0">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">D1留存%</label>
+        <input type="number" id="dash-d1" class="form-input" value="0" min="0" max="100">
+      </div>
+      <div class="form-group" style="min-width:80px;">
+        <label class="form-label">D7留存%</label>
+        <input type="number" id="dash-d7" class="form-input" value="0" min="0" max="100">
+      </div>
+      <button class="btn btn-primary" onclick="addDashEntry()" style="height:36px;margin-bottom:1px;">+ 添加</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">核心漏斗转化率</div><div class="card-sub">基于《数据指标定义手册》</div></div>
+    <div id="funnel" style="padding:8px 0;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">事件追踪概览</div><div class="card-sub">App 内埋点事件统计参考</div></div>
+    <div id="events-summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;"></div>
+  </div>
+</div>
+
+<!-- ==================== REFERRAL PAGE ==================== -->
+<div id="page-referral" class="page">
+  <div class="stats" id="ref-stats"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-hd"><div class="card-title">邀请码使用记录</div><div class="card-sub">手动录入邀请数据</div></div>
+      <div class="form-row" style="flex-wrap:nowrap;align-items:end;">
+        <div class="form-group" style="min-width:100px;">
+          <label class="form-label">邀请码</label>
+          <input id="ref-code" class="form-input" placeholder="ABC12345" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="form-group" style="min-width:80px;">
+          <label class="form-label">邀请人数</label>
+          <input id="ref-count" type="number" class="form-input" value="0" min="0">
+        </div>
+        <div class="form-group" style="min-width:80px;">
+          <label class="form-label">已得会员(月)</label>
+          <input id="ref-months" type="number" class="form-input" value="0" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="addReferralEntry()" style="height:36px;">+ 添加</button>
+      </div>
+      <table class="ref-table" style="margin-top:12px;">
+        <thead><tr><th>邀请码</th><th>邀请人数</th><th>获得会员</th><th>进度</th><th></th></tr></thead>
+        <tbody id="ref-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><div class="card-title">奖励阶梯</div></div>
+      <div id="reward-stages"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">归因分析</div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;" id="attribution-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">裂变分享文案生成器</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">你的邀请码</label>
+        <input id="share-invite-code" class="form-input" placeholder="输入邀请码">
+      </div>
+      <div class="form-group" style="flex:0 0 auto;display:flex;align-items:end;">
+        <button class="btn btn-primary" onclick="generateShareLink()">生成分享文案</button>
+      </div>
+    </div>
+    <textarea class="copy-box" id="share-text-result" readonly placeholder="点击上方按钮生成分享文案..."></textarea>
+    <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="copyToClip('share-text-result')">📋 复制文案</button>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================
+// DATA STORES
+// ============================
+
+const PLATFORM_COLORS = {
+  'xiaohongshu': { cls: 'red', dot: '#ef4444', label: '小红书' },
+  'wechat': { cls: 'blue', dot: '#3b82f6', label: '朋友圈' },
+  'douyin': { cls: 'green', dot: '#22c55e', label: '抖音' },
+  'zh-CN': { cls: 'orange', dot: '#f97316', label: '知乎' },
+  'full': { cls: 'cyan', dot: '#06b6d4', label: '全平台' },
+  'gongzhonghao': { cls: 'purple', dot: '#8b5cf6', label: '公众号' },
+};
+
+// 30-day content calendar data from docs/marketing/内容日历/
+const CONTENT_CALENDAR = [
+  { day: 1,  platforms: ['wechat','xiaohongshu'],  theme: '产品发布',    title: '「做了一个学英语的AI工具」',        type: '创始人视角', week: 1 },
+  { day: 2,  platforms: ['xiaohongshu','douyin'],  theme: '核心功能',    title: '「30秒生成英语字幕是什么体验」',  type: '产品演示', week: 1 },
+  { day: 3,  platforms: ['wechat'],               theme: '痛点共鸣',    title: '「你的英语听力差，可能不是耳朵的问题」', type: '干货分享', week: 1 },
+  { day: 4,  platforms: ['xiaohongshu'],           theme: '使用教程',    title: '「手把手教你用AI练口语」',        type: '教程类', week: 1 },
+  { day: 5,  platforms: ['douyin','zhihu'],         theme: '对比测评',    title: '「人工转录 vs AI转录，差距有多大」',type: '对比类', week: 1 },
+  { day: 6,  platforms: ['wechat','xiaohongshu'],  theme: '用户反馈',    title: '「第一批内测用户说……」',          type: '社交证明', week: 1 },
+  { day: 7,  platforms: ['gongzhonghao'],          theme: '深度文章',    title: '「为什么我觉得AI能改变英语学习」',  type: '品牌故事', week: 1 },
+  { day: 8,  platforms: ['xiaohongshu'],           theme: '跟读功能',    title: '「跟读评分准吗？我测了50个人」',  type: '实测类', week: 2 },
+  { day: 9,  platforms: ['douyin'],                theme: 'TTS展示',     title: '「这个AI发音比我英语老师还标准」',  type: '趣味类', week: 2 },
+  { day: 10, platforms: ['wechat'],                theme: '功能科普',    title: '「你知道吗，AI还能分析句子语法」', type: '知识类', week: 2 },
+  { day: 11, platforms: ['xiaohongshu'],           theme: '场景应用',    title: '「考研党必看：用这个方法背单词效率翻倍」', type: '场景类', week: 2 },
+  { day: 12, platforms: ['zhihu'],                 theme: '问题回答',    title: '「有哪些好的英语口语练习APP？」',   type: '软植入', week: 2 },
+  { day: 13, platforms: ['douyin'],                theme: '挑战活动',    title: '「跟读Challenge：你能得多少分？」', type: '互动类', week: 2 },
+  { day: 14, platforms: ['wechat'],                theme: '周总结',      title: '「这周用APP练口语，变化是……」',    type: '个人分享', week: 2 },
+  { day: 15, platforms: ['xiaohongshu'],           theme: '备考攻略',    title: '「四六级听力提分：我的30天计划」', type: '攻略类', week: 3 },
+  { day: 16, platforms: ['douyin'],                theme: '学生场景',    title: '「大学生宿舍里的英语角，人人都在用」', type: '场景类', week: 3 },
+  { day: 17, platforms: ['wechat'],                theme: '限时活动',    title: '「前100名送7天会员，先到先得」',   type: '促销类', week: 3 },
+  { day: 18, platforms: ['xiaohongshu'],           theme: '职场英语',    title: '「外企面试前，我用这个方法练口语」', type: '场景类', week: 3 },
+  { day: 19, platforms: ['zhihu','douyin'],        theme: '竞品对比',    title: '「多邻国 vs 灵犀AI，谁更适合成年人」',type: '对比类', week: 3 },
+  { day: 20, platforms: ['wechat'],                theme: 'KOL背书',     title: '「英语老师推荐的学习神器」',       type: '推荐类', week: 3 },
+  { day: 21, platforms: ['gongzhonghao'],          theme: '案例集',      title: '「3个真实用户，3个月口语进步故事」', type: '案例类', week: 3 },
+  { day: 22, platforms: ['full'],                  theme: '邀请活动',    title: '「邀请好友，双方各得7天会员」',     type: '裂变', week: 4 },
+  { day: 23, platforms: ['xiaohongshu'],           theme: '打卡活动',    title: '「21天打卡挑战，第1天开始」',       type: '社群', week: 4 },
+  { day: 24, platforms: ['douyin'],                theme: '达人合作',    title: 'KOL视频发布',                     type: '合作', week: 4 },
+  { day: 25, platforms: ['wechat'],                theme: '数据分享',    title: '「上线30天，我们收到了这些反馈」',  type: '透明化', week: 4 },
+  { day: 26, platforms: ['xiaohongshu'],           theme: '进阶教程',    title: '「从入门到精通：灵犀AI高阶用法」',  type: '教程', week: 4 },
+  { day: 27, platforms: ['zhihu'],                 theme: '竞品对比',    title: '「为什么我放弃了流利说选了灵犀」',  type: '对比', week: 4 },
+  { day: 28, platforms: ['wechat'],                theme: '月末促销',    title: '「月末特惠：年卡7折，仅限3天」',    type: '促销', week: 4 },
+  { day: 29, platforms: ['xiaohongshu'],           theme: '用户UGC',     title: '「你们发的打卡截图太好看了！」',     type: 'UGC', week: 4 },
+  { day: 30, platforms: ['full'],                  theme: '月度总结',    title: '「第一个月，我们做到了这些」',       type: '总结', week: 4 },
+];
+
+// Copywriting templates from 全渠道文案库
+const COPY_TEMPLATES = {
+  wechat: [
+    { id: 'w1', name: '产品介绍 - 功能导向', text: `🎯 做了个英语听说学习App，分享下：
+上传任意英语音频，30秒自动生成字幕
+跟读练习，AI即时评分
+句子级AI翻译+语法解析
+重点是——支持离线使用！
+免费版就能用核心功能
+下载地址：${APP_URL}
+欢迎体验，有问题随时反馈 👇` },
+    { id: 'w2', name: '产品介绍 - 痛点导向', text: `学英语最大的痛苦是什么？
+听力材料听不懂，看了字幕还是不会说
+口语没人纠正，练了等于白练
+
+花了几个月做了一款工具，
+帮你：
+✅ 30秒把音频变成字幕
+✅ 逐句跟读，AI给你打分
+✅ 哪个词没读好，一目了然
+
+用了两周，感觉确实有用
+分享给需要的朋友：
+${APP_URL}` },
+    { id: 'w3', name: '产品介绍 - 数据导向', text: `测试了100个用户，反馈汇总：
+转录准确率：95%
+转录速度：平均35秒
+跟读评分准确度：4.5/5
+7日留存率：40%
+月收入：¥1,400（还在增长中）
+
+一款真正在解决英语听说痛点的工具
+感兴趣的朋友欢迎试用：
+${APP_URL}` },
+    { id: 'w4', name: '限时福利 - 前100名', text: `🎁 限时福利！
+前100名注册的用户
+赠送7天高级会员体验
+涵盖全部AI功能
+扫码/点击免费下载：
+${APP_URL}
+活动截止日期：月底` },
+    { id: 'w5', name: '邀请有礼', text: `🎉 老用户福利来了！
+邀请好友注册，双方各得7天会员
+邀请3人额外送30天
+邀请10人送半年会员+限量周边
+立即分享你的邀请链接：
+${APP_URL}/invite/你的邀请码` },
+    { id: 'w6', name: '用户反馈', text: `用了一周，朋友们都说好用 😄
+特别是那个跟读评分功能，
+能清楚地看到哪个音发得不够标准
+比干听效果好太多了
+推荐给大家：${APP_URL}` },
+    { id: 'w7', name: '早间推送', text: `☀️ 早安！今日英语学习主题：
+【跟读练习】上传一段TED演讲，AI帮你出字幕+评分
+坚持每天15分钟，一个月后你会感谢自己
+🔗 ${APP_URL}` },
+    { id: 'w8', name: '午间推送', text: `💡 英语学习小技巧：
+影子跟读法 = 原音频延迟0.5秒跟读
+模仿语音语调，提升流利度
+用灵犀AI跟读功能，AI帮你打分纠音
+🎯 ${APP_URL}` },
+    { id: 'w9', name: '晚间推送', text: `🌙 今日学习打卡提醒！
+今天的跟读练习完成了吗？
+来群里晒一下你的评分 📊
+坚持打卡7天送会员，30天送半年！` },
+    { id: 'w10', name: '周总结', text: `这周用灵犀AI练口语，最大的感受是：
+以前是干听，现在有字幕对照，
+知道哪里没听懂，针对性练习。
+AI评分虽然不能代替真人老师，
+但作为日常练习工具完全够用。
+下载地址：${APP_URL}` },
+  ],
+  xiaohongshu: [
+    { id: 'x1', name: '产品种草 - 痛点引入型', text: `【痛点引入】
+英语听力总是听不懂？跟读练了无数遍还是找不到感觉？
+
+【解决方案】
+最近发现了一个超好用的英语学习APP——灵犀AI英语听说
+上传任意英语音频，30秒自动生成字幕
+然后逐句跟读，AI会给你评分
+
+【核心功能】
+✅ 音频转录：30秒出字幕，准确率95%
+✅ 跟读练习：AI即时评分，指出发音问题
+✅ 句子解析：一键翻译+语法分析
+✅ 离线使用：下载模型后无需联网
+
+【使用感受】
+用了两周，最大的感受是：
+跟读练习真的很有效！
+以前是干听，现在有字幕对照，
+知道哪里没听懂，针对性练习。
+
+【适合人群】
+备考四六级/考研/雅思的同学
+想要提升英语口语的职场人士
+
+【获取方式】
+iOS/Android均可下载
+免费版就有基础功能
+下载地址：${APP_URL}
+
+#英语学习 #口语练习 #AI工具 #英语听力 #学习APP #四六级 #考研 #雅思`, hashtags: ['#英语学习','#口语练习','#AI工具','#英语听力','#学习APP','#四六级','#考研','#雅思'] },
+    { id: 'x2', name: '使用教程 - 四步跟读法', text: `很多小伙伴问我是怎么练口语的
+其实方法很简单：
+
+第一步：找一段英语音频
+可以是TED演讲、播客、新闻、教材音频
+任何你感兴趣的都可以
+
+第二步：上传到APP
+灵犀AI英语听说
+30秒自动生成字幕
+
+第三步：逐句跟读
+点击每句开始跟读
+AI会实时评分
+标红的是发音有问题的部分
+
+第四步：反复练习
+跟着原音频一起读
+直到评分达到90分以上
+
+坚持两周，口语进步明显！
+
+推荐工具：灵犀AI英语听说
+下载地址：${APP_URL}
+
+#英语口语 #跟读练习 #AI学习 #学习方法`, hashtags: ['#英语口语','#跟读练习','#AI学习','#学习方法'] },
+    { id: 'x3', name: '学习干货 - 三个方法', text: `分享3个我亲测有效的英语学习法：
+
+📌 方法1：影子跟读法
+原音频放一句，延迟0.5秒跟读
+模仿语音语调和节奏
+坚持每天15分钟
+效果：口语流利度显著提升
+
+📌 方法2：精听+听写
+选一段1-2分钟的音频
+第一遍盲听，第二遍看字幕核对
+第三遍听写，第四遍对照修正
+效果：听力准确率大幅提升
+
+📌 方法3：AI辅助练习
+用灵犀AI英语听说
+上传音频→生成字幕→跟读练习→AI评分
+把传统方法工具化、自动化
+效果：效率提升3倍
+
+我的日常搭配：
+早上影子跟读15分钟
+晚上精听+听写15分钟
+周末用AI工具做一次全面练习
+
+有什么好的学习方法，欢迎评论区分享 👇
+
+#英语学习 #听力训练 #口语提升 #学习方法`, hashtags: ['#英语学习','#听力训练','#口语提升','#学习方法'] },
+    { id: 'x4', name: '备考攻略 - 四六级提分', text: `四六级听力总听不懂？分享我的30天提分计划：
+
+Week 1：影子跟读打底
+每天15分钟，选VOA慢速
+模仿语调，不追求快
+
+Week 2-3：精听+AI评分
+用灵犀AI上传真题音频
+看字幕跟读，重点练标红处
+目标分数：90+
+
+Week 4：全真模拟
+按考试时间做整套听力
+记录错因：连读？生词？速度？
+
+30天后听力从40提到65分
+亲测有效！
+
+下载地址：${APP_URL}
+
+#四六级 #英语听力 #跟读练习 #备考攻略`, hashtags: ['#四六级','#英语听力','#跟读练习','#备考攻略'] },
+    { id: 'x5', name: '爆款标题库', text: `以下是10个可直接使用的爆款标题：
+
+01. 这个AI工具太狠了，30秒搞定英语字幕
+02. 发现一个宝藏英语学习APP，相见恨晚
+03. 英语听力总听不懂？因为这个原因
+04. 手把手教你用AI练口语（附工具）
+05. 备考四六级，我靠这个APP逆袭
+06. 一个APP解决英语听说练，太香了
+07. 外企面试前，我用这个方法练口语
+08. 英语老师不会告诉你的口语提分秘诀
+09. 免费！这款AI英语学习工具太好用了
+10. 从听力25分到65分，我做了这三件事
+
+每个标题搭配对应截图使用，转化率最高。`, hashtags: [] },
+  ],
+  douyin: [
+    { id: 'd1', name: '功能展示脚本（15秒）', text: `[0-3s] 悬念钩子
+"这个AI工具太狠了"
+
+[3-8s] 产品演示
+"上传英语音频，30秒自动出字幕"
+"跟读练习，AI即时评分"
+
+[8-12s] 功能亮点
+"句子解析、TTS配音、离线使用"
+"关键是——完全免费！"
+
+[12-15s] CTA
+"下载地址在评论区"
+"点个关注不迷路"
+
+标题：30秒生成英语字幕，这个AI太牛了
+话题：#英语学习 #AI工具 #口语练习 #学习APP #学生党 #四六级`, hashtags: ['#英语学习','#AI工具','#口语练习','#学习APP','#学生党','#四六级'] },
+    { id: 'd2', name: '对比反差脚本（30秒）', text: `[0-5s] 对比引入
+"人工转录 vs AI转录，差距有多大？"
+
+[5-15s] 过程展示
+左边：人工 transcription，耗时2分钟
+右边：灵犀AI转录，耗时30秒
+字幕准确度对比
+
+[15-25s] 跟读功能
+"不仅转录快，还能跟读练习"
+展示AI评分界面
+
+[25-30s] CTA
+"想试试吗？评论'领取'，发你链接"
+
+标题：人工转录2分钟 vs AI转录30秒，差距有多大？
+话题：#英语学习 #AI工具 #转录 #效率`, hashtags: ['#英语学习','#AI工具','#转录','#效率'] },
+    { id: 'd3', name: '用户故事脚本', text: `[0-3s] "四六级听力40分→65分，我只用了30天"
+[3-10s] APP使用过程快剪
+[10-15s] 成绩单+用户笑脸
+[15s] "下载地址评论区见"
+
+标题：从40分到65分，我只用了30天
+话题：#四六级 #英语听力 #逆袭 #学习APP`, hashtags: ['#四六级','#英语听力','#逆袭','#学习APP'] },
+  ],
+  zhihu: [
+    { id: 'z1', name: 'APP推荐回答', text: `先说结论：目前市面上最好的英语听说练习工具，
+我个人觉得是「灵犀AI英语听说」。
+
+为什么推荐它？
+
+第一，转录速度快。
+上传一段5分钟的英语音频，
+30秒内就能生成字幕，
+准确率在95%左右。
+
+第二，跟读练习体验好。
+支持逐句跟读，AI会给出发音评分，
+标红发音有问题的部分，
+帮助你有针对性地改进。
+
+第三，功能全面。
+除了转录和跟读，
+还支持句子级AI翻译、语法解析、
+TTS语音合成、离线使用等。
+
+第四，性价比高。
+基础功能完全免费，
+会员价格也合理（月卡¥28，年卡¥268）。
+
+下载地址：${APP_URL}
+
+有什么其他问题欢迎评论区交流 👇`, hashtags: [] },
+    { id: 'z2', name: '如何高效练习口语', text: `口语练习的核心是「输入+输出+反馈」三要素。
+
+很多人只做了输入（听）和输出（说），
+缺少了关键的「反馈」环节——
+你不知道自己说得对不对，
+练习了也进步不了。
+
+灵犀AI英语听说解决的问题就是反馈：
+1. 上传音频→自动生成字幕（输入）
+2. 逐句跟读→AI即时评分（输出+反馈）
+3. 标红发音问题→针对性改进（迭代）
+
+具体练习方法：
+1. 选一段1-2分钟的音频
+2. 第一遍盲听，理解大意
+3. 看字幕跟读，模仿语音语调
+4. AI评分后，重点练习标红部分
+5. 反复练习直到评分≥90分
+
+坚持每天15分钟，
+一个月后你会发现口语有明显进步。
+
+工具推荐：灵犀AI英语听说
+下载地址：${APP_URL}`, hashtags: [] },
+  ],
+  gongzhonghao: [
+    { id: 'g1', name: '深度文章 - AI改变英语学习', text: `【引言】（约200字）
+描述痛点场景，引发共鸣：
+你是不是也有这样的经历：
+听英语听力，每个单词都认识，
+连在一起就听不懂？
+跟读了无数遍，却不知道自己哪里出了问题？
+
+【问题剖析】（约500字）
+传统英语学习方法的问题：
+- 听力材料难找，质量参差不齐
+- 口语练习缺少即时反馈
+- 缺乏个性化的学习路径
+- 难以坚持，容易放弃
+
+【解决方案】（约500字）
+正确的英语听说学习方法：
+1. 影子跟读法
+2. 精听+听写
+3. AI辅助的即时反馈
+
+工具的重要性：
+把传统方法工具化、自动化，效率提升3倍。
+
+【产品介绍】（约300字）
+灵犀AI英语听说核心功能：
+- 音频转录：30秒出字幕，准确率95%
+- 跟读练习：AI即时评分，标红发音问题
+- 句子解析：一键翻译+语法分析
+- 离线使用：下载模型后无需联网
+
+【用户反馈】（约200字）
+真实用户使用案例和数据。
+
+【结语】（约100字）
+鼓励行动，附上下载链接。
+下载地址：${APP_URL}`, hashtags: [] },
+  ],
+};
+
+const SCREENSHOTS = [
+  { id: '01-import', label: '音频导入', url: '../../assets/screenshots/01-import.png' },
+  { id: '02-loop',    label: '跟读循环', url: '../../assets/screenshots/02-loop.png' },
+  { id: '03-reminder', label: '学习提醒', url: '../../assets/screenshots/03-reminder.png' },
+  { id: '04-intensive', label: '精听模式', url: '../../assets/screenshots/04-intensive.png' },
+  { id: '05-analysis', label: '句子解析', url: '../../assets/screenshots/05-analysis.png' },
+  { id: '06-retell',   label: '复述练习', url: '../../assets/screenshots/06-retell.png' },
+  { id: '07-favorites',label: '收藏管理', url: '../../assets/screenshots/07-favorites.png' },
+  { id: '08-flashcard',label: '闪卡复习', url: '../../assets/screenshots/08-flashcard.png' },
+  { id: '09-freestyle',label: '自由练习', url: '../../assets/screenshots/09-freestyle.png' },
+];
+
+const APP_URL = 'http://38.55.146.160:8100';
+
+const REWARD_STAGES = [
+  { friends: 1, reward: '双方各得7天会员', desc: '邀请第1位好友', progress: 10 },
+  { friends: 3, reward: '额外送30天会员', desc: '累计邀请3人', progress: 33 },
+  { friends: 5, reward: '再送30天会员', desc: '累计邀请5人', progress: 55 },
+  { friends: 10, reward: '半年会员+限量周边', desc: '累计邀请10人', progress: 80 },
+  { friends: 20, reward: '全年免费+专属顾问', desc: '累计邀请20人', progress: 100 },
+];
+
+// ============================
+// STATE
+// ============================
+
+let currentCalMonthOffset = 0;
+let selectedDayDetail = null;
+let dashData = [];
+let referralData = [];
+let currentScreenshot = SCREENSHOTS[0];
+
+function loadState() {
+  try {
+    const sd = localStorage.getItem('echo_dash_data');
+    if (sd) dashData = JSON.parse(sd);
+    const rd = localStorage.getItem('echo_referral_data');
+    if (rd) referralData = JSON.parse(rd);
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('echo_dash_data', JSON.stringify(dashData));
+  localStorage.setItem('echo_referral_data', JSON.stringify(referralData));
+}
+
+// ============================
+// NAVIGATION
+// ============================
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-' + btn.dataset.page).classList.add('active');
+    if (btn.dataset.page === 'dashboard') renderDashboard();
+    if (btn.dataset.page === 'referral') renderReferral();
+    if (btn.dataset.page === 'share') initSharePage();
+    if (btn.dataset.page === 'calendar') renderCalendar();
+  });
+});
+
+// ============================
+// CALENDAR
+// ============================
+
+function renderCalendar() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay; // Monday start
+  const padDays = startOffset;
+
+  // stats
+  const statsEl = document.getElementById('cal-stats');
+  const totalEvents = CONTENT_CALENDAR.length;
+  const thisWeekEvents = CONTENT_CALENDAR.filter(d => d.week === Math.ceil((today.getDate() + 6) / 7) || true).length;
+  const todayIdx = today.getDate();
+  const todayEvent = CONTENT_CALENDAR.find(d => d.day === todayIdx);
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">今日内容</div>
+      <div class="stat-value">${todayEvent ? todayEvent.theme : '—'}</div>
+      <div class="stat-change up">${todayEvent ? todayEvent.title : ''}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">本月排期</div>
+      <div class="stat-value">${totalEvents} 篇</div>
+      <div class="stat-change">覆盖 4 个平台</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">本周待发布</div>
+      <div class="stat-value">${CONTENT_CALENDAR.filter(d => d.week === (Math.ceil(todayIdx/7))).length} 篇</div>
+      <div class="stat-change">Week ${Math.ceil(todayIdx/7)}</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-label">已发布</div>
+      <div class="stat-value" id="published-count">${getContentPublished()}</div>
+      <div class="stat-change up">完成率 ${Math.round(getPublishedRate()*100)}%</div>
+    </div>
+  `;
+
+  // build grid
+  const grid = document.getElementById('cal-grid');
+  const headers = ['一','二','三','四','五','六','日'];
+  let html = headers.map(h => `<div class="cal-day-header">${h}</div>`).join('');
+
+  // padding days from prev month
+  const prevMonthDays = new Date(year, month, 0).getDate();
+  for (let i = padDays - 1; i >= 0; i--) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${prevMonthDays - i}</div></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const event = CONTENT_CALENDAR.find(e => e.day === d);
+    const isToday = d === todayIdx;
+    let eventsHtml = '';
+    if (event) {
+      const platformTags = event.platforms.map(p => {
+        const pc = PLATFORM_COLORS[p];
+        return `<span class="cal-event ${pc.cls}" title="${pc.label}">${pc.label.substring(0,2)}</span>`;
+      }).join('');
+      eventsHtml = `<div style="font-size:0.6rem;font-weight:600;color:var(--text-s);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${event.theme}</div><div class="cal-dot">${platformTags}</div>`;
+    }
+    html += `<div class="cal-day${isToday ? ' today' : ''}" onclick="showDayDetail(${d})">${eventsHtml}<div class="cal-day-num">${d}</div></div>`;
+  }
+
+  // padding next month
+  const totalCells = padDays + daysInMonth;
+  const remaining = (7 - totalCells % 7) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function getContentPublished() {
+  return localStorage.getItem('echo_published') ? JSON.parse(localStorage.getItem('echo_published')).length : 0;
+}
+
+function getContentPublishedRate() {
+  const pub = localStorage.getItem('echo_published') ? JSON.parse(localStorage.getItem('echo_published')) : [];
+  return pub.length / CONTENT_CALENDAR.length;
+}
+
+function showDayDetail(day) {
+  const event = CONTENT_CALENDAR.find(e => e.day === day);
+  const detail = document.getElementById('day-detail');
+  if (!event) {
+    detail.style.display = 'none';
+    return;
+  }
+  selectedDayDetail = day;
+  const platforms = event.platforms.map(p => {
+    const pc = PLATFORM_COLORS[p];
+    return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;"><span style="width:8px;height:8px;border-radius:50%;background:${pc.dot};display:inline-block;"></span>${pc.label}</span>`;
+  }).join('');
+
+  const pub = localStorage.getItem('echo_published') ? JSON.parse(localStorage.getItem('echo_published')) : [];
+  const isPublished = pub.includes(day);
+
+  detail.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="day-detail-title">Day ${day} · ${event.theme}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:0.78rem;color:var(--text-m);">${event.type}</span>
+        ${!isPublished ? `<button class="btn btn-success btn-sm" onclick="markPublished(${day})">✓ 标记已发布</button>` : `<span class="tag tag-green">✓ 已发布</span>`}
+      </div>
+    </div>
+    <div style="margin-bottom:8px;">平台：<div style="margin-top:4px;">${platforms}</div></div>
+    <div style="margin-bottom:8px;">标题：<span style="color:var(--text);font-weight:600;">${event.title}</span></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${event.platforms.map(p => `<button class="btn btn-ghost btn-sm" onclick="copyDayContent(${day},'${p}')">📋 复制${PLATFORM_COLORS[p].label}文案</button>`).join('')}
+    </div>
+  `;
+  detail.style.display = 'block';
+}
+
+function markPublished(day) {
+  let pub = localStorage.getItem('echo_published') ? JSON.parse(localStorage.getItem('echo_published')) : [];
+  if (!pub.includes(day)) pub.push(day);
+  localStorage.setItem('echo_published', JSON.stringify(pub));
+  renderCalendar();
+  showToast('已标记为已发布 ✓');
+}
+
+function copyDayContent(day, platform) {
+  const event = CONTENT_CALENDAR.find(e => e.day === day);
+  const platformKey = Object.keys(PLATFORM_COLORS).find(k => PLATFORM_COLORS[k].label === platform);
+  const templates = COPY_TEMPLATES[platformKey] || COPY_TEMPLATES.wechat;
+  const text = templates[0].text;
+  navigator.clipboard.writeText(text).then(() => showToast(`已复制${platform}文案`));
+}
+
+function exportCalendar() {
+  const lines = ['灵犀AI英语听说 · 30天内容排期', '', 'Week 1: 产品亮相期', ...CONTENT_CALENDAR.filter(d=>d.week===1).map(d => `  Day${d.day}: [${d.platforms.map(p=>PLATFORM_COLORS[p]?.label).join('+')}] ${d.theme} | ${d.title}`),
+  '', 'Week 2: 功能深挖期', ...CONTENT_CALENDAR.filter(d=>d.week===2).map(d => `  Day${d.day}: [${d.platforms.map(p=>PLATFORM_COLORS[p]?.label).join('+')}] ${d.theme} | ${d.title}`),
+  '', 'Week 3: 用户增长期', ...CONTENT_CALENDAR.filter(d=>d.week===3).map(d => `  Day${d.day}: [${d.platforms.map(p=>PLATFORM_COLORS[p]?.label).join('+')}] ${d.theme} | ${d.title}`),
+  '', 'Week 4: 裂变传播期', ...CONTENT_CALENDAR.filter(d=>d.week===4).map(d => `  Day${d.day}: [${d.platforms.map(p=>PLATFORM_COLORS[p]?.label).join('+')}] ${d.theme} | ${d.title}`),
+  ].join('\n');
+  const blob = new Blob([lines], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `灵犀AI内容排期_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  showToast('排期已导出');
+}
+
+// ============================
+// COPY WRITING LIBRARY
+// ============================
+
+function initCopyLibrary() {
+  const tabs = document.getElementById('copy-tabs');
+  const platforms = [
+    { key: 'wechat', label: '朋友圈', icon: '🟢' },
+    { key: 'xiaohongshu', label: '小红书', icon: '🔴' },
+    { key: 'douyin', label: '抖音', icon: '⚫' },
+    { key: 'zhihu', label: '知乎', icon: '🔵' },
+    { key: 'gongzhonghao', label: '公众号', icon: '🟣' },
+  ];
+  tabs.innerHTML = platforms.map((p, i) =>
+    `<button class="sub-tab${i===0?' active':''}" onclick="switchCopyTab('${p.key}',this)">${p.icon} ${p.label} (${COPY_TEMPLATES[p.key].length})</button>`
+  ).join('');
+  switchCopyTab('wechat', tabs.querySelector('.sub-tab'));
+}
+
+function switchCopyTab(key, el) {
+  document.querySelectorAll('#copy-tabs .sub-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const templates = COPY_TEMPLATES[key] || [];
+  const icons = { wechat:'🟢', xiaohongshu:'🔴', douyin:'⚫', zhihu:'🔵', gongzhonghao:'🟣' };
+  document.getElementById('copy-content').innerHTML = templates.map((t, i) => `
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);cursor:pointer;" onclick="toggleTemplate(this)">
+        <span style="font-size:0.82rem;font-weight:600;">${icons[key]} ${t.name}</span>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();copyTemplate('${key}',${i})">📋 复制文案</button>
+      </div>
+      <div class="tpl-body" style="display:none;padding:12px 14px;font-size:0.82rem;line-height:1.7;color:var(--text-s);white-space:pre-wrap;font-family:inherit;">${t.text}</div>
+    </div>
+  `).join('');
+}
+
+function toggleTemplate(el) {
+  const body = el.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyTemplate(key, idx) {
+  const text = COPY_TEMPLATES[key][idx].text;
+  navigator.clipboard.writeText(text).then(() => showToast('文案已复制到剪贴板'));
+}
+
+// ============================
+// SHARE CARD
+// ============================
+
+const CARD_PLATFORM_CONFIG = {
+  wechat: { label: '朋友圈', bg: '#0d1117', accent: '#3b82f6' },
+  xiaohongshu: { label: '小红书', bg: '#1a0a0a', accent: '#ff2442' },
+  douyin: { label: '抖音', bg: '#0a0a14', accent: '#25f4ee' },
+  zhihu: { label: '知乎', bg: '#0a1628', accent: '#0560de' },
+};
+
+function initSharePage() {
+  const sel = document.getElementById('card-template');
+  const platform = document.getElementById('card-platform').value;
+  const templates = COPY_TEMPLATES[platform] || [];
+  sel.innerHTML = templates.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+  document.getElementById('card-hashtag-row').style.display = platform === 'xiaohongshu' || platform === 'douyin' ? 'flex' : 'none';
+  updateCardPreview();
+  renderQuickTemplates();
+  renderScreenshotGrid();
+}
+
+function onCardPlatformChange() {
+  initSharePage();
+}
+
+function updateCardPreview() {
+  const platform = document.getElementById('card-platform').value;
+  const idx = parseInt(document.getElementById('card-template').value) || 0;
+  const templates = COPY_TEMPLATES[platform] || [];
+  const t = templates[idx];
+  if (!t) return;
+
+  document.getElementById('cc-text').textContent = t.text;
+  document.getElementById('cc-platform-label').textContent = CARD_PLATFORM_CONFIG[platform].label;
+  document.getElementById('cc-url').textContent = document.getElementById('card-url').value || APP_URL;
+  document.getElementById('cc-hashtags').innerHTML = (t.hashtags || []).map(h => `<span class="cc-tag">${h}</span>`).join('');
+
+  // update screenshot
+  const imgArea = document.getElementById('cc-img-area');
+  if (currentScreenshot) {
+    imgArea.innerHTML = `<img src="${currentScreenshot.url}" alt="${currentScreenshot.label}" style="width:100%;display:block;">`;
+  } else {
+    imgArea.innerHTML = `<div class="cc-placeholder">📸 产品截图区</div>`;
+  }
+
+  // apply platform theme
+  const cfg = CARD_PLATFORM_CONFIG[platform];
+  const preview = document.getElementById('card-preview');
+  preview.style.background = `linear-gradient(160deg, #0d0f1a 0%, ${cfg.accent}15 50%, #0d1525 100%)`;
+}
+
+function copyCardText() {
+  const platform = document.getElementById('card-platform').value;
+  const idx = parseInt(document.getElementById('card-template').value) || 0;
+  const templates = COPY_TEMPLATES[platform] || [];
+  const text = templates[idx]?.text || '';
+  navigator.clipboard.writeText(text).then(() => showToast('文案已复制'));
+}
+
+function downloadCard() {
+  showToast('提示：请使用浏览器截图功能（Ctrl/Cmd+S）保存当前卡片预览');
+}
+
+function showScreenshotPicker() {
+  document.getElementById('screenshot-picker').style.display = 'flex';
+}
+
+function closeScreenshotPicker(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('screenshot-picker').style.display = 'none';
+}
+
+function renderScreenshotGrid() {
+  const grid = document.getElementById('screenshot-grid');
+  grid.innerHTML = SCREENSHOTS.map((s, i) => `
+    <div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid ${i===0?'var(--a)':'var(--border)'};transition:border-color 0.2s;" onclick="selectScreenshot(${i})">
+      <img src="${s.url}" style="width:100%;display:block;" alt="${s.label}">
+      <div style="padding:6px;font-size:0.72rem;color:var(--text-s);text-align:center;background:var(--surface);">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function selectScreenshot(idx) {
+  currentScreenshot = SCREENSHOTS[idx];
+  updateCardPreview();
+  renderScreenshotGrid();
+  document.getElementById('screenshot-picker').style.display = 'none';
+}
+
+function renderQuickTemplates() {
+  const containers = {
+    wechat: document.getElementById('quick-templates') || document.createElement('div'),
+  };
+  // Quick templates section - show a few of the best ones
+  const all = [...(COPY_TEMPLATES.wechat.slice(0,3)), ...(COPY_TEMPLATES.xiaohongshu.slice(0,2))];
+  document.getElementById('quick-templates').innerHTML = all.map((t, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--border);margin-bottom:6px;font-size:0.8rem;color:var(--text-s);transition:all 0.15s;"
+         onmouseover="this.style.borderColor='var(--border-hi)';this.style.color='var(--text)'"
+         onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-s)'"
+         onclick="navigator.clipboard.writeText(${JSON.stringify(t.text)}).then(()=>showToast('已复制'))">
+      <span>${t.name}</span>
+      <span style="font-size:0.72rem;">📋 复制</span>
+    </div>
+  `).join('');
+}
+
+// ============================
+// DASHBOARD
+// ============================
+
+function renderDashboard() {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0,10);
+  document.getElementById('dash-date').value = dateStr;
+
+  // compute stats from data
+  const entries = dashData.filter(d => d.date >= dateStr.slice(0,7)).sort((a,b) => a.date.localeCompare(b.date));
+  const last = entries[entries.length - 1];
+  const prev = entries.length > 1 ? entries[entries.length - 2] : null;
+
+  const statsEl = document.getElementById('dash-stats');
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">昨日 DAU</div>
+      <div class="stat-value">${last ? last.dau : '—'}</div>
+      <div class="stat-change ${prev && last ? (last.dau >= prev.dau ? 'up' : 'down') : ''}">${prev ? (last.dau >= prev.dau ? '↑' : '↓') : ''} ${prev ? Math.abs(Math.round((last.dau - prev.dau)/prev.dau*100)) : 0}% 环比</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">昨日新增</div>
+      <div class="stat-value">${last ? last.newUsers : '—'}</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">昨日付费用户</div>
+      <div class="stat-value">${last ? last.paid : '—'}</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-label">月收入 (¥)</div>
+      <div class="stat-value">${last ? last.revenue.toLocaleString() : '—'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">D1 留存率</div>
+      <div class="stat-value">${last ? last.d1 : '—'}%</div>
+      <div class="stat-change ${last && last.d1 >= 60 ? 'up' : 'down'}">${last && last.d1 >= 60 ? '✓ 达标' : '目标 ≥60%'}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">D7 留存率</div>
+      <div class="stat-value">${last ? last.d7 : '—'}%</div>
+      <div class="stat-change ${last && last.d7 >= 40 ? 'up' : 'down'}">${last && last.d7 >= 40 ? '✓ 达标' : '目标 ≥40%'}</div>
+    </div>
+  `;
+
+  // charts
+  renderMiniChart('chart-dau', entries.map(e => e.dau), 'chart-dau-labels', entries.map(e => e.date.slice(5)));
+  renderMiniChart('chart-signup', entries.map(e => e.newUsers), 'chart-signup-labels', entries.map(e => e.date.slice(5)));
+
+  // funnel
+  renderFunnel();
+  renderEventsSummary();
+}
+
+function renderMiniChart(containerId, data, labelId, labels) {
+  const max = Math.max(...data, 1);
+  const container = document.getElementById(containerId);
+  container.innerHTML = data.map((v, i) =>
+    `<div class="mini-bar${i === data.length - 1 ? '' : ''}" style="height:${Math.max(v/max*100, 4)}%;" title="${labels[i]}: ${v}"></div>`
+  ).join('');
+  document.getElementById(labelId).innerHTML = labels.map((l, i) =>
+    `<span style="flex:1;text-align:center;">${i % 2 === 0 ? l : ''}</span>`
+  ).join('');
+}
+
+function renderFunnel() {
+  const stages = [
+    { name: '打开App', rate: 100, color: 'var(--a)' },
+    { name: '注册登录', rate: 70, color: 'var(--a)' },
+    { name: '首次转录', rate: 60, color: 'var(--b)' },
+    { name: '首次跟读', rate: 40, color: 'var(--pink)' },
+    { name: '关注Paywall', rate: 20, color: 'var(--orange)' },
+    { name: '付费转化', rate: 5, color: 'var(--green)' },
+  ];
+  document.getElementById('funnel').innerHTML = stages.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <div style="width:110px;font-size:0.78rem;color:var(--text-s);text-align:right;flex-shrink:0;">${s.name}</div>
+      <div class="progress-bar-bg" style="flex:1;">
+        <div class="progress-bar-fill" style="width:${s.rate}%;background:${s.color};"></div>
+      </div>
+      <div style="width:50px;font-size:0.78rem;font-weight:700;color:${s.color};text-align:right;">${s.rate}%</div>
+      ${i < stages.length - 1 ? `<div style="font-size:0.68rem;color:var(--text-m);width:50px;">${((stages[i+1].rate/s.rate)*100).toFixed(0)}%流转</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderEventsSummary() {
+  // Events from the app's analytics model
+  const events = [
+    { name: 'app_open', label: 'App 启动', cat: '系统' },
+    { name: 'login_method_selected', label: '登录选择', cat: '认证' },
+    { name: 'learning_start', label: '开始学习', cat: '学习' },
+    { name: 'learning_end', label: '结束学习', cat: '学习' },
+    { name: 'transcription_complete', label: '转录完成', cat: '核心' },
+    { name: 'listen_repeat_complete', label: '跟读完成', cat: '核心' },
+    { name: 'intensive_listen_complete', label: '精听完成', cat: '核心' },
+    { name: 'retell_complete', label: '复述完成', cat: '核心' },
+    { name: 'first_learn_complete', label: '首次完整学习', cat: '关键' },
+    { name: 'collection_create', label: '创建合集', cat: '内容' },
+    { name: 'audio_upload', label: '上传音频', cat: '内容' },
+    { name: 'translation_succeeded', label: '翻译成功', cat: '辅助' },
+    { name: 'analysis_succeeded', label: '解析成功', cat: '辅助' },
+    { name: 'stage_advance', label: '阶段推进', cat: '学习' },
+    { name: 'community_invite_tapped', label: '邀请入口点击', cat: '裂变' },
+  ];
+  document.getElementById('events-summary').innerHTML = events.map(e => `
+    <div style="padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:0.78rem;">
+      <div style="font-weight:600;color:var(--text);margin-bottom:2px;">${e.label}</div>
+      <div style="font-size:0.7rem;color:var(--text-m);font-family:monospace;">${e.name}</div>
+      <span class="tag tag-blue" style="margin-top:4px;display:inline-block;">${e.cat}</span>
+    </div>
+  `).join('');
+}
+
+function addDashEntry() {
+  const date = document.getElementById('dash-date').value;
+  const dau = parseInt(document.getElementById('dash-dau').value) || 0;
+  const newUsers = parseInt(document.getElementById('dash-new').value) || 0;
+  const paid = parseInt(document.getElementById('dash-paid').value) || 0;
+  const revenue = parseFloat(document.getElementById('dash-revenue').value) || 0;
+  const d1 = parseFloat(document.getElementById('dash-d1').value) || 0;
+  const d7 = parseFloat(document.getElementById('dash-d7').value) || 0;
+  if (!date) { showToast('请选择日期'); return; }
+  const existing = dashData.findIndex(d => d.date === date);
+  if (existing >= 0) dashData[existing] = { date, dau, newUsers, paid, revenue, d1, d7 };
+  else dashData.push({ date, dau, newUsers, paid, revenue, d1, d7 });
+  dashData.sort((a,b) => a.date.localeCompare(b.date));
+  saveState();
+  renderDashboard();
+  showToast('数据已保存');
+}
+
+function refreshDashData() {
+  renderDashboard();
+  showToast('看板已刷新');
+}
+
+function clearDashData() {
+  if (!confirm('确定要清除所有看板数据吗？此操作不可撤销。')) return;
+  dashData = [];
+  saveState();
+  renderDashboard();
+  showToast('数据已清除');
+}
+
+function saveDashData() {
+  saveState();
+  showToast('数据已保存到本地');
+}
+
+// ============================
+// REFERRAL
+// ============================
+
+function renderReferral() {
+  const totalInvited = referralData.reduce((s, r) => s + r.count, 0);
+  const totalMonths = referralData.reduce((s, r) => s + r.months, 0);
+  const avgPerCode = referralData.length > 0 ? (totalInvited / referralData.length).toFixed(1) : 0;
+
+  const statsEl = document.getElementById('ref-stats');
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">总邀请人数</div>
+      <div class="stat-value">${totalInvited}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">活跃邀请码数</div>
+      <div class="stat-value">${referralData.length}</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">已发放会员(月)</div>
+      <div class="stat-value">${totalMonths}</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-label">平均每码邀请</div>
+      <div class="stat-value">${avgPerCode}</div>
+    </div>
+  `;
+
+  // reward stages
+  const maxFriends = Math.max(...referralData.map(r=>r.count), 1);
+  document.getElementById('reward-stages').innerHTML = REWARD_STAGES.map(s => {
+    const achieved = referralData.some(r => r.count >= s.friends);
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;margin-bottom:8px;border:1px solid ${achieved ? 'var(--green)' : 'var(--border)'};${achieved ? 'background:rgba(34,197,94,0.05);' : ''}">
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;flex-shrink:0;background:${achieved ? 'var(--green)' : 'var(--surface2)'};color:${achieved ? 'white' : 'var(--text-m)'};">${s.friends}</div>
+        <div style="flex:1;">
+          <div style="font-size:0.82rem;font-weight:600;">${s.desc}</div>
+          <div style="font-size:0.75rem;color:var(--text-s);">奖励：${s.reward}</div>
+        </div>
+        ${achieved ? '<span class="tag tag-green">✓ 已达成</span>' : '<span class="tag tag-blue">未达成</span>'}
+      </div>
+    `;
+  }).join('');
+
+  // table
+  document.getElementById('ref-table-body').innerHTML = referralData.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--text-m);padding:20px;">暂无数据，请在上方添加邀请记录</td></tr>'
+    : referralData.map((r, i) => {
+      const stage = REWARD_STAGES.find(s => s.friends >= r.count) || REWARD_STAGES[REWARD_STAGES.length-1];
+      const progressPct = Math.min(100, (r.count / stage.friends) * 100);
+      return `<tr>
+        <td><code style="font-size:0.8rem;background:var(--surface2);padding:2px 6px;border-radius:4px;">${r.code}</code></td>
+        <td><strong>${r.count}</strong></td>
+        <td>${r.months} 月</td>
+        <td>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width:${progressPct}%;"></div>
+          </div>
+          <div style="font-size:0.68rem;color:var(--text-m);margin-top:2px;">目标: ${stage.friends}人</div>
+        </td>
+        <td><button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem;" onclick="removeReferral(${i})">删除</button></td>
+      </tr>`;
+    }).join('');
+
+  // attribution
+  const sources = [
+    { name: '自然流量', pct: 45, color: 'var(--a)' },
+    { name: '朋友圈', pct: 25, color: 'var(--green)' },
+    { name: '小红书', pct: 15, color: 'var(--pink)' },
+    { name: '抖音', pct: 10, color: 'var(--orange)' },
+    { name: '知乎', pct: 5, color: 'var(--b)' },
+  ];
+  document.getElementById('attribution-grid').innerHTML = sources.map(s => `
+    <div style="padding:12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:6px;">${s.name}</div>
+      <div class="progress-bar-bg" style="margin-bottom:4px;">
+        <div class="progress-bar-fill" style="width:${s.pct}%;background:${s.color};"></div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-m);">占比 ${s.pct}%</div>
+    </div>
+  `).join('');
+}
+
+function addReferralEntry() {
+  const code = document.getElementById('ref-code').value.trim().toUpperCase();
+  const count = parseInt(document.getElementById('ref-count').value) || 0;
+  const months = parseInt(document.getElementById('ref-months').value) || 0;
+  if (!code) { showToast('请输入邀请码'); return; }
+  const existing = referralData.findIndex(r => r.code === code);
+  if (existing >= 0) {
+    referralData[existing].count = count;
+    referralData[existing].months = months;
+  } else {
+    referralData.push({ code, count, months });
+  }
+  saveState();
+  document.getElementById('ref-code').value = '';
+  document.getElementById('ref-count').value = '0';
+  document.getElementById('ref-months').value = '0';
+  renderReferral();
+  showToast('邀请记录已保存');
+}
+
+function removeReferral(idx) {
+  referralData.splice(idx, 1);
+  saveState();
+  renderReferral();
+}
+
+function generateShareLink() {
+  const code = document.getElementById('share-invite-code').value.trim().toUpperCase();
+  if (!code) { showToast('请输入邀请码'); return; }
+  const text = `🎁 邀请好友，双方都得会员！\n\n用我的邀请码【${code}】注册灵犀AI英语听说，我们各得7天会员。\n\n👉 点击注册：${APP_URL}/invite/${code}\n\n#英语学习 #AI工具`;
+  document.getElementById('share-text-result').value = text;
+  navigator.clipboard.writeText(text).then(() => showToast('分享文案已复制'));
+}
+
+// ============================
+// UTILS
+// ============================
+
+function copyToClip(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value || el.textContent).then(() => showToast('已复制到剪贴板'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============================
+// INIT
+// ============================
+
+loadState();
+initCopyLibrary();
+renderCalendar();
+renderDashboard();
+renderReferral();
+initSharePage();
+</script>
+</body>
+</html>

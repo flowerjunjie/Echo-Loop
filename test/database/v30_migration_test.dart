@@ -1,3 +1,4 @@
+@TestOn('browser')
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:echo_loop/database/app_database.dart';

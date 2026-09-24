@@ -238,6 +238,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   Timer? _transcriptStaleTimer;
 
   // ── 内部状态 ──
+  bool _disposed = false;
   bool _isStopping = false;
   bool _hasDetectedSpeech = false;
   String? _lastKnownTranscript;
@@ -271,6 +272,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       onStateChange: _handleAppLifecycleChange,
     );
     ref.onDispose(() {
+      _disposed = true;
       lifecycleListener.dispose();
       _cancelAllTimers();
       _eventSub?.cancel();
@@ -310,6 +312,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     required String referenceText,
     Duration? referenceDuration,
   }) async {
+    if (_disposed) return;
     final backend = ref.read(speechPracticeBackendProvider);
     if (state.promptId == promptId && state.isActive) {
       AppLogger.log('SpeechRec', '⏭ startRecording 跳过: 已在录音中 ($promptId)');
@@ -409,6 +412,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
 
   /// 取消当前录音
   Future<void> cancelActiveRecording() async {
+    if (_disposed) return;
     if (!_recordingService.isRecording) return;
 
     _cancelAllTimers();
@@ -429,6 +433,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
 
   /// 清除当前回合状态（保留配置），并删除已完成录音的临时文件。
   Future<void> clearRecording() async {
+    if (_disposed) return;
     AppLogger.log('SpeechRec', '● clearRecording → idle');
     _cancelAllTimers();
     _isStopping = false;
@@ -473,6 +478,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     required String promptId,
     required String referenceText,
   }) async {
+    if (_disposed) return;
     final backend = ref.read(speechPracticeBackendProvider);
     final ratingEnabled = ref
         .read(learningSettingsProvider)
@@ -500,7 +506,20 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     final filePath = stopResult.filePath;
     AppLogger.log('SpeechRec', '│ backend=${backend.runtimeType}');
 
-    if (stopResult.errorCode != null || filePath == null || filePath.isEmpty) {
+    // Web 端无本地文件，但 transcriptText 不为空时直接使用
+    if (filePath == null || filePath.isEmpty) {
+      if (stopResult.transcriptText != null && stopResult.transcriptText!.isNotEmpty) {
+        // Web 端：转录文本已由后端直接返回，无需走 waitForTranscript 流程
+        final webTranscript = stopResult.transcriptText!;
+        AppLogger.log('SpeechRec', '│ Web transcriptText="\$1"');
+        _evaluateResult(
+          promptId: promptId,
+          referenceText: referenceText,
+          result: RecordingResult(finalTranscript: webTranscript),
+        );
+        await _recordingService.shutdown();
+        return;
+      }
       AppLogger.log('SpeechRec', '✗ 停止录音失败: ${stopResult.errorCode}');
       state = state.copyWith(
         phase: SpeechRecordingPhase.idle,

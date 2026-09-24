@@ -387,7 +387,7 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     }
   }
 
-  /// 删除本地模型。Echo Loop AI 当前使用的模型不可删除；Apple Speech 下可删任意模型。
+  /// 删除本地模型。灵犀AI英语听说 AI 当前使用的模型不可删除；Apple Speech 下可删任意模型。
   Future<void> deleteModel([String? modelId]) async {
     final targetId = modelId ?? state.selectedModel.id;
     if (state.backend == AsrBackend.offline &&

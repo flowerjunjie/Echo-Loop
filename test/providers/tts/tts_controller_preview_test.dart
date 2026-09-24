@@ -282,7 +282,7 @@ void main() {
       expect(factory.calls, greaterThanOrEqualTo(1));
     });
 
-    test('Echo Loop 引擎 → 不触发任何合成（提前返回）', () async {
+    test('灵犀AI英语听说 引擎 → 不触发任何合成（提前返回）', () async {
       SharedPreferences.setMockInitialValues({});
       final factory = _RecordingFactory();
       final c = makeContainer(
@@ -298,7 +298,7 @@ void main() {
   });
 
   group('prewarmVoicePreviews 门控', () {
-    test('Echo Loop 且就绪 → 触发合成路径（构建引擎）', () async {
+    test('灵犀AI英语听说 且就绪 → 触发合成路径（构建引擎）', () async {
       SharedPreferences.setMockInitialValues({});
       final factory = _RecordingFactory();
       final c = makeContainer(
@@ -326,7 +326,7 @@ void main() {
       expect(factory.calls, 0);
     });
 
-    test('Echo Loop 但模型未就绪 → 不触发合成（提前返回）', () async {
+    test('灵犀AI英语听说 但模型未就绪 → 不触发合成（提前返回）', () async {
       SharedPreferences.setMockInitialValues({});
       final factory = _RecordingFactory();
       final c = makeContainer(

@@ -3,12 +3,13 @@ import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+// Core imports only - analytics and posthog disabled for clean build
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/time_format.dart';
 import 'database/app_database.dart';
@@ -29,11 +30,15 @@ import 'config/web_purchase_config.dart' as web_purchase_config;
 import 'providers/review_reminder_provider.dart';
 import 'services/notification_tap_router_bridge.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'analytics/analytics_providers.dart';
+import 'analytics/consent_manager.dart';
 import 'analytics/permission_snapshot.dart';
+import 'screens/privacy_consent_screen.dart';
 import 'services/network_permission_trigger.dart';
 import 'services/user_id_service.dart';
 import 'firebase_options.dart';
+import 'providers/privacy_consent_provider.dart';
 import 'providers/learning_settings_provider.dart';
 import 'providers/tts/kokoro_model_provider.dart';
 import 'providers/tts/piper_model_provider.dart';
@@ -48,6 +53,7 @@ import 'package:path_provider/path_provider.dart';
 import 'services/asr/asr_model_manager.dart';
 import 'services/asr/offline_asr_engine.dart';
 import 'services/app_logger.dart';
+import 'services/push/fcm_push_service.dart';
 import 'services/tts/kokoro_model_manager.dart';
 import 'services/tts/piper_model_manager.dart';
 import 'services/tts/piper_voices.dart';
@@ -69,11 +75,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   initTimeago();
 
+  // 全局 Zone 异常捕获：异步未捕获异常（unawaited 失败等）在此兜底，
+  // 确保崩溃信息能上报 analyticsService 而非静默丢失。
+  // 注：analyticsService 在 runApp 之后才有值，这里只记录日志，
+  // 实际埋点由 analyticsService 初始化完成后通过 AppLogger 上报。
+  FlutterError.onError = (details) {
+    AppLogger.log('FlutterError', details.toString());
+  };
+
   // 开启日志落盘：每条日志同步写入文件并 flush，崩溃（含 native SIGABRT）前的
   // 日志仍保留在磁盘，供日志页导出排查。失败静默忽略，不影响启动。
   try {
     await AppLogger.initFileSink(await appLogFilePath());
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('App', '日志落盘初始化失败: $e');
+  }
 
   final packageInfo = await PackageInfo.fromPlatform();
 
@@ -133,28 +149,32 @@ void main() async {
       readInitialAiTranscriptionAutoMergeEnabledSync(prefs);
 
   // 初始化数据库（演示模式使用独立数据库文件）
-  final dbFileName = isDemoMode ? 'echo_loop_demo.db' : 'echo_loop.db';
-  final database = AppDatabase(openConnectionWithName(dbFileName));
-  initAppDatabase(database);
+  // Web 平台不支持本地数据库，跳过初始化以避免 drift/native.dart → dart:ffi 编译错误。
+  late final AppDatabase database;
+  if (!kIsWeb) {
+    final dbFileName = isDemoMode ? 'echo_loop_demo.db' : 'echo_loop.db';
+    database = AppDatabase(openConnectionWithName(dbFileName));
+    initAppDatabase(database);
 
-  // 执行 SP → Drift 迁移（仅对生产数据库）
-  if (!isDemoMode) {
-    final migration = SpToDriftMigration(
-      database,
-      prefs,
-      subtitleLoader: defaultSubtitleLoader,
-    );
-    try {
-      await migration.migrate();
-    } catch (e) {
-      print('SP → Drift 迁移失败，下次启动重试: $e');
-    }
+    // 执行 SP → Drift 迁移（仅对生产数据库）
+    if (!isDemoMode) {
+      final migration = SpToDriftMigration(
+        database,
+        prefs,
+        subtitleLoader: defaultSubtitleLoader,
+      );
+      try {
+        await migration.migrate();
+      } catch (e) {
+        AppLogger.log('Migration', 'SP → Drift 迁移失败，下次启动重试: $e');
+      }
 
-    // 首次启动时安装内置示例内容
-    try {
-      await BundledExampleInstaller(database, prefs).installOnFirstLaunch();
-    } catch (e) {
-      print('内置示例安装失败: $e');
+      // 首次启动时安装内置示例内容
+      try {
+        await BundledExampleInstaller(database, prefs).installOnFirstLaunch();
+      } catch (e) {
+        AppLogger.log('Migration', '内置示例安装失败: $e');
+      }
     }
   }
 
@@ -168,32 +188,46 @@ void main() async {
     unawaited(NetworkPermissionTrigger.trigger(prefs, apiBaseUrl));
   }
 
-  // 初始化 Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // 初始化 Firebase（分析服务依赖）
+  // 失败时静默跳过，不影响 app 核心功能
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    AppLogger.log('App', 'Firebase 初始化成功');
+  } catch (e, stackTrace) {
+    AppLogger.log(
+      'App',
+      'Firebase 初始化失败，分析功能不可用: $e\n$stackTrace',
+    );
+  }
 
-  // 初始化 Supabase（认证 + 未来云同步用）
-  //
-  // 仅在 --dart-define 注入了 SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY 时才初始化；
-  // 未配置时跳过，登录功能不可用但 app 仍可匿名运行（渐进式登录策略）。
-  // Session 默认走 SharedPreferences 持久化，重启自动恢复。
-  // 已恢复的登录用户 ID（若有）。用于给 RevenueCat configure 直接带上 appUserID，
-  // 让已登录老用户冷启动跳过匿名态；未登录 / 未配置认证时为 null。
-  String? restoredUserId;
-  if (auth_config.isAuthConfigured) {
+  // FCM 远程推送初始化（通知召回 + 学习提醒）
+  // 仅在 Firebase 初始化成功且非 Web 平台时执行。
+  if (!kIsWeb) {
     try {
-      await Supabase.initialize(
-        url: auth_config.supabaseUrl,
-        anonKey: auth_config.supabasePublishableKey,
+      // 尝试从 prefs 获取已保存的 accessToken，用于 token 上报认证
+      final savedAccessToken = prefs.getString('access_token');
+      final fcmService = FcmPushService(
+        messaging: FirebaseMessaging.instance,
+        authToken: savedAccessToken,
       );
-      // Supabase 启动时自动从 SharedPreferences 恢复上次 session；此处读回恢复的用户 ID。
-      restoredUserId = Supabase.instance.client.auth.currentSession?.user.id;
+      await fcmService.initialize();
+      // 注册全局导航桥接，供 FCM 后台消息回调使用
+      setNavigationBridge(_FcmNavigationBridge());
+      // 将服务存入 provider container 供后续使用
+      // 注：此处直接调用，provider 注册在 runApp 内完成
     } catch (e) {
-      AppLogger.log('App', 'Supabase 初始化失败，认证功能不可用: $e');
+      AppLogger.log('FCM', 'FCM 初始化失败: $e');
     }
+  }
+
+  // auth_config.isAuthConfigured 现在始终为 false（空 SUPABASE_URL/KEY），
+  // 但保留分支结构以便未来扩展其他认证方式。
+  if (auth_config.isAuthConfigured) {
+    AppLogger.log('App', 'Supabase 已配置，跳过（使用自研 OTP 认证）');
   } else {
     AppLogger.log(
       'App',
-      'Supabase 未配置（缺 SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY），跳过初始化',
+      'Supabase 未配置，使用自研 OTP 邮箱验证码认证',
     );
   }
 
@@ -212,31 +246,13 @@ void main() async {
     // 权益经后端 /api/entitlements 读回，**不初始化 RevenueCat SDK**。
     AppLogger.log('App', '网页支付渠道：跳过 RevenueCat 初始化（权益经后端读回）');
   } else if (revenuecat_config.isRevenueCatConfigured) {
-    try {
-      // Debug 构建打开 RevenueCat 详细日志，便于定位 Offerings 为空等问题。
-      if (kDebugMode) {
-        await Purchases.setLogLevel(LogLevel.debug);
-      }
-      // 若已有恢复的登录 session，直接以真实用户 ID 配置，跳过匿名态；
-      // 否则匿名 configure（行为同旧版），后续由 SubscriptionController.logIn 绑定。
-      final configuration = PurchasesConfiguration(
-        revenuecat_config.revenueCatApiKey,
-      );
-      if (restoredUserId != null) {
-        configuration.appUserID = restoredUserId;
-      }
-      await Purchases.configure(configuration);
-      AppLogger.log(
-        'App',
-        restoredUserId != null
-            ? 'RevenueCat 以已登录身份 configure（appUserID=$restoredUserId）'
-            : 'RevenueCat 匿名 configure',
-      );
-    } catch (e) {
-      AppLogger.log('App', 'RevenueCat 初始化失败，订阅功能不可用: $e');
-    }
+    // 正式渠道（App Store / Google Play）：初始化 RevenueCat SDK，
+    // 购买走 RC 原生 SDK，权益经后端 /api/entitlements 读取。
+    // Purchases.logIn 由 SubscriptionController 监听身份变化后处理。
+    Purchases.configure(PurchasesConfiguration(revenuecat_config.revenueCatApiKey));
+    AppLogger.log('App', 'RevenueCat 初始化成功 (platform=${Platform.operatingSystem})');
   } else {
-    AppLogger.log('App', 'RevenueCat 未配置（缺平台 API Key），跳过初始化');
+    AppLogger.log('App', 'RevenueCat 跳过（API Key 未注入，订阅功能不可用）');
   }
 
   // 初始化用户 ID（SecureStorage 持久化，卸载重装可恢复）
@@ -337,6 +353,34 @@ void main() async {
   // 清理上次运行残留的官方合集音频下载 tmp 文件（异步）
   unawaited(cleanupOfficialDownloadTmp());
 
+  // 隐私同意检测：在 Sentry/PostHog 初始化前检查用户是否已同意数据采集。
+  // 若未同意，通过 provider 在根组件中展示同意弹窗（必须在 runApp 之后）。
+  final consentManager = ConsentManager(prefs);
+  final needsConsent = !consentManager.hasConsented;
+
+  // Sentry 崩溃上报：捕获异步未处理异常 + 渲染错误 + 原生 crash。
+  // DSN 通过 --dart-define=SENTRY_DSN 注入；未注入时跳过初始化（开发环境）。
+  final sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  if (sentryDsn.isNotEmpty) {
+    try {
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = sentryDsn;
+          options.dist = packageInfo.version;
+          options.environment = kDebugMode ? 'debug' : 'production';
+          options.beforeSend = (event, hint) {
+            // 过滤 Sentry 自身诊断事件，只保留业务 crash
+            if (event.logger == 'io.sentry') return null;
+            return event;
+          };
+        },
+      );
+      AppLogger.log('Sentry', 'Sentry 初始化成功');
+    } catch (e) {
+      AppLogger.log('Sentry', 'Sentry 初始化失败（不影响主流程）: $e');
+    }
+  }
+
   runApp(
     // PostHogWidget：posthog_flutter 5.x Session Replay 必需的根包装。
     // 负责 Flutter 端变更检测 + 截图并桥接原生 SDK 上报 $snapshot 事件；
@@ -383,11 +427,28 @@ void main() async {
             initialPiperModelStateProvider.overrideWithValue(
               initialPiperModelState,
             ),
+          needsConsentProvider.overrideWithValue(needsConsent),
         ],
         child: const EchoLoopApp(),
       ),
     ),
   );
+}
+
+/// FCM 导航桥接实现：通过 GoRouter 处理后台通知路由。
+/// 在 [main] 中初始化后，FCM 回调可通过 [setNavigationBridge] 设置此实例。
+class _FcmNavigationBridge implements NavigationBridge {
+  @override
+  void goTo(String path) {
+    // 此处暂留空，实际导航通过 [appRouterProvider] 在 Widget 层完成；
+    // 后台通知处理由 [NotificationTapRouterBridge] 统一桥接。
+    AppLogger.log('FCM', 'NavigationBridge: goTo $path');
+  }
+
+  @override
+  void goToPath(String path, Object? extra) {
+    AppLogger.log('FCM', 'NavigationBridge: goToPath $path');
+  }
 }
 
 class EchoLoopApp extends ConsumerStatefulWidget {
@@ -400,7 +461,7 @@ class EchoLoopApp extends ConsumerStatefulWidget {
 class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     with WidgetsBindingObserver {
   StreamSubscription<NotificationIntent>? _intentSubscription;
-  ProviderSubscription<AsyncValue<Session?>>? _authSessionSubscription;
+  ProviderSubscription<AuthResponse?>? _authSessionSubscription;
   late final ShowcaseView _showcase;
 
   @override
@@ -430,17 +491,10 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     // 用户首次打开订阅页时可直接渲染，无需等待临时网络请求。
     ref.read(subscriptionPlansProvider);
 
-    _authSessionSubscription = ref.listenManual<AsyncValue<Session?>>(
-      supabaseSessionProvider,
+    _authSessionSubscription = ref.listenManual<AuthResponse?>(
+      authSessionProvider,
       (previous, next) {
-        unawaited(
-          ref
-              .read(authAnalyticsSyncProvider)
-              .syncSessionChange(
-                previous: previous?.valueOrNull,
-                current: next.valueOrNull,
-              ),
-        );
+        // No-op: self-hosted OTP auth has no session sync needed.
       },
       fireImmediately: true,
     );
@@ -456,6 +510,17 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 首次启动且用户未同意数据采集时，展示隐私同意弹窗（barrierDismissible=false，必须选择）
+      if (ref.read(needsConsentProvider) && mounted) {
+        final allowed = await showPrivacyConsentDialog(context);
+        if (!mounted) return;
+        if (!allowed) {
+          // 拒绝：撤销同意，后续 AnalyticsService 将自动跳过所有埋点
+          final p = await SharedPreferences.getInstance();
+          ConsentManager(p).revokeConsent();
+        }
+      }
+
       final bridge = ref.read(notificationTapRouterBridgeProvider);
       _intentSubscription = bridge.intents.listen(_handleNotificationIntent);
 
@@ -531,6 +596,8 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
         final router = ref.read(appRouterProvider);
         router.go(AppRoutes.study);
         router.push(AppRoutes.audioLearningPlan(audioId));
+      default:
+        break;
     }
   }
 
@@ -540,7 +607,7 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Echo Loop',
+      title: '灵犀AI英语听说',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

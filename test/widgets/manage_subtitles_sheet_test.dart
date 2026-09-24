@@ -18,35 +18,27 @@ import 'package:echo_loop/widgets/manage_subtitles_sheet.dart';
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 
-void main() {
-  Session signedInSession() {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {'provider': 'email'},
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'learner@example.com',
-      createdAt: '2026-06-12T00:00:00.000Z',
-    );
-    return Session(
-      accessToken: 'token',
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class _FakeAuthSessionNotifier extends AuthSessionNotifier {
+  _FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
   }
+}
+
+void main() {
 
   group('ManageSubtitlesSheet', () {
     /// 构建弹窗测试 App（包含所有必要的 provider override）
     Widget buildSheet(
       AudioItem audioItem, {
       LearningProgressState? progressState,
-      Session? session,
+      
       AppSettingsState appSettingsState = const AppSettingsState(
         locale: Locale('en'),
       ),
@@ -91,8 +83,8 @@ void main() {
           transcriptionApiClientProvider.overrideWith(
             (ref) => createTestTranscriptionApiClient(),
           ),
-          supabaseSessionProvider.overrideWith(
-            (ref) => Stream<Session?>.value(session),
+          authSessionProvider.overrideWith(
+            (ref) => _FakeAuthSessionNotifier(AuthResponse(userId: 'user-1', email: 'learner@example.com', accessToken: 'token')),
           ),
           // 已登录用户视为已解锁（Pro），使转录机制测试不被额度闸拦截。
           subscriptionEntitlementOverride(),
@@ -299,7 +291,7 @@ void main() {
         final item = createTestAudioItem(
           totalDuration: 31 * 60,
         ).copyWith(transcriptSource: TranscriptSource.local);
-        await tester.pumpWidget(buildSheet(item, session: signedInSession()));
+        await tester.pumpWidget(buildSheet(item));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Open'));

@@ -74,11 +74,14 @@ class ListenAndRepeatController extends _$ListenAndRepeatController
     ref.listen(speechRecordingControllerProvider, _onRecordingStateChanged);
 
     // 打印状态变化日志
-    ref.listenSelf((prev, next) {
-      if (prev?.phase.runtimeType != next.phase.runtimeType ||
-          prev?.sentenceIndex != next.sentenceIndex ||
-          prev?.repeatIndex != next.repeatIndex) {
-        final recPhase = ref.read(speechRecordingControllerProvider).phase;
+    ref.listen(listenAndRepeatControllerProvider, (prev, next) {
+      if (// ignore: unnecessary_non_null_assertion
+prev!.phase.runtimeType != next!.phase.runtimeType ||
+          // ignore: unnecessary_non_null_assertion
+prev!.sentenceIndex != next!.sentenceIndex ||
+          // ignore: unnecessary_non_null_assertion
+prev!.repeatIndex != next.repeatIndex) {
+        final recPhase = ref.read(listenAndRepeatControllerProvider).phase;
         AppLogger.log(
           'L&R State',
           '${next.phase.runtimeType} | '

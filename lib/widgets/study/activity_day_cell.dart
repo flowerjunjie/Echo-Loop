@@ -8,7 +8,7 @@ import '../../providers/monthly_study_records_provider.dart';
 /// 本月日期统一黑色、统一字重，仅通过圆形背景色深浅区分学习强度。
 /// 非本月日期显示为浅灰色。今天额外加红色圆环标识。
 ///
-/// 背景色使用 GitHub 风格纯正绿，12 档固定阈值（分钟）：
+/// 背景色使用提交热力图风格纯正绿，12 档固定阈值（分钟）：
 /// 0–5–10–20–35–55–80–110–145–185–230–280+
 /// 颜色越深表示学习时长越长，level ≥ 7 时文字改白色。
 class ActivityDayCell extends StatelessWidget {

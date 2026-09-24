@@ -1,6 +1,6 @@
 // 网页支付（RevenueCat Web Purchase Link）配置
 //
-// 面向**无商店内购通道**的分发渠道：Android 侧载 APK、macOS 官网/GitHub 下载、
+// 面向**无商店内购通道**的分发渠道：Android 侧载 APK、macOS 官网/直接下载、
 // Windows。这些端没有可用的 RevenueCat 原生 SDK，购买改为在浏览器打开
 // RevenueCat 托管的 Web Purchase Link（底层计费引擎为 Paddle，作为 MoR），权益仍由 RC webhook 落库、
 // 客户端经后端 `/api/entitlements` 读回（见 `entitlement_repository.dart`）。

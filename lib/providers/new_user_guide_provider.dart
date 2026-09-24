@@ -25,8 +25,10 @@ class GuideRegistry {
 
   final SharedPreferences? _prefs;
 
-  Future<SharedPreferences> get _preferences async =>
-      _prefs ?? SharedPreferences.getInstance();
+  Future<SharedPreferences> get _preferences async {
+    if (_prefs != null) return _prefs;
+    return SharedPreferences.getInstance();
+  }
 
   String keyFor(String flowId) => 'guide_v1_${flowId}_seen';
 

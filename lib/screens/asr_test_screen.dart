@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,7 +55,8 @@ class AsrTestScreen extends ConsumerStatefulWidget {
 
 class _AsrTestScreenState extends ConsumerState<AsrTestScreen> {
   // 引擎选择
-  _AsrMode _mode = Platform.isAndroid ? _AsrMode.offline : _AsrMode.platform;
+  // Web 端无离线 ASR 引擎，默认走 platform（WebSpeechPracticeBackend 走 echo-transcribe API）
+  _AsrMode _mode = (Platform.isAndroid && !kIsWeb) ? _AsrMode.offline : _AsrMode.platform;
   String _selectedModelId = 'whisper-tiny-en-int8';
 
   // 录音状态
@@ -411,15 +413,17 @@ class _AsrTestScreenState extends ConsumerState<AsrTestScreen> {
                 Expanded(
                   child: SegmentedButton<_AsrMode>(
                     segments: [
-                      if (!Platform.isAndroid)
+                      // Web 端只显示 Platform（offline 模式在 Web 不可用）
+                      if (kIsWeb || !Platform.isAndroid)
                         const ButtonSegment(
                           value: _AsrMode.platform,
                           label: Text('Platform'),
                         ),
-                      const ButtonSegment(
-                        value: _AsrMode.offline,
-                        label: Text('本地离线'),
-                      ),
+                      if (!kIsWeb && Platform.isAndroid)
+                        const ButtonSegment(
+                          value: _AsrMode.offline,
+                          label: Text('本地离线'),
+                        ),
                     ],
                     selected: {_mode},
                     onSelectionChanged: (set) {

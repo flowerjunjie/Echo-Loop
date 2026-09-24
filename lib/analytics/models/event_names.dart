@@ -133,6 +133,7 @@ abstract class Events {
   // ── 录音完成（三个界面共用，mode 参数区分） ──
   /// 单次录音评估完成
   static const recordingComplete = 'recording_complete';
+  static const todayTasksViewed = 'today_tasks_viewed';
 
   // ── 查单词 ──
   /// 用户查询单词
@@ -241,6 +242,47 @@ abstract class Events {
   /// 用户从提醒设置页跳转到系统设置
   static const notificationSettingsOpenTapped =
       'notification_settings_open_tapped';
+
+  // ── 邀请裂变 ──
+  /// 进入邀请裂变页（区分 deep link 来源 vs 手动进入）
+  static const invitePageViewed = 'invite_page_viewed';
+
+  /// 复制邀请码
+  static const inviteCopyCode = 'invite_copy_code';
+
+  /// 复制邀请链接
+  static const inviteCopyLink = 'invite_copy_link';
+
+  /// 点击分享按钮
+  static const inviteShareTapped = 'invite_share_tapped';
+
+  /// 成功归因（新用户通过 deep link 注册，邀请码生效）
+  static const inviteAttributionSuccess = 'invite_attribution_success';
+
+  // ── 订阅/付费墙 ──
+  /// 付费墙页面展示
+  /// params: source ∈ {'quota_exceeded', 'upgrade_tapped', 'subscription_screen'}
+  static const paywallViewed = 'paywall_viewed';
+
+  /// 用户开始购买流程（点击购买按钮）
+  static const purchaseStarted = 'purchase_started';
+
+  /// 购买成功
+  /// params: plan_id, amount, currency
+  static const purchaseCompleted = 'purchase_completed';
+
+  /// 购买失败
+  /// params: error_code
+  static const purchaseFailed = 'purchase_failed';
+
+  /// 用户取消订阅
+  static const subscriptionCancelled = 'subscription_cancelled';
+
+  /// 免费试用开始
+  static const freeTrialStarted = 'free_trial_started';
+
+  /// 免费试用到期
+  static const freeTrialExpired = 'free_trial_expired';
 }
 
 /// User property 名称常量（写入分析通道用于分群留存）
@@ -256,7 +298,7 @@ abstract class UserProperties {
 
   /// 来源渠道（xiaohongshu / wechat / douyin / kuaishou / bilibili /
   /// baidu_search / youtube / reddit / x_twitter / tiktok / instagram /
-  /// google_search / github / app_store / google_play / friend / other）
+  /// google_search / app_store / google_play / friend / other）
   static const referralSource = 'referral_source';
 }
 
@@ -403,4 +445,21 @@ abstract class EventParams {
   /// 系统授权框返回状态
   /// 值：'granted' / 'denied'
   static const status = 'status';
+  static const completedCount = 'completed_count';
+
+  // ── 订阅/付费墙 ──
+  /// 付费墙来源
+  static const paywallSource = 'source';
+
+  /// 套餐 ID
+  static const planId = 'plan_id';
+
+  /// 交易金额
+  static const amount = 'amount';
+
+  /// 币种
+  static const currency = 'currency';
+
+  /// 错误码
+  static const errorCode = 'error_code';
 }

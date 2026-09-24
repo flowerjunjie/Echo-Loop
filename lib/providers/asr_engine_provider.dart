@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
-import '../services/asr/sherpa_onnx_engine.dart';
+import '../services/asr/sherpa_onnx_engine.dart' if (dart.library.html) '../services/asr/sherpa_onnx_engine_web_stub.dart';
 
 /// ASR 模型管理器 Provider（单例）。
 final asrModelManagerProvider = Provider<AsrModelManager>((ref) {

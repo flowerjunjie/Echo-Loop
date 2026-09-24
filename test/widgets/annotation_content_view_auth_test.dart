@@ -7,7 +7,6 @@ import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/database/daos/sentence_ai_cache_dao.dart';
@@ -26,6 +25,15 @@ import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:echo_loop/widgets/practice/annotation_content_view.dart';
 
 import '../helpers/mock_providers.dart';
+
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class _FakeAuthSessionNotifier extends AuthSessionNotifier {
+  _FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+  }
+}
 
 class _NoopSentenceAiApiClient extends SentenceAiApiClient {
   _NoopSentenceAiApiClient() : super.withDio(_UnusedDio());
@@ -120,20 +128,6 @@ class _MockAudioItemDao extends Mock implements AudioItemDao {}
 
 class MockDio extends Mock implements Dio {}
 
-Session testSession() {
-  return Session(
-    accessToken: 'test-access-token',
-    tokenType: 'bearer',
-    user: const User(
-      id: 'test-user',
-      appMetadata: {},
-      userMetadata: {},
-      aud: 'authenticated',
-      createdAt: '2026-07-13T00:00:00.000Z',
-    ),
-  );
-}
-
 void main() {
   Future<void> pumpAuthTestApp(
     WidgetTester tester, {
@@ -187,8 +181,8 @@ void main() {
           analyticsOverride(),
           usageOverride(),
           ...learningSettingsOverrides(prefs: prefs),
-          supabaseSessionProvider.overrideWith(
-            (ref) => Stream<Session?>.value(signedIn ? testSession() : null),
+          authSessionProvider.overrideWith(
+            (ref) => _FakeAuthSessionNotifier(signedIn ? AuthResponse(userId: 'test-user', email: 'learner@example.com', accessToken: 'test-access-token') : null),
           ),
           savedSenseGroupDaoProvider.overrideWithValue(savedSenseGroupDao),
           subscriptionAvailabilityProvider.overrideWithValue(true),

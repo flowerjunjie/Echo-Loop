@@ -14,6 +14,7 @@ import 'audio_finalization_service.dart';
 import 'audio_import_models.dart';
 import 'audio_registration_service.dart';
 import 'audio_transcode_service.dart';
+import '../../../services/app_logger.dart';
 
 typedef AudioImportProgressCallback =
     void Function(int receivedBytes, int? totalBytes);
@@ -310,7 +311,9 @@ class AudioImportService {
       if (await tmpFile.exists()) {
         try {
           await tmpFile.delete();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('AudioImport', '$e');
+      }
       }
     }
   }
@@ -374,6 +377,8 @@ class AudioImportService {
     if (!await file.exists()) return;
     try {
       await file.delete();
-    } catch (_) {}
+    } catch (e) {
+        AppLogger.log('AudioImport', '$e');
+      }
   }
 }

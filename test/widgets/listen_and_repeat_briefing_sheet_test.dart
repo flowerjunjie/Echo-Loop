@@ -1,3 +1,5 @@
+import 'package:echo_loop/models/stage_settings_overrides.dart'
+    show BriefingPauseChoice;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/widgets/listen_and_repeat/listen_and_repeat_briefing_sheet.dart';
@@ -15,7 +17,7 @@ void main() {
                 context: context,
                 difficultCount: 5,
                 playCount: 3,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),
@@ -51,7 +53,7 @@ void main() {
                 difficultCount: 5,
                 playCount: 3,
                 defaultPlaybackSpeed: 0.9,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),

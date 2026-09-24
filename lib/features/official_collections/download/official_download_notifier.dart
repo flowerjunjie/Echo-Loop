@@ -360,7 +360,9 @@ class OfficialDownload extends _$OfficialDownload {
       if (await tmpAudioFile.exists()) {
         try {
           await tmpAudioFile.delete();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('OfficialCollection', '$e');
+      }
       }
     }
     // 走到这里说明 catch 分支吞掉了异常（下载失败）。
@@ -390,7 +392,9 @@ Future<void> cleanupOfficialDownloadTmp() async {
       if (entity is File) {
         try {
           await entity.delete();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('OfficialCollection', '$e');
+      }
       }
     }
   } catch (e) {

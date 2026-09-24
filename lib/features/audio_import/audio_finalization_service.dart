@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../utils/audio_fingerprint.dart';
 import 'audio_import_models.dart';
 import 'audio_transcode_service.dart';
+import '../../../services/app_logger.dart';
 
 /// 音频落盘结果。
 ///
@@ -171,6 +172,8 @@ class AudioFinalizationService {
     if (!await file.exists()) return;
     try {
       await file.delete();
-    } catch (_) {}
+    } catch (e) {
+        AppLogger.log('AudioImport', '$e');
+      }
   }
 }

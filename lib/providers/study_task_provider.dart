@@ -342,3 +342,19 @@ final recentCompletionsProvider = FutureProvider<List<RecentCompletion>>((ref) {
   final since = now.subtract(const Duration(hours: 24));
   return dao.getRecentCompletions(since);
 });
+
+// ---------------------------------------------------------------------------
+// 今日完成任务数（用于学习 Tab 首页折叠区展示）
+// ---------------------------------------------------------------------------
+
+/// 当天已完成的子步骤数量（用于"今日完成任务"折叠区）。
+///
+/// 依赖 [learningProgressNotifierProvider] 实现自动刷新：
+/// 完成子步骤后 progressMap 变化 → 触发重新计数。
+final todayCompletedTaskCountProvider = FutureProvider<int>((ref) async {
+  ref.watch(learningProgressNotifierProvider.select((s) => s.progressMap));
+  final dao = ref.watch(stageCompletionDaoProvider);
+  final now = ref.watch(nowProvider)();
+  final startOfDay = DateTime(now.year, now.month, now.day);
+  return await dao.countCompletedSince(startOfDay);
+});

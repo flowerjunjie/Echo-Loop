@@ -43,7 +43,8 @@ class _FakePurchaseService implements PurchaseService {
     } else {
       fastFetches++;
     }
-    return onFetch?.call(includeIntroEligibility) ?? _chinaPlans;
+    final result = onFetch?.call(includeIntroEligibility);
+    return result ?? Future.value(_chinaPlans);
   }
 
   @override

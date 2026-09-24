@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod/riverpod.dart';
 
 import '../../models/audio_item.dart';
 import '../../providers/audio_library_provider.dart';
@@ -12,7 +13,7 @@ import 'audio_import_service.dart';
 part 'audio_import_provider.g.dart';
 
 @riverpod
-AudioImportService audioImportService(AudioImportServiceRef ref) {
+AudioImportService audioImportService(Ref ref) {
   return AudioImportService();
 }
 

@@ -164,7 +164,7 @@ void main() {
       word,
       preferredSourceId: preferredSourceId,
     );
-    final sub = c.listen(p, (_, _) {});
+    final sub = c.listen(p, (_, __) {});
     addTearDown(sub.close);
     return c.read(p.notifier);
   }
@@ -339,7 +339,7 @@ void main() {
     final a = ControllableSource('a');
     final c = makeContainer({'a': a});
     final p = dictionaryLookupControllerProvider('run');
-    final sub = c.listen(p, (_, _) {});
+    final sub = c.listen(p, (_, __) {});
     await pump();
     expect(a.calls, hasLength(1));
 

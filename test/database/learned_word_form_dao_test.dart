@@ -1,3 +1,4 @@
+@TestOn('browser')
 import 'package:echo_loop/database/daos/learned_word_form_dao.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';

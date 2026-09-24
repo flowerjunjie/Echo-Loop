@@ -1,4 +1,4 @@
-/// Echo Loop TTS（Kokoro）端到端集成测试。
+/// 灵犀AI英语听说 TTS（Kokoro）端到端集成测试。
 ///
 /// 从 CDN 下载真实 Kokoro int8 模型（首次较慢，缓存到 app support 跨次复用；
 /// 下载失败则跳过），跑真实 sherpa-onnx native 合成，验证：
@@ -189,7 +189,7 @@ void main() {
       );
       await coordinator.configure(TtsEngineKind.echoLoop, config);
 
-      const text = 'Learning English with Echo Loop is really fun.';
+      const text = 'Learning English with 灵犀AI英语听说 is really fun.';
 
       // 首次：未命中 → 合成 → 入库 → 播放完成。
       final played1 = await coordinator.speak(text);

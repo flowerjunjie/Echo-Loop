@@ -103,7 +103,7 @@ class SavedWordTexts extends _$SavedWordTexts {
 /// keepAlive + 派生自两个流 provider：索引只在收藏集合变化时重建，
 /// 被所有可见句子共享（避免每个句子组件各自重复归一化全部 key）。
 @Riverpod(keepAlive: true)
-SavedTextIndex savedTextIndex(SavedTextIndexRef ref) {
+SavedTextIndex savedTextIndex(ProviderRef<SavedTextIndex> ref) {
   final words =
       ref.watch(savedWordTextsProvider).valueOrNull ?? const <String>{};
   final phrases =

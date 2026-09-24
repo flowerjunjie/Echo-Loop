@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  ffmpeg_kit_flutter_new_min
   firebase_core
   flutter_inappwebview_windows
   flutter_secure_storage_windows
@@ -11,14 +12,14 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_tts
   permission_handler_windows
   printing
+  sentry_flutter
   share_plus
   sqlite3_flutter_libs
   url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  flutter_local_notifications_windows
-  sherpa_onnx_windows
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

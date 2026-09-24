@@ -235,14 +235,18 @@ class OfficialCollectionRepository {
         try {
           final f = File(p.join(dir.path, audioPath));
           if (await f.exists()) await f.delete();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('OfficialCollection', '$e');
+      }
       }
       final transcript = row.transcriptPath;
       if (transcript != null) {
         try {
           final f = File(p.join(dir.path, transcript));
           if (await f.exists()) await f.delete();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('OfficialCollection', '$e');
+      }
       }
     }
   }

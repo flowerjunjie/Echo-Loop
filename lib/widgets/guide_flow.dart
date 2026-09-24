@@ -104,7 +104,7 @@ class _GuideFlowSequenceHostState extends ConsumerState<GuideFlowSequenceHost> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final tickerEnabled = TickerMode.valuesOf(context).enabled;
+    final tickerEnabled = TickerMode.of(context);
     if (tickerEnabled && !_lastTickerEnabled) {
       _attemptScheduled = false;
       _scheduleAttempt();
@@ -140,7 +140,7 @@ class _GuideFlowSequenceHostState extends ConsumerState<GuideFlowSequenceHost> {
   void _scheduleAttempt() {
     if (_attemptScheduled ||
         widget.flows.isEmpty ||
-        !TickerMode.valuesOf(context).enabled) {
+        !TickerMode.of(context)) {
       return;
     }
     _attemptScheduled = true;
@@ -153,7 +153,7 @@ class _GuideFlowSequenceHostState extends ConsumerState<GuideFlowSequenceHost> {
 
   Future<void> _tryStartNext() async {
     if (!mounted) return;
-    if (!TickerMode.valuesOf(context).enabled) return;
+    if (!TickerMode.of(context)) return;
     final showcase = _tryGetShowcase();
     if (showcase == null) return;
     if (ref.read(guideControllerProvider).isActive) return;
@@ -181,7 +181,7 @@ class _GuideFlowSequenceHostState extends ConsumerState<GuideFlowSequenceHost> {
 
       await Future<void>.delayed(_kGuideAppearDelay);
       if (!mounted) return;
-      if (!TickerMode.valuesOf(context).enabled) return;
+      if (!TickerMode.of(context)) return;
 
       showcase.startShowCase(keys);
       return;

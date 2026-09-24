@@ -3,7 +3,6 @@
 /// 测试设置页面的渲染和交互。
 library;
 
-import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
@@ -22,6 +21,7 @@ import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/collection_provider.dart';
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/subscription/models/entitlement.dart';
+
 import 'package:echo_loop/features/subscription/providers/subscription_availability.dart';
 import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
 import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
@@ -29,14 +29,21 @@ import 'package:echo_loop/providers/listening_practice/listening_practice_provid
 import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
 import 'package:echo_loop/providers/package_info_provider.dart';
 import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class _FakeAuthSessionNotifier extends AuthSessionNotifier {
+  _FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+  }
+}
+
 void main() {
   final testPackageInfo = PackageInfo(
-    appName: 'Echo Loop',
+    appName: '灵犀AI英语听说',
     packageName: 'top.echo-loop',
     version: '1.0.0',
     buildNumber: '1',
@@ -58,6 +65,7 @@ void main() {
     PackageInfo? packageInfo,
     // 测试宿主（macOS/无 key）默认不支持订阅，这里默认置 true 以覆盖订阅入口 UI。
     bool subscriptionAvailable = true,
+    AuthResponse? authResponse,
   }) {
     const recommendedModel = AsrModelInfo(
       id: 'whisper-base-en-int8',
@@ -85,6 +93,8 @@ void main() {
       appUpdateProvider.overrideWith(() => TestAppUpdate()),
       subscriptionAvailabilityProvider.overrideWithValue(subscriptionAvailable),
       analyticsOverride(),
+      if (authResponse != null)
+        authSessionProvider.overrideWith((ref) => _FakeAuthSessionNotifier(authResponse)),
     ];
   }
 
@@ -163,30 +173,15 @@ void main() {
       });
 
       testWidgets('已登录时账号区显示登录邮箱', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {},
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'user@example.com',
-          createdAt: '2026-06-03T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
+            overrides: buildOverrides(authResponse: AuthResponse(
+              userId: 'user-1',
+              email: 'user@example.com',
+              accessToken: 'token',
+              refreshToken: 'refresh',
+            )),
           ),
         );
         await tester.pumpAndSettle();
@@ -194,148 +189,74 @@ void main() {
         expect(find.text('user@example.com'), findsOneWidget);
       });
 
-      testWidgets('Apple 登录在账号入口显示 Apple 登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'apple',
-            'providers': ['apple'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'mbfpw8sdy7@privaterelay.appleid.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
+      testWidgets('Apple 登录在账号入口显示邮箱地址', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
+            overrides: buildOverrides(authResponse: AuthResponse(
+              userId: 'user-1',
+              email: 'mbfpw8sdy7@privaterelay.appleid.com',
+              accessToken: 'token',
+              refreshToken: 'refresh',
+            )),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('mbfpw8sdy7@privaterelay.appleid.com'), findsNothing);
-        expect(find.text('Signed in with Apple'), findsOneWidget);
+        // 简化后统一显示邮箱，不再区分登录方式
+        expect(find.text('mbfpw8sdy7@privaterelay.appleid.com'), findsOneWidget);
       });
 
-      testWidgets('Google 登录在账号入口显示 Google 登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'google',
-            'providers': ['google'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'long.google.account@example.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
+      testWidgets('Google 登录在账号入口显示截断的邮箱地址', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
+            overrides: buildOverrides(authResponse: AuthResponse(
+              userId: 'user-1',
+              email: 'long.google.account@example.com',
+              accessToken: 'token',
+              refreshToken: 'refresh',
+            )),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('long.google.account@example.com'), findsNothing);
-        expect(find.text('Signed in with Google'), findsOneWidget);
+        // 超长邮箱会被截断
+        expect(find.text('long.google.accou...@example.com'), findsOneWidget);
       });
 
-      testWidgets('关联 Google 后使用邮箱 OTP 登录在账号入口显示邮箱', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'google',
-            'providers': ['email', 'google'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'user@example.com',
-          createdAt: '2026-06-07T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: _jwtWithAuthenticationMethod('otp'),
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
+      testWidgets('邮箱登录账号区显示邮箱地址', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
+            overrides: buildOverrides(authResponse: AuthResponse(
+              userId: 'user-1',
+              email: 'user@example.com',
+              accessToken: 'token',
+              refreshToken: 'refresh',
+            )),
           ),
         );
         await tester.pumpAndSettle();
 
         expect(find.text('user@example.com'), findsOneWidget);
-        expect(find.text('Signed in with Google'), findsNothing);
       });
 
-      testWidgets('邮箱登录不通过 Apple relay 域名误判登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'email',
-            'providers': ['email'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'mbfpw8sdy7@privaterelay.appleid.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
+      testWidgets('Apple relay 邮箱正常显示', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
+            overrides: buildOverrides(authResponse: AuthResponse(
+              userId: 'user-1',
+              email: 'mbfpw8sdy7@privaterelay.appleid.com',
+              accessToken: 'token',
+              refreshToken: 'refresh',
+            )),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Signed in with Apple'), findsNothing);
-        expect(find.text('mbfpw8sd...@ay.appleid.com'), findsOneWidget);
+        expect(find.text('mbfpw8sdy7@privaterelay.appleid.com'), findsOneWidget);
       });
 
       testWidgets('未订阅：账户分组内显示订阅入口与「升级」徽章，无顶部金卡', (tester) async {
@@ -467,7 +388,7 @@ void main() {
         expect(find.text('American'), findsNothing);
       });
 
-      testWidgets('语音合成入口显示 Echo Loop 引擎', (tester) async {
+      testWidgets('语音合成入口显示 灵犀AI英语听说 引擎', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
@@ -479,7 +400,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Text-to-Speech'), findsOneWidget);
-        expect(find.text('Echo Loop AI'), findsOneWidget);
+        expect(find.text('灵犀AI英语听说 AI'), findsOneWidget);
       });
 
       testWidgets('开发者选项关闭时不显示开发者分组', (tester) async {
@@ -631,14 +552,6 @@ void main() {
       });
     });
   });
-}
-
-String _jwtWithAuthenticationMethod(String method) {
-  final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
-  final payload = base64Url.encode(
-    utf8.encode('{"amr":[{"method":"$method","timestamp":0}]}'),
-  );
-  return '$header.$payload.';
 }
 
 /// 测试用 SubscriptionController，固定返回指定权益状态，

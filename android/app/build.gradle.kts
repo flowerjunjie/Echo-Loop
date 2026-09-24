@@ -50,7 +50,7 @@ android {
     packaging {
         jniLibs {
             // 强制排除非 arm64 的 so，防止 Flutter 插件绕过 abiFilters
-            excludes += listOf("lib/x86_64/**", "lib/armeabi-v7a/**", "lib/x86/**")
+            
         }
     }
 
@@ -83,8 +83,8 @@ android {
     }
 
     // 与 iOS 的 dev / prod scheme 保持一致：
-    // dev  -> app.echoloop.dev  / "Echo Loop Dev"
-    // prod -> app.echoloop      / "Echo Loop"
+    // dev  -> app.echoloop.dev  / "灵犀AI英语听说 Dev"
+    // prod -> app.echoloop      / "灵犀AI英语听说"
     // 这里按 flavor 固定签名：dev 使用 debug 证书，prod 使用 release 证书。
     // 这样同一个 package 的 debug / release 会保持同一把签名，便于 Google 登录配置。
     flavorDimensions += "env"
@@ -92,11 +92,11 @@ android {
         create("dev") {
             dimension = "env"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Echo Loop Dev")
+            resValue("string", "app_name", "灵犀AI英语听说")
         }
         create("prod") {
             dimension = "env"
-            resValue("string", "app_name", "Echo Loop")
+            resValue("string", "app_name", "灵犀AI英语听说")
         }
     }
 }

@@ -72,7 +72,6 @@ abstract final class OnboardingReferralSource {
   static const instagram = 'instagram';
   static const googleSearch = 'google_search';
   // 通用渠道
-  static const github = 'github';
   static const appStore = 'app_store';
   static const googlePlay = 'google_play';
   static const friend = 'friend';
@@ -91,7 +90,6 @@ abstract final class OnboardingReferralSource {
     tiktok,
     instagram,
     googleSearch,
-    github,
     appStore,
     googlePlay,
     friend,

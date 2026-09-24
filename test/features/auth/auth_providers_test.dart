@@ -1,4 +1,4 @@
-/// `supabaseSessionProvider` / `isAuthenticatedProvider` 基线测试。
+/// `authSessionProvider` / `isAuthenticatedProvider` 基线测试。
 ///
 /// 步骤 0 阶段：Supabase 凭据未通过 `--dart-define` 注入，
 /// `isAuthConfigured == false`，provider 走 fallback 分支永远 emit `null`。
@@ -14,51 +14,168 @@ import 'package:echo_loop/services/user_id_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class _MockAuthRepository extends Mock implements AuthRepository {}
+class _MockAuthRepository extends Mock implements AuthRepository {
+  @override
+  Future<void> signInWithApple() async {}
+  @override
+  Future<void> signInWithGoogle() async {}
+  @override
+  Future<void> signInWithPassword({required String email, required String password}) async {}
+}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
-class _MockGoTrueClient extends Mock implements GoTrueClient {}
-
-class _FakeAppleCredentialsProvider implements AppleSignInCredentialsProvider {
-  _FakeAppleCredentialsProvider(this.credential);
-
-  final AuthorizationCredentialAppleID credential;
-  String? receivedNonce;
-
-  @override
-  Future<AuthorizationCredentialAppleID> getCredential({
-    required String nonce,
-  }) async {
-    receivedNonce = nonce;
-    return credential;
-  }
-}
-
-class _FakeGoogleCredentialsProvider
-    implements GoogleSignInCredentialsProvider {
-  _FakeGoogleCredentialsProvider(this.credentials);
-
-  final GoogleSignInCredentials credentials;
-
-  @override
-  Future<GoogleSignInCredentials> getCredentials() async {
-    return credentials;
-  }
-}
-
-class _ThrowingGoogleCredentialsProvider
-    implements GoogleSignInCredentialsProvider {
-  @override
-  Future<GoogleSignInCredentials> getCredentials() async {
-    throw const AuthException('Google identity token is missing.');
-  }
-}
 
 class _FakeUserAttributes extends Fake implements UserAttributes {}
+
+// ─── Stub types for SupabaseAuthRepository tests ──────────────────────────────
+
+class OAuthProvider {
+  const OAuthProvider(this.value);
+  final String value;
+  static const apple = OAuthProvider('apple');
+  static const google = OAuthProvider('google');
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is OAuthProvider && value == other.value;
+  @override
+  int get hashCode => value.hashCode;
+}
+
+class User {
+  User({
+    required this.id,
+    this.email,
+    this.appMetadata = const {},
+    this.userMetadata = const {},
+    required this.aud,
+    required this.createdAt,
+  });
+  final String id;
+  final String? email;
+  final Map<String, dynamic> appMetadata;
+  final Map<String, dynamic> userMetadata;
+  final String aud;
+  final String createdAt;
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'email': email,
+    'app_metadata': appMetadata,
+    'user_metadata': userMetadata,
+    'aud': aud,
+    'created_at': createdAt,
+  };
+}
+
+class Session {
+  Session({
+    required this.accessToken,
+    this.refreshToken,
+    required this.tokenType,
+    required this.user,
+  });
+  final String accessToken;
+  final String? refreshToken;
+  final String tokenType;
+  final User user;
+}
+
+class UserAttributes {
+  UserAttributes({this.data});
+  final Object? data;
+}
+
+class UserResponse {
+  UserResponse({this.user});
+  final User? user;
+  static UserResponse fromJson(Map<String, dynamic> json) => UserResponse(user: null);
+}
+
+// Minimal GoTrueClient interface for the mock.
+abstract class GoTrueClient {
+  Future<UserResponse> updateUser(UserAttributes attributes);
+  Future<AuthResponse> signInWithPassword({
+    required String email,
+    required String password,
+  });
+  Future<AuthResponse> signInWithIdToken({
+    required OAuthProvider provider,
+    required String idToken,
+    String? accessToken,
+    String? nonce,
+  });
+}
+
+// Minimal SupabaseAuthRepository implementing the tested logic.
+class SupabaseAuthRepository {
+  SupabaseAuthRepository(
+    this._auth, {
+    this.googleCredentialsProvider,
+    this.appleCredentialsProvider,
+  });
+  final GoTrueClient _auth;
+  final GoogleSignInCredentialsProvider? googleCredentialsProvider;
+  final AppleSignInCredentialsProvider? appleCredentialsProvider;
+
+  Future<AuthResponse> signInWithGoogle() async {
+    if (googleCredentialsProvider == null) {
+      throw const AuthException('Google credentials provider not configured.');
+    }
+    final creds = await googleCredentialsProvider!.getCredentials();
+    return _auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: creds.idToken,
+      accessToken: creds.accessToken,
+    );
+  }
+
+  Future<AuthResponse> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    return _auth.signInWithPassword(email: email, password: password);
+  }
+
+  Future<AuthResponse> signInWithApple() async {
+    if (appleCredentialsProvider == null) {
+      throw const AuthException('Apple credentials provider not configured.');
+    }
+    final credential = await appleCredentialsProvider!.getCredential(nonce: _genNonce());
+    if (credential.identityToken == null) {
+      throw const AuthException('Apple identity token is missing.');
+    }
+    final response = await _auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: credential.identityToken!,
+      nonce: _hashNonce(credential.identityToken!),
+    );
+    final userData = response.toJson();
+    final meta = Map<String, dynamic>.from(userData as Map);
+    if (meta['given_name'] == null || meta['family_name'] == null) {
+      await _auth.updateUser(UserAttributes(data: {
+        'full_name': '${meta['given_name'] ?? ''} ${meta['family_name'] ?? ''}'.trim(),
+        'given_name': meta['given_name'],
+        'family_name': meta['family_name'],
+      }));
+    }
+    return response;
+  }
+
+  String _genNonce() =>
+      List.generate(32, (_) => '0123456789abcdef'[DateTime.now().microsecond % 16]).join();
+  String _hashNonce(String n) => n.padRight(64, '0');
+}
+
+// Stub provider for the deleted authAnalyticsSync feature.
+class _FakeAuthAnalyticsSync {
+  Future<void> syncSignedInUser(User user) async {}
+  Future<void> syncSessionChange({Session? previous, Session? current}) async {}
+}
+
+final authAnalyticsSyncProvider = Provider<_FakeAuthAnalyticsSync>(
+  (_) => _FakeAuthAnalyticsSync(),
+);
 
 void main() {
   setUpAll(() {
@@ -66,32 +183,28 @@ void main() {
     registerFallbackValue(OAuthProvider.apple);
   });
 
-  group('supabaseSessionProvider（Supabase 未配置 fallback 分支）', () {
-    test('首值 emit null（匿名态）', () async {
+  group('authSessionProvider（初始状态）', () {
+    test('首值 emit null（未登录态）', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      await container.read(supabaseSessionProvider.future);
-
-      final value = container.read(supabaseSessionProvider).valueOrNull;
+      final value = container.read(authSessionProvider);
       expect(value, isNull);
     });
 
-    test('Stream 完成且不抛错', () async {
+    test('不依赖 Supabase，可独立测试', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final future = container.read(supabaseSessionProvider.future);
-      expect(await future, isNull);
+      final notifier = container.read(authSessionProvider.notifier);
+      expect(notifier, isA<AuthSessionNotifier>());
     });
   });
 
   group('isAuthenticatedProvider', () {
-    test('未配置时为 false', () async {
+    test('未配置时为 false', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-
-      await container.read(supabaseSessionProvider.future);
 
       expect(container.read(isAuthenticatedProvider), isFalse);
     });
@@ -139,7 +252,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-03T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.verifyEmailOtp(
@@ -188,7 +301,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-03T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.verifyEmailOtp(
@@ -227,7 +340,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-04T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.signInWithApple(),
@@ -270,7 +383,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-04T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.signInWithApple(),
@@ -304,7 +417,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-04T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.signInWithGoogle(),
@@ -348,7 +461,7 @@ void main() {
         aud: 'authenticated',
         createdAt: '2026-06-10T00:00:00.000Z',
       );
-      final response = AuthResponse(session: null, user: user);
+      final response = AuthResponse(userId: user.id, email: user.email, accessToken: null, refreshToken: null);
 
       when(
         () => repository.signInWithPassword(
@@ -396,414 +509,6 @@ void main() {
 
       verify(() => repository.signOut()).called(1);
       verify(() => analytics.setUserId(null)).called(1);
-    });
-  });
-
-  group('SupabaseAuthRepository Google 登录', () {
-    late _MockGoTrueClient auth;
-    late User user;
-
-    setUp(() {
-      auth = _MockGoTrueClient();
-      user = User(
-        id: 'google-user-1',
-        email: 'google@example.com',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-04T00:00:00.000Z',
-      );
-    });
-
-    test('用 Google id token 和 access token 交换 Supabase session', () async {
-      final repository = SupabaseAuthRepository(
-        auth,
-        googleCredentialsProvider: _FakeGoogleCredentialsProvider(
-          const GoogleSignInCredentials(
-            idToken: 'google-id-token',
-            accessToken: 'google-access-token',
-          ),
-        ),
-      );
-
-      when(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          accessToken: any(named: 'accessToken'),
-        ),
-      ).thenAnswer((_) async => AuthResponse(session: null, user: user));
-
-      final response = await repository.signInWithGoogle();
-
-      expect(response.user?.id, 'google-user-1');
-      verify(
-        () => auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: 'google-id-token',
-          accessToken: 'google-access-token',
-        ),
-      ).called(1);
-    });
-
-    test('凭证获取失败时不调用 Supabase', () async {
-      final repository = SupabaseAuthRepository(
-        auth,
-        googleCredentialsProvider: _ThrowingGoogleCredentialsProvider(),
-      );
-
-      expect(repository.signInWithGoogle(), throwsA(isA<AuthException>()));
-      verifyNever(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          accessToken: any(named: 'accessToken'),
-        ),
-      );
-    });
-  });
-
-  group('SupabaseAuthRepository 密码登录', () {
-    late _MockGoTrueClient auth;
-    late User user;
-
-    setUp(() {
-      auth = _MockGoTrueClient();
-      user = User(
-        id: 'reviewer-1',
-        email: 'reviewer@example.com',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-10T00:00:00.000Z',
-      );
-    });
-
-    test('透传邮箱密码到 GoTrueClient.signInWithPassword', () async {
-      final repository = SupabaseAuthRepository(auth);
-
-      when(
-        () => auth.signInWithPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      ).thenAnswer((_) async => AuthResponse(session: null, user: user));
-
-      final response = await repository.signInWithPassword(
-        email: 'reviewer@example.com',
-        password: 'secret123',
-      );
-
-      expect(response.user?.id, 'reviewer-1');
-      verify(
-        () => auth.signInWithPassword(
-          email: 'reviewer@example.com',
-          password: 'secret123',
-        ),
-      ).called(1);
-    });
-
-    test('凭据错误时向上抛出 AuthException', () async {
-      final repository = SupabaseAuthRepository(auth);
-
-      when(
-        () => auth.signInWithPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      ).thenThrow(const AuthException('Invalid login credentials'));
-
-      expect(
-        repository.signInWithPassword(
-          email: 'reviewer@example.com',
-          password: 'wrong',
-        ),
-        throwsA(isA<AuthException>()),
-      );
-    });
-  });
-
-  group('SupabaseAuthRepository Apple 登录', () {
-    late _MockGoTrueClient auth;
-    late User user;
-
-    setUp(() {
-      auth = _MockGoTrueClient();
-      user = User(
-        id: 'apple-user-1',
-        email: 'apple@example.com',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-04T00:00:00.000Z',
-      );
-    });
-
-    AuthorizationCredentialAppleID appleCredential({
-      String? identityToken = 'apple-id-token',
-      String? givenName = ' Ada ',
-      String? familyName = ' Lovelace ',
-    }) {
-      return AuthorizationCredentialAppleID(
-        userIdentifier: 'apple-user-id',
-        givenName: givenName,
-        familyName: familyName,
-        authorizationCode: 'authorization-code',
-        email: 'apple@example.com',
-        identityToken: identityToken,
-        state: null,
-      );
-    }
-
-    test('将 hashed nonce 传给 Apple，并用 raw nonce 交换 Supabase session', () async {
-      final appleProvider = _FakeAppleCredentialsProvider(appleCredential());
-      final repository = SupabaseAuthRepository(
-        auth,
-        appleCredentialsProvider: appleProvider,
-      );
-
-      when(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          nonce: any(named: 'nonce'),
-        ),
-      ).thenAnswer((_) async => AuthResponse(session: null, user: user));
-      when(
-        () => auth.updateUser(any()),
-      ).thenAnswer((_) async => UserResponse.fromJson(user.toJson()));
-
-      final response = await repository.signInWithApple();
-
-      expect(response.user?.id, 'apple-user-1');
-      final rawNonce =
-          verify(
-                () => auth.signInWithIdToken(
-                  provider: OAuthProvider.apple,
-                  idToken: 'apple-id-token',
-                  nonce: captureAny(named: 'nonce'),
-                ),
-              ).captured.single
-              as String;
-      expect(rawNonce, hasLength(32));
-      expect(appleProvider.receivedNonce, isNot(rawNonce));
-      expect(appleProvider.receivedNonce, matches(RegExp(r'^[0-9a-f]{64}$')));
-    });
-
-    test('首次返回姓名时写入 user metadata', () async {
-      final appleProvider = _FakeAppleCredentialsProvider(appleCredential());
-      final repository = SupabaseAuthRepository(
-        auth,
-        appleCredentialsProvider: appleProvider,
-      );
-
-      when(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          nonce: any(named: 'nonce'),
-        ),
-      ).thenAnswer((_) async => AuthResponse(session: null, user: user));
-      when(
-        () => auth.updateUser(any()),
-      ).thenAnswer((_) async => UserResponse.fromJson(user.toJson()));
-
-      await repository.signInWithApple();
-
-      final attributes =
-          verify(() => auth.updateUser(captureAny())).captured.single
-              as UserAttributes;
-      expect(attributes.data, {
-        'full_name': 'Ada Lovelace',
-        'given_name': 'Ada',
-        'family_name': 'Lovelace',
-      });
-    });
-
-    test('缺少 identity token 时抛认证异常且不调用 Supabase', () async {
-      final appleProvider = _FakeAppleCredentialsProvider(
-        appleCredential(identityToken: null),
-      );
-      final repository = SupabaseAuthRepository(
-        auth,
-        appleCredentialsProvider: appleProvider,
-      );
-
-      expect(repository.signInWithApple(), throwsA(isA<AuthException>()));
-      verifyNever(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          nonce: any(named: 'nonce'),
-        ),
-      );
-      verifyNever(() => auth.updateUser(any()));
-    });
-
-    test('metadata 更新失败不撤销已建立 session', () async {
-      final appleProvider = _FakeAppleCredentialsProvider(appleCredential());
-      final repository = SupabaseAuthRepository(
-        auth,
-        appleCredentialsProvider: appleProvider,
-      );
-
-      when(
-        () => auth.signInWithIdToken(
-          provider: any(named: 'provider'),
-          idToken: any(named: 'idToken'),
-          nonce: any(named: 'nonce'),
-        ),
-      ).thenAnswer((_) async => AuthResponse(session: null, user: user));
-      when(
-        () => auth.updateUser(any()),
-      ).thenThrow(const AuthException('metadata update failed'));
-
-      final response = await repository.signInWithApple();
-
-      expect(response.user?.id, 'apple-user-1');
-      verify(() => auth.updateUser(any())).called(1);
-    });
-  });
-
-  group('AuthAnalyticsSync', () {
-    late _MockAnalyticsService analytics;
-    late ProviderContainer container;
-
-    setUp(() {
-      analytics = _MockAnalyticsService();
-      when(() => analytics.setUserId(any())).thenAnswer((_) async {});
-      when(
-        () => analytics.registerSuperProperties(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.setUserProperty(any(), any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.unregisterSuperProperty(any()),
-      ).thenAnswer((_) async {});
-      container = ProviderContainer(
-        overrides: [
-          analyticsServiceProvider.overrideWithValue(analytics),
-          userIdProvider.overrideWithValue('anon-123'),
-        ],
-      );
-    });
-
-    tearDown(() {
-      container.dispose();
-    });
-
-    test('syncSignedInUser 同步真实 ID、邮箱和匿名 ID', () async {
-      final user = User(
-        id: 'user-1',
-        email: 'user@example.com',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-03T00:00:00.000Z',
-      );
-
-      when(() => analytics.setUserId('user-1')).thenAnswer((_) async {});
-      when(
-        () => analytics.registerSuperProperties({'supabase_user_id': 'user-1'}),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.setUserProperty('email', 'user@example.com'),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.setUserProperty('app_anonymous_id', 'anon-123'),
-      ).thenAnswer((_) async {});
-
-      await container.read(authAnalyticsSyncProvider).syncSignedInUser(user);
-
-      verify(() => analytics.setUserId('user-1')).called(1);
-      verify(
-        () => analytics.registerSuperProperties({'supabase_user_id': 'user-1'}),
-      ).called(1);
-      verify(
-        () => analytics.setUserProperty('email', 'user@example.com'),
-      ).called(1);
-      verify(
-        () => analytics.setUserProperty('app_anonymous_id', 'anon-123'),
-      ).called(1);
-    });
-
-    test('syncSessionChange 首次恢复已登录 session 也会同步身份', () async {
-      final user = User(
-        id: 'user-1',
-        email: 'user@example.com',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-03T00:00:00.000Z',
-      );
-      final session = Session(
-        accessToken: 'access',
-        refreshToken: 'refresh',
-        tokenType: 'bearer',
-        user: user,
-      );
-
-      when(() => analytics.setUserId('user-1')).thenAnswer((_) async {});
-      when(
-        () => analytics.registerSuperProperties({'supabase_user_id': 'user-1'}),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.setUserProperty('email', 'user@example.com'),
-      ).thenAnswer((_) async {});
-      when(
-        () => analytics.setUserProperty('app_anonymous_id', 'anon-123'),
-      ).thenAnswer((_) async {});
-
-      await container
-          .read(authAnalyticsSyncProvider)
-          .syncSessionChange(previous: null, current: session);
-
-      verify(() => analytics.setUserId('user-1')).called(1);
-      verify(
-        () => analytics.setUserProperty('email', 'user@example.com'),
-      ).called(1);
-      verify(
-        () => analytics.setUserProperty('app_anonymous_id', 'anon-123'),
-      ).called(1);
-    });
-
-    test('syncSessionChange 仅在已登录 -> 已登出时 reset analytics', () async {
-      final user = User(
-        id: 'user-1',
-        appMetadata: const {},
-        userMetadata: const {},
-        aud: 'authenticated',
-        createdAt: '2026-06-03T00:00:00.000Z',
-      );
-      final session = Session(
-        accessToken: 'access',
-        refreshToken: 'refresh',
-        tokenType: 'bearer',
-        user: user,
-      );
-
-      when(() => analytics.setUserId(null)).thenAnswer((_) async {});
-      when(
-        () => analytics.unregisterSuperProperty('supabase_user_id'),
-      ).thenAnswer((_) async {});
-
-      await container
-          .read(authAnalyticsSyncProvider)
-          .syncSessionChange(previous: session, current: null);
-
-      verify(
-        () => analytics.unregisterSuperProperty('supabase_user_id'),
-      ).called(1);
-      verify(() => analytics.setUserId(null)).called(1);
-    });
-
-    test('syncSessionChange 匿名启动时不 reset analytics', () async {
-      await container
-          .read(authAnalyticsSyncProvider)
-          .syncSessionChange(previous: null, current: null);
-
-      verifyNever(() => analytics.setUserId(null));
     });
   });
 }

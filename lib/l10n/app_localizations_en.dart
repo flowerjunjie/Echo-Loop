@@ -9,13 +9,14 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Echo Loop';
+  String get appTitle => '灵犀AI英语听说';
 
   @override
-  String get premiumTitle => 'Echo Loop Membership';
+  String get premiumTitle => '灵犀AI英语听说 Membership';
 
   @override
-  String get premiumTagline => 'Get more AI-powered learning';
+  String get premiumTagline =>
+      'Unlock unlimited AI translations, sentence breakdowns, and shadowing feedback — learn at your own pace';
 
   @override
   String get aiQuotaExceededTitle => 'You\'ve reached your free limit';
@@ -50,19 +51,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumActive => 'You\'re a member';
 
   @override
-  String get premiumBenefitTranslation => 'More AI translation';
+  String get premiumBenefitTranslation =>
+      'Unlimited AI translations — never hit a wall';
 
   @override
-  String get premiumBenefitAnalysis => 'More AI sentence breakdown';
+  String get premiumBenefitAnalysis =>
+      'Deep sentence breakdown — understand every grammar point';
 
   @override
-  String get premiumBenefitWordAnalysis => 'More AI word explanation';
+  String get premiumBenefitWordAnalysis =>
+      'Rich word explanations — learn words in context';
 
   @override
-  String get premiumBenefitTranscription => 'More AI subtitle transcription';
+  String get premiumBenefitTranscription =>
+      'Unlimited subtitle transcription — import any audio';
 
   @override
-  String get premiumBenefitSenseGroups => 'More AI sentence chunking';
+  String get premiumBenefitSenseGroups =>
+      'Intelligent chunking — natural speaking rhythm';
 
   @override
   String get premiumSubscribe => 'Subscribe';
@@ -1728,7 +1734,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Uses the built-in system speech recognition, no download needed';
 
   @override
-  String get asrBackendOffline => 'Echo Loop AI';
+  String get asrBackendOffline => '灵犀AI英语听说 AI';
 
   @override
   String get asrBackendOfflineDescription =>
@@ -2512,6 +2518,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicy => 'Privacy Policy';
 
   @override
+  String get privacyPolicyLastUpdated => 'Last updated';
+
+  @override
+  String get termsLastUpdated => 'Last updated';
+
+  @override
+  String get privacyPolicyContent => '';
+
+  @override
+  String get termsOfServiceContent => '';
+
+  @override
   String get writeFeedback => 'Write Feedback';
 
   @override
@@ -2527,9 +2545,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get networkError =>
       'Unable to connect. Please check your network and try again.';
-
-  @override
-  String get viewSourceCode => 'View Source Code';
 
   @override
   String updateAvailable(String version) {
@@ -2807,6 +2822,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recentCompletionsSummary => 'Past 24 hours';
+
+  @override
+  String todayCompletedTasks(Object count) {
+    return 'Completed Today ($count)';
+  }
+
+  @override
+  String get todayCompletedTasksSummary => 'Tasks finished today';
+
+  @override
+  String get todayNoTasks => 'No tasks completed yet today';
 
   @override
   String get timeAgoJustNow => 'Just now';
@@ -3263,7 +3289,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guidePlanStartLearningDescription =>
-      'Tap here to follow the learning plan step by step. Echo Loop will guide you and remind you to review at the right time.';
+      'Tap here to follow the learning plan step by step. 灵犀AI英语听说 will guide you and remind you to review at the right time.';
 
   @override
   String get guidePlanPauseLearningTitle => 'Pause learning';
@@ -3295,7 +3321,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guideStudyTasksOverviewDescription =>
-      'This area includes new audio to learn, due reviews, completed tasks, and more. Echo Loop will pace your learning for you.';
+      'This area includes new audio to learn, due reviews, completed tasks, and more. 灵犀AI英语听说 will pace your learning for you.';
 
   @override
   String get guideStudyStatsHeaderTitle => 'Today at a glance';
@@ -3714,9 +3740,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingQ3OptionGoogleSearch => 'Google search';
 
   @override
-  String get onboardingQ3OptionGithub => 'GitHub';
-
-  @override
   String get onboardingQ3OptionFriend => 'Friend or family';
 
   @override
@@ -3859,7 +3882,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Recording is not supported on this platform';
 
   @override
-  String get authSignInTitle => 'Sign in to Echo Loop';
+  String get authSignInTitle => 'Sign in to 灵犀AI英语听说';
 
   @override
   String get authChooseMethod => 'Choose how you want to continue.';
@@ -4319,7 +4342,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Built into your device. Fast, no download, but average quality.';
 
   @override
-  String get ttsEngineEchoLoop => 'Echo Loop AI (Advanced)';
+  String get ttsEngineEchoLoop => '灵犀AI英语听说 AI (Advanced)';
 
   @override
   String get ttsEngineComingSoon => 'Coming soon';
@@ -4329,7 +4352,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Best sound quality. Needs a model download; recommended for high-performance devices.';
 
   @override
-  String get ttsEnginePiper => 'Echo Loop AI (Balanced)';
+  String get ttsEnginePiper => '灵犀AI英语听说 AI (Balanced)';
 
   @override
   String get ttsEnginePiperDescription =>
@@ -4385,13 +4408,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ttsDeleteModelConfirm =>
-      'Delete the Echo Loop voice model? You can re-download it anytime.';
+      'Delete the 灵犀AI英语听说 voice model? You can re-download it anytime.';
 
   @override
   String get ttsCancelDownload => 'Cancel';
 
   @override
-  String get ttsDownloadedModelsTitle => 'Downloaded Echo Loop models';
+  String get ttsDownloadedModelsTitle => 'Downloaded 灵犀AI英语听说 models';
 
   @override
   String ttsDownloadedModelsDesc(String size) {
@@ -4400,7 +4423,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get asrDeleteAllModelsConfirm =>
-      'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.';
+      'Delete all downloaded 灵犀AI英语听说 speech recognition models? You can re-download them anytime.';
 
   @override
   String get asrDownloadedModelsTitle => 'Downloaded speech recognition models';
@@ -4429,7 +4452,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dictionaryWebAdsNotice =>
-      'Online dictionaries may show their own ads, unrelated to Echo Loop.';
+      'Online dictionaries may show their own ads, unrelated to 灵犀AI英语听说.';
 
   @override
   String get dictSourceLocal => 'Local Dictionary';
@@ -4519,4 +4542,271 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dictAiMultiBackground => 'Background Knowledge';
+
+  @override
+  String get activationTitle => 'Activate Code';
+
+  @override
+  String get activationSubtitle =>
+      'Enter your activation code to unlock premium features';
+
+  @override
+  String get activationCodeHint => 'Enter activation code';
+
+  @override
+  String get activationCodePlaceholder => 'e.g. ABCD1234';
+
+  @override
+  String get activationButton => 'Activate';
+
+  @override
+  String get activationActivating => 'Activating...';
+
+  @override
+  String get activationSuccess => 'Activated successfully!';
+
+  @override
+  String activationSuccessDetail(Object months) {
+    return 'Enjoy $months months of premium features';
+  }
+
+  @override
+  String get activationErrorInvalid =>
+      'Invalid activation code, please check and try again';
+
+  @override
+  String get activationErrorUsed =>
+      'This activation code has already been used';
+
+  @override
+  String get activationErrorExpired => 'This activation code has expired';
+
+  @override
+  String get activationErrorNetwork => 'Network error, please try again later';
+
+  @override
+  String get activationAlreadyMember => 'You are already a member';
+
+  @override
+  String get activationPeriodMonthly => 'Monthly';
+
+  @override
+  String get activationPeriodQuarterly => 'Quarterly';
+
+  @override
+  String get activationPeriodHalfYearly => 'Half Year';
+
+  @override
+  String get activationPeriodYearly => 'Yearly';
+
+  @override
+  String get activationMyCodesTitle => 'My Activation Codes';
+
+  @override
+  String get activationMyCodesEmpty => 'No activation codes yet';
+
+  @override
+  String get activationEnterpriseBanner => '🏢 Enterprise Edition';
+
+  @override
+  String get activationEnterpriseDesc =>
+      'For schools and organizations — contact us for bulk licensing';
+
+  @override
+  String get activationEnterpriseContact => 'Contact Sales';
+
+  @override
+  String get activationLearnMore => 'Learn More';
+
+  @override
+  String get activationCodeRequired => 'Activation code required';
+
+  @override
+  String get activationCodeLengthError =>
+      'Activation code must be 8 characters';
+
+  @override
+  String get activationRedeemedSuccessfully => 'Redeemed successfully';
+
+  @override
+  String get inviteTitle => 'Invite Friends, Both Get Premium';
+
+  @override
+  String get inviteSubtitle =>
+      'Share your invite link, both of you get membership when they sign up';
+
+  @override
+  String get inviteYourCode => 'My Invite Code';
+
+  @override
+  String get inviteCopyCode => 'Copy Invite Code';
+
+  @override
+  String get inviteCopied => 'Copied to clipboard';
+
+  @override
+  String get inviteShareLink => 'Share Link';
+
+  @override
+  String get inviteShareApp => 'Share App';
+
+  @override
+  String inviteFriendsCount(Object count) {
+    return 'Invited $count friends';
+  }
+
+  @override
+  String get inviteRewardMonthly => '1 friend: both get 7 days premium';
+
+  @override
+  String get inviteRewardQuarterly => '3 friends: both get 30 days premium';
+
+  @override
+  String get inviteRewardHalfYearly =>
+      '5 friends: both get 90 days premium + sticker';
+
+  @override
+  String get inviteRewardYearly =>
+      '10 friends: both get 180 days premium + merch';
+
+  @override
+  String get inviteMyReward => 'My Rewards';
+
+  @override
+  String inviteMyRewardDetail(Object months) {
+    return 'Earned $months months of premium';
+  }
+
+  @override
+  String get inviteMyRewardNone => 'No rewards yet';
+
+  @override
+  String get inviteLoading => 'Loading...';
+
+  @override
+  String get inviteErrorNetwork => 'Network error, please try again';
+
+  @override
+  String get inviteErrorNotLoggedIn => 'Please log in to use invite feature';
+
+  @override
+  String get inviteEmpty => 'No friends signed up yet\nStart sharing now!';
+
+  @override
+  String get statsTitle => 'Activation Statistics';
+
+  @override
+  String get statsTotalCodes => 'Total Codes';
+
+  @override
+  String get statsUsedCodes => 'Activated';
+
+  @override
+  String get statsUnusedCodes => 'Unused';
+
+  @override
+  String get statsRedemptionRate => 'Redemption Rate';
+
+  @override
+  String get statsTotalSeats => 'Total Seats';
+
+  @override
+  String get statsUsedSeats => 'Used Seats';
+
+  @override
+  String get statsPeriodBreakdown => 'By Package Type';
+
+  @override
+  String get statsDailyTrend => '7-Day Trend';
+
+  @override
+  String get statsGenerated => 'Generated';
+
+  @override
+  String get statsActivated => 'Activated';
+
+  @override
+  String get statsCreatorStats => 'By Creator';
+
+  @override
+  String get statsLoading => 'Loading statistics...';
+
+  @override
+  String get statsRefresh => 'Refresh';
+
+  @override
+  String get statsLastUpdated => 'Last updated';
+
+  @override
+  String get statsNoData => 'No statistics available';
+
+  @override
+  String get webWelcomeTitle => 'Welcome to 灵犀AI English';
+
+  @override
+  String get webWelcomeSubtitle =>
+      'Practice listening and speaking anytime, anywhere in your browser';
+
+  @override
+  String get webFeaturesTitle => 'Web Features';
+
+  @override
+  String get webInfoNotice =>
+      'Web version currently supports recording, transcription, and settings. Full learning features coming soon.';
+
+  @override
+  String get webOfflineAsrNotice =>
+      'Web version currently uses online transcription service; offline ASR is mobile-only.';
+
+  @override
+  String get webLogViewerTitle => 'Developer Logs';
+
+  @override
+  String get webLogEmpty => 'No logs yet';
+
+  @override
+  String get webLoginChip => 'Signed in';
+
+  @override
+  String get webDevLogs => 'Developer Logs';
+
+  @override
+  String get webInviteTitle => 'Your Invite Code';
+
+  @override
+  String webInviteFriends(int count) {
+    return '$count friend(s) signed up';
+  }
+
+  @override
+  String webInviteMonths(int months) {
+    return '$months month(s) earned';
+  }
+
+  @override
+  String get webInviteCopy => 'Copy Invite Code';
+
+  @override
+  String get webInvitePending =>
+      'Start a study session to generate your invite code';
+
+  @override
+  String get webInvitePendingInfo =>
+      'Share this code with friends to earn free months';
+
+  @override
+  String get consentDialogTitle => 'Privacy Notice';
+
+  @override
+  String get consentDialogContent =>
+      'We use analytics to improve your experience. Your data is stored locally and never shared without your consent.';
+
+  @override
+  String get consentDialogPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get consentDialogDeny => 'Decline';
+
+  @override
+  String get consentDialogAccept => 'Allow';
 }

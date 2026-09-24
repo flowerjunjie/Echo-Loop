@@ -84,7 +84,7 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> _tapLogo(WidgetTester tester, int times) async {
-  final logo = find.bySemanticsLabel('Echo Loop');
+  final logo = find.bySemanticsLabel('灵犀AI英语听说');
   for (var i = 0; i < times; i++) {
     await tester.tap(logo);
     await tester.pump();
@@ -94,7 +94,7 @@ Future<void> _tapLogo(WidgetTester tester, int times) async {
 
 void main() {
   testWidgets('连点 logo 不足 5 次不进入密码登录页', (tester) async {
-    await tester.pumpWidget(_app(_router(onSignIn: (_, _) async {})));
+    await tester.pumpWidget(_app(_router(onSignIn: (_, __) async {})));
     await tester.pumpAndSettle();
 
     await _tapLogo(tester, 4);
@@ -108,7 +108,7 @@ void main() {
     when(() => analytics.track(any(), any())).thenAnswer((_) async {});
 
     await tester.pumpWidget(
-      _app(_router(onSignIn: (_, _) async {}), analytics: analytics),
+      _app(_router(onSignIn: (_, __) async {}), analytics: analytics),
     );
     await tester.pumpAndSettle();
 
@@ -125,7 +125,7 @@ void main() {
   });
 
   testWidgets('密码登录页校验邮箱和密码格式', (tester) async {
-    await tester.pumpWidget(_app(_router(onSignIn: (_, _) async {})));
+    await tester.pumpWidget(_app(_router(onSignIn: (_, __) async {})));
     await tester.pumpAndSettle();
     await _tapLogo(tester, 5);
 
@@ -178,7 +178,7 @@ void main() {
 
   testWidgets('密码登录失败时停留在密码页并提示本地化错误', (tester) async {
     final router = _router(
-      onSignIn: (_, _) async {
+      onSignIn: (_, __) async {
         throw const AuthException('Invalid login credentials');
       },
     );

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../router/app_router.dart';
 import '../auth_form_utils.dart';
 import '../providers/auth_providers.dart';
-
+import '../../../config/app_config.dart';
 /// 邮箱+密码登录页（App Store / Google Play 审核员专用隐藏入口）。
 ///
 /// 仅做登录，不提供注册 / 找回密码；审核账号在 Supabase 后台手动预创建。
@@ -96,7 +96,7 @@ class _PasswordSignInScreenState extends ConsumerState<PasswordSignInScreen> {
   }
 
   Future<void> _openPolicy(String path) async {
-    await launchUrl(Uri.parse('https://www.echo-loop.top$path'));
+    await launchUrl(Uri.parse(webPath(path)));
   }
 
   void _dismissKeyboardOnTapOutside(PointerDownEvent event) {

@@ -12,6 +12,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/premium_feature.dart';
+import '../config/ai_trial_limits.dart';
 
 /// 免费额度策略接口。
 abstract class FreeAllowancePolicy {
@@ -55,6 +56,16 @@ class TrialAllowancePolicy implements FreeAllowancePolicy {
 /// 超额时客户端捕获 402 → 弹订阅（见 `sentence_ai_provider` 与转录流程）。
 ///
 /// 保留 [TrialAllowancePolicy]（本地预测性额度）供后续订阅阶段按需复用；当前不启用。
+/// 免费额度策略 Provider。
+///
+/// 当前使用 [TrialAllowancePolicy]，试用次数由 [aiTrialLimitsProvider] 配置。
+/// 由于 [kAiTrialLimits] 中所有功能均配置为 0，未订阅用户将无法使用 AI 功能，
+/// 必须升级到会员才能解锁。
 final freeAllowancePolicyProvider = Provider<FreeAllowancePolicy>((ref) {
-  return const AlwaysAllowPolicy();
+  final limits = ref.read(aiTrialLimitsProvider);
+  // 免费用户的已用次数初始化为0（实际计数由 aiTrialUsageProvider 维护）
+  return TrialAllowancePolicy(
+    limits: limits,
+    used: const {},
+  );
 });

@@ -1,4 +1,6 @@
 import 'package:echo_loop/models/retell_settings.dart';
+import 'package:echo_loop/models/stage_settings_overrides.dart'
+    show BriefingPauseChoice;
 import 'package:echo_loop/models/sentence.dart';
 import 'package:echo_loop/widgets/retell/retell_briefing_sheet.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +33,7 @@ void main() {
               showRetellBriefingSheet(
                 context: context,
                 sentences: sentences,
-                onStartPractice: (_, _, _, _) {},
+                onStartPractice: (Duration targetDuration, BriefingPauseChoice pause, KeywordRatio? keywordRatio, double speed) {},
               );
             },
             child: const Text('Open'),
@@ -66,7 +68,7 @@ void main() {
               showRetellBriefingSheet(
                 context: context,
                 sentences: sentences,
-                onStartPractice: (_, _, _, speed) {
+                onStartPractice: (Duration targetDuration, BriefingPauseChoice pause, KeywordRatio? keywordRatio, double speed) {
                   selectedSpeed = speed;
                 },
               );

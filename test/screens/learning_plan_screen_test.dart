@@ -19,10 +19,19 @@ import 'package:echo_loop/models/sentence.dart';
 import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
 import 'package:echo_loop/providers/time_provider.dart';
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
+
 import 'package:echo_loop/theme/app_theme.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
+
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class _FakeAuthSessionNotifier extends AuthSessionNotifier {
+  _FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,22 +67,6 @@ void main() {
     addedDate: DateTime(2026, 1, 1),
   );
 
-  Session signedInSession() {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {'provider': 'email'},
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'learner@example.com',
-      createdAt: '2026-06-12T00:00:00.000Z',
-    );
-    return Session(
-      accessToken: 'token',
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
-  }
 
   /// 创建测试用句子列表（模拟字幕加载后的 LP 状态）
   List<Sentence> createTestSentences({int count = 5}) {
@@ -932,8 +925,8 @@ void main() {
               () => TestLearningProgressNotifier(),
             ),
             learningSessionProvider.overrideWith(() => TestLearningSession()),
-            supabaseSessionProvider.overrideWith(
-              (ref) => Stream<Session?>.value(signedInSession()),
+            authSessionProvider.overrideWith(
+              (ref) => _FakeAuthSessionNotifier(AuthResponse(userId: 'user-1', email: 'learner@example.com', accessToken: 'token')),
             ),
             // 已登录用户视为已解锁（Pro），转录机制测试不被额度闸拦截。
             subscriptionEntitlementOverride(),

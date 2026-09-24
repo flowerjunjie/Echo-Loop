@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -148,7 +149,8 @@ class _DiscoverCollectionsScreenState
           enrolled: enrolled,
           enrolling: enrolling,
           onOpenDetail: () => context.push('/discover/${item.id}'),
-          onEnroll: () => _handleEnroll(item),
+          // Web 端 enroll 依赖本地 DB（drift），暂不可用，隐藏按钮
+          onEnroll: kIsWeb ? null : () => _handleEnroll(item),
           onGoLearn: () {
             final localId = remoteIdToLocalId[item.id];
             if (localId != null) {

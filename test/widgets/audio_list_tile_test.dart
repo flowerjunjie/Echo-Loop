@@ -22,10 +22,18 @@ import 'package:echo_loop/features/official_collections/download/official_downlo
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/audio_list_tile.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
+
+/// 可注入初始状态的 AuthSessionNotifier 替身。
+class _FakeAuthSessionNotifier extends AuthSessionNotifier {
+  _FakeAuthSessionNotifier(AuthResponse? initial) : super();
+  @override
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+  }
+}
 
 /// 包装器：从 Provider 读取第一个音频项，传给 AudioListTile
 /// 模拟真实场景中父组件 watch provider → 传 item 给子组件的模式
@@ -88,23 +96,6 @@ class _PendingAudioImportController extends PodcastDownloadController {
       _completer.complete(ok);
     }
   }
-}
-
-Session _signedInSession() {
-  final user = User(
-    id: 'user-1',
-    appMetadata: const {'provider': 'email'},
-    userMetadata: const {},
-    aud: 'authenticated',
-    email: 'learner@example.com',
-    createdAt: '2026-06-12T00:00:00.000Z',
-  );
-  return Session(
-    accessToken: 'token',
-    tokenType: 'bearer',
-    user: user,
-    refreshToken: 'refresh',
-  );
 }
 
 void main() {
@@ -757,8 +748,8 @@ void main() {
             audioLibraryProvider.overrideWith(
               () => TestAudioLibrary(AudioLibraryState(audioItems: [item])),
             ),
-            supabaseSessionProvider.overrideWith(
-              (ref) => Stream<Session?>.value(_signedInSession()),
+            authSessionProvider.overrideWith(
+              (ref) => _FakeAuthSessionNotifier(AuthResponse(userId: 'test-user', email: 'learner@example.com', accessToken: 'test-access-token')),
             ),
             // 已登录用户视为已解锁（Pro），转录机制测试不被额度闸拦截。
             subscriptionEntitlementOverride(),

@@ -15,22 +15,34 @@
 /// 但保留以兼容 Android 路径。
 library;
 
+import 'dart:io';
+
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 import '../analytics_channel.dart';
 
 /// PostHog 分析上报通道
 class PostHogChannel implements AnalyticsChannel {
-  static const _apiKey = String.fromEnvironment(
-    'POSTHOG_API_KEY',
-    defaultValue: 'phc_s2ZWTJV3n57Tcz16OYZailIJroIUJhWEXmHMothJ5MZ',
-  );
-  static const _host = String.fromEnvironment(
-    'POSTHOG_HOST',
-    defaultValue: 'https://us.i.posthog.com',
-  );
+  /// 中国环境 PostHog 项目 API Key（待 PostHog 中国区部署就绪后配置）
+  // TODO: 替换为实际的 CN API Key，并恢复双节点路由
+  static const String? cnApiKey = null; // 🚨 占位符已移除，当前使用 globalApiKey
+  /// 全球环境 PostHog 项目 API Key
+  /// 全球环境 PostHog 项目 API Key
+  /// 生产环境请通过环境变量 POSTHOG_GLOBAL_API_KEY 配置
+  /// 全球环境 PostHog 项目 API Key
+  /// 优先级: 环境变量 POSTHOG_GLOBAL_API_KEY > 默认值
+  static String get globalApiKey =>
+      Platform.environment['POSTHOG_GLOBAL_API_KEY'] ??
+      'phc_s2ZWTJV3n57Tcz16OYZailIJroIUJhWEXmHMothJ5MZ'; // TODO: 迁移到环境变量
+  /// 全球 PostHog host
+  static const String globalHost = 'https://us.i.posthog.com';
 
-  /// 始终已配置（内置默认 API Key）
+  final String apiKey;
+  final String host;
+
+  PostHogChannel({required this.apiKey, required this.host});
+
+  /// 始终已配置
   static bool get isConfigured => true;
 
   @override
@@ -38,8 +50,8 @@ class PostHogChannel implements AnalyticsChannel {
 
   @override
   Future<void> initialize() async {
-    final config = PostHogConfig(_apiKey)
-      ..host = _host
+    final config = PostHogConfig(apiKey)
+      ..host = host
       ..flushAt = 5
       ..flushInterval = const Duration(seconds: 3)
       ..personProfiles = PostHogPersonProfiles.always

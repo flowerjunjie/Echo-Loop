@@ -23,7 +23,8 @@ class OfficialCollectionCard extends StatelessWidget {
   final bool enrolling;
 
   final VoidCallback onOpenDetail;
-  final VoidCallback onEnroll;
+  /// null 时隐藏 enroll 按钮（如 Web 端暂不支持 enroll）
+  final VoidCallback? onEnroll;
   final VoidCallback onGoLearn;
 
   const OfficialCollectionCard({
@@ -32,8 +33,8 @@ class OfficialCollectionCard extends StatelessWidget {
     required this.enrolled,
     required this.enrolling,
     required this.onOpenDetail,
-    required this.onEnroll,
     required this.onGoLearn,
+    this.onEnroll,
   });
 
   @override
@@ -191,6 +192,10 @@ class OfficialCollectionCard extends StatelessWidget {
           ),
         ),
       );
+    }
+    // Web 端 onEnroll 为 null（不可 enroll），不显示右侧按钮
+    if (onEnroll == null) {
+      return const SizedBox(width: trailingWidth);
     }
     return SizedBox(
       width: trailingWidth,

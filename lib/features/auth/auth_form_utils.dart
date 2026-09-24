@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
+import 'providers/auth_providers.dart';
 
 /// 一次实际登录尝试的结束状态。
 ///
@@ -222,7 +222,7 @@ class AuthBrandHeader extends StatelessWidget {
       'assets/icon/app-icon-1024.png',
       width: authBrandLogoSize,
       height: authBrandLogoSize,
-      semanticLabel: 'Echo Loop',
+      semanticLabel: '灵犀AI英语听说',
       filterQuality: FilterQuality.high,
       errorBuilder: (context, error, stackTrace) =>
           Icon(Icons.graphic_eq_rounded, size: 48, color: colorScheme.primary),

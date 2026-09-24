@@ -184,7 +184,7 @@ Future<void> pumpFullApp(
   List<Override> overrides = const [],
 }) async {
   final packageInfo = PackageInfo(
-    appName: 'Echo Loop',
+    appName: '灵犀AI英语听说',
     packageName: 'top.echo-loop',
     version: '1.0.0',
     buildNumber: '1',

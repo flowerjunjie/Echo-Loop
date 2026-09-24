@@ -16,7 +16,7 @@ void main() {
               showIntensiveListenBriefingSheet(
                 context: context,
                 sentenceCount: 10,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),
@@ -51,7 +51,7 @@ void main() {
                 context: context,
                 sentenceCount: 10,
                 defaultPlaybackSpeed: 0.9,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),
@@ -142,7 +142,7 @@ void main() {
               showIntensiveListenBriefingSheet(
                 context: context,
                 sentenceCount: 10,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),
@@ -167,7 +167,7 @@ void main() {
               showIntensiveListenBriefingSheet(
                 context: context,
                 sentenceCount: 10,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
                 onSkip: () => skipped = true,
               );
             },
@@ -239,7 +239,7 @@ void main() {
               showIntensiveListenBriefingSheet(
                 context: context,
                 sentenceCount: 10,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
                 onSelectionChanged: (_, pause) {
                   changedPause = pause;
                 },

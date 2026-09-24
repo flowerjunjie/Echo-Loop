@@ -66,7 +66,7 @@ class _WaitingSpyRepeatEngine extends RepeatFlowEngine {
         onStateChanged: (_) {},
         callbacks: RepeatFlowCallbacks(
           pauseAudio: () {},
-          playSentence: (_, _) async {},
+          playSentence: (_, __) async {},
           startRecording:
               ({
                 required String promptId,
@@ -139,7 +139,7 @@ class _TestBookmarkReview extends BookmarkReview {
       onStateChanged: (_) {},
       callbacks: RepeatFlowCallbacks(
         pauseAudio: () {},
-        playSentence: (_, _) async {},
+        playSentence: (_, __) async {},
         startRecording:
             ({
               required String promptId,

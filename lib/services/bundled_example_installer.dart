@@ -7,6 +7,7 @@ import '../utils/app_data_dir.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/app_database.dart';
+import '../../services/app_logger.dart';
 
 /// 内置示例内容安装器
 ///
@@ -249,7 +250,9 @@ class BundledExampleInstaller {
     if (await file.exists()) {
       try {
         await file.delete();
-      } catch (_) {}
+      } catch (e) {
+    AppLogger.log('Cleanup', '$e');
+  }
     }
   }
 }

@@ -7,6 +7,7 @@ library;
 
 import 'dart:io';
 import 'dart:typed_data';
+ import '../../../services/app_logger.dart';
 
 /// 解析后的音频数据。
 class AudioData {
@@ -266,7 +267,9 @@ class Pcm16WavStreamReader {
       if (raf != null) {
         try {
           raf.closeSync();
-        } catch (_) {}
+        } catch (e) {
+        AppLogger.log('AudioFileReader', 'closeSync failed: $e');
+      }
       }
       return null;
     }
@@ -275,7 +278,9 @@ class Pcm16WavStreamReader {
   static Pcm16WavStreamReader? _closeReturnNull(RandomAccessFile raf) {
     try {
       raf.closeSync();
-    } catch (_) {}
+    } catch (e) {
+        AppLogger.log('AudioFileReader', 'closeSync failed: $e');
+      }
     return null;
   }
 
@@ -329,7 +334,9 @@ class Pcm16WavStreamReader {
   void close() {
     try {
       _raf.closeSync();
-    } catch (_) {}
+    } catch (e) {
+        AppLogger.log('AudioFileReader', 'closeSync failed: $e');
+      }
   }
 }
 

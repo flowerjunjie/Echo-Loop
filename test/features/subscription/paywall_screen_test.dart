@@ -461,7 +461,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 走通用 ensureSignedInForAction 登录引导弹窗，且未真正发起购买
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(spy.purchaseCalls, 0);
   });
 
@@ -479,7 +479,7 @@ void main() {
     await tester.tap(find.text('Restore Purchases'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsOneWidget);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsOneWidget);
     expect(spy.restoreCalls, 0);
   });
 
@@ -499,7 +499,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Sign in to Echo Loop'), findsNothing);
+    expect(find.text('Sign in to 灵犀AI英语听说'), findsNothing);
     expect(spy.purchaseCalls, 1);
   });
 }

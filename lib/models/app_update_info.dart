@@ -79,7 +79,7 @@ enum AppUpdateChannel {
   /// Android Google Play
   androidGooglePlay,
 
-  /// Android 官网/GitHub APK
+  /// Android 官网/APK
   androidApk,
 }
 

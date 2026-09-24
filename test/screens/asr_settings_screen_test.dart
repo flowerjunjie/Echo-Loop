@@ -113,7 +113,7 @@ void main() {
     expect(find.textContaining('153 MB'), findsAny);
   });
 
-  testWidgets('Echo Loop AI 模型列表单独成组并显示预估大小', (tester) async {
+  testWidgets('灵犀AI英语听说 AI 模型列表单独成组并显示预估大小', (tester) async {
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -126,9 +126,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Speech Engine'), findsOneWidget);
-    // iOS/macOS 额外显示后端选择器中的 Echo Loop AI；Linux CI 不显示平台后端选择器。
+    // iOS/macOS 额外显示后端选择器中的 灵犀AI英语听说 AI；Linux CI 不显示平台后端选择器。
     final expectedEchoLoopLabels = Platform.isIOS || Platform.isMacOS ? 2 : 1;
-    expect(find.text('Echo Loop AI'), findsNWidgets(expectedEchoLoopLabels));
+    expect(find.text('灵犀AI英语听说 AI'), findsNWidgets(expectedEchoLoopLabels));
     expect(find.byType(Card), findsNWidgets(2));
     expect(find.textContaining('~100 MB'), findsOneWidget);
     expect(find.textContaining('~150 MB'), findsOneWidget);
@@ -179,7 +179,7 @@ void main() {
 
     expect(
       find.text(
-        'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.',
+        'Delete all downloaded 灵犀AI英语听说 speech recognition models? You can re-download them anytime.',
       ),
       findsOneWidget,
     );

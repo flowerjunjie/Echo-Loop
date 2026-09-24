@@ -1,0 +1,8 @@
+name: flutter_local_notifications
+description: VM stub for flutter_local_notifications
+version: 19.5.0
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter

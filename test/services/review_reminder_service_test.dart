@@ -218,12 +218,7 @@ void main() {
 
       when(() => mockPlugin.pendingNotificationRequests()).thenAnswer(
         (_) async => [
-          const PendingNotificationRequest(
-            5000,
-            'Echo Loop',
-            'old',
-            'old_payload',
-          ),
+          const PendingNotificationRequest(id: 5000, title: '灵犀AI英语听说', body: 'old'),
         ],
       );
 
@@ -464,12 +459,7 @@ void main() {
       // 模拟系统中已有一个 per-audio 范围内的 pending 通知（上次启动遗留）
       when(() => mockPlugin.pendingNotificationRequests()).thenAnswer(
         (_) async => [
-          const PendingNotificationRequest(
-            5000,
-            'Echo Loop',
-            'old',
-            'old_payload',
-          ),
+          const PendingNotificationRequest(id: 5000, title: '灵犀AI英语听说', body: 'old'),
         ],
       );
 
@@ -485,12 +475,7 @@ void main() {
       // 模拟系统中有 daily reminder（ID 1001，范围外）
       when(() => mockPlugin.pendingNotificationRequests()).thenAnswer(
         (_) async => [
-          const PendingNotificationRequest(
-            1001,
-            'Echo Loop',
-            'daily',
-            'open_study_tasks',
-          ),
+          const PendingNotificationRequest(id: 1001, title: '灵犀AI英语听说', body: 'daily'),
         ],
       );
 
@@ -508,24 +493,9 @@ void main() {
       // 模拟系统中有 per-audio 通知
       when(() => mockPlugin.pendingNotificationRequests()).thenAnswer(
         (_) async => [
-          const PendingNotificationRequest(
-            3000,
-            'Echo Loop',
-            'a',
-            'open_audio:a',
-          ),
-          const PendingNotificationRequest(
-            4000,
-            'Echo Loop',
-            'b',
-            'open_audio:b',
-          ),
-          const PendingNotificationRequest(
-            1001,
-            'Echo Loop',
-            'daily',
-            'open_study_tasks',
-          ),
+          const PendingNotificationRequest(id: 3000, title: '灵犀AI英语听说', body: 'a'),
+          const PendingNotificationRequest(id: 4000, title: '灵犀AI英语听说', body: 'b'),
+          const PendingNotificationRequest(id: 1001, title: '灵犀AI英语听说', body: 'daily'),
         ],
       );
 

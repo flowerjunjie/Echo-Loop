@@ -26,6 +26,12 @@ class RecordingResult {
   /// 错误消息。
   final String? errorMessage;
 
+  /// Web 端直接返回的转录文本（跳过本地文件依赖）。
+  ///
+  /// Web 平台无法写本地文件，转录由 [WebAsrService] 完成，
+  /// 结果通过此字段透传到上层，避免 _doTranscribe 因 filePath==null 直接 return。
+  final String? transcriptText;
+
   /// 是否成功（有 final transcript 且无错误）。
   bool get isSuccess => errorCode == null && finalTranscript != null;
 
@@ -34,6 +40,7 @@ class RecordingResult {
     this.finalTranscript,
     this.errorCode,
     this.errorMessage,
+    this.transcriptText,
   });
 }
 
@@ -96,7 +103,7 @@ class RecordingService {
   ///
   /// [requirePlatformSpeechRecognition]：是否要求 iOS/macOS 平台原生
   /// `SFSpeechRecognizer` 权限。仅当用户启用 ASR 且 backend 为
-  /// `AsrBackend.platform` 时为 true；关闭 ASR / Echo Loop 离线后端时为 false。
+  /// `AsrBackend.platform` 时为 true；关闭 ASR / 灵犀AI英语听说 离线后端时为 false。
   /// 为 false 时只检查麦克风权限，speech recognition 状态被忽略。
   ///
   /// 每次都查询原生层获取实时权限状态，防止用户在系统设置中撤销权限后
@@ -159,7 +166,7 @@ class RecordingService {
       // 权限检查（必须在 warmup 之前，否则 iOS/macOS 原生 warmup
       // 会把 notDetermined 当作 denied 直接返回错误）。
       // 仅在启用平台原生 ASR（recognitionEnabled == true）时才要求
-      // speech recognition 权限；纯录音 / Echo Loop 离线 ASR 只需 mic。
+      // speech recognition 权限；纯录音 / 灵犀AI英语听说 离线 ASR 只需 mic。
       final granted = await ensurePermissions(
         requirePlatformSpeechRecognition: recognitionEnabled,
       );
@@ -240,10 +247,14 @@ class RecordingService {
     _recordingStartedAt = null;
     AppLogger.log(
       'Recording',
-      '└ stopSession done filePath=${filePath ?? '(null)'}',
+      '└ stopSession done filePath=${filePath ?? '(null)'}'
+          ' transcriptText=${stopResult.transcriptText ?? "(null)"}',
     );
 
-    return RecordingResult(filePath: filePath);
+    return RecordingResult(
+      filePath: filePath,
+      transcriptText: stopResult.transcriptText,
+    );
   }
 
   /// 等待转录结果并释放引擎。

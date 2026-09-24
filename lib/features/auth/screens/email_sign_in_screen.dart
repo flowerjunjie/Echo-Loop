@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -11,13 +11,13 @@ import '../../../router/app_router.dart';
 import '../../../theme/app_theme.dart';
 import '../auth_form_utils.dart';
 import '../providers/auth_providers.dart';
+import '../../../config/app_config.dart';
 
 typedef EmailAction = Future<void> Function(String email);
 typedef VerifyOtpAction = Future<void> Function(String email, String token);
 typedef ResendOtpAction = Future<void> Function(String email);
 
 enum _EmailOtpStep { emailEntry, otpEntry }
-
 class EmailSignInScreen extends ConsumerStatefulWidget {
   const EmailSignInScreen({
     super.key,
@@ -254,7 +254,7 @@ class _EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   }
 
   Future<void> _openPolicy(String path) async {
-    await launchUrl(Uri.parse('https://www.echo-loop.top$path'));
+    await launchUrl(Uri.parse(webPath(path)));
   }
 
   /// 点击输入框外部时释放焦点，避免软键盘遮挡后续主操作按钮。

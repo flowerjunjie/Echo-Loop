@@ -1439,7 +1439,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
                 ),
               ),
             ),
-            ?_buildPlanMenu(context, l10n, audioItem),
+            (_buildPlanMenu(context, l10n, audioItem) ?? const SizedBox.shrink()),
           ],
         ),
         body: Column(

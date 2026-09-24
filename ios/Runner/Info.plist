@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Echo Loop</string>
+	<string>灵犀AI英语听说</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -53,6 +53,22 @@
 	<true/>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<!-- 邀请裂变 deep link scheme -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app.echoloop</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>app.echoloop</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to select audio files.</string>
 	<key>NSAppleMusicUsageDescription</key>
@@ -67,7 +83,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>top.echo-loop.backup</string>
 			<key>UTTypeDescription</key>
-			<string>Echo Loop Backup</string>
+			<string>灵犀AI英语听说 Backup</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.zip-archive</string>
@@ -128,7 +144,7 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Echo Loop Backup</string>
+			<string>灵犀AI英语听说 Backup</string>
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
@@ -157,11 +173,21 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>38.55.146.160</key>
+				<dict>
+					<key>NSExceptionAllowsInsecureHTTPLoads</key>
+					<true/>
+					<key>NSIncludesSubdomains</key>
+					<false/>
+					<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+					<false/>
+				</dict>
+			</dict>
+		</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>This app needs to connect to a local server for AI transcription.</string>
 	<key>UIBackgroundModes</key>

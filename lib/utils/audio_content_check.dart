@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../models/audio_item.dart';
 import 'app_data_dir.dart';
 import 'audio_duration.dart';
+import '../../services/app_logger.dart';
 
 /// 「响亮样本」振幅门限：绝对振幅 > 满量程 × 该比例 视为有声内容。
 ///
@@ -106,7 +107,9 @@ Future<bool> _isFileSilent(String relativePath) async {
     if (waveFile != null && await waveFile.exists()) {
       try {
         await waveFile.delete();
-      } catch (_) {}
+      } catch (e) {
+    AppLogger.log('AudioContent', '$e');
+  }
     }
   }
 }

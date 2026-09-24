@@ -1,0 +1,8 @@
+name: ffi
+version: 99.0.0-web
+description: Web stub for ffi
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter

@@ -22,6 +22,7 @@ import '../providers/settings_provider.dart';
 import '../services/app_logger.dart';
 import '../services/subtitle_auto_align_service.dart';
 import '../services/transcription_api_client.dart';
+import '../features/auth/providers/auth_providers.dart' show authSessionProvider;
 import '../utils/audio_fingerprint.dart';
 import '../utils/srt_generator.dart';
 import '../utils/transcript_stats.dart';

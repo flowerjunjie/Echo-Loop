@@ -9,13 +9,13 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Echo Loop';
+  String get appTitle => '灵犀AI英语听说';
 
   @override
-  String get premiumTitle => 'Echo Loop 会员';
+  String get premiumTitle => '灵犀AI英语听说 会员';
 
   @override
-  String get premiumTagline => '使用更多 AI，学习更高效。';
+  String get premiumTagline => '无限AI翻译、句子拆解、跟读反馈——按自己的节奏学英语';
 
   @override
   String get aiQuotaExceededTitle => '本月免费额度已用完';
@@ -48,19 +48,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get premiumActive => '你已是会员';
 
   @override
-  String get premiumBenefitTranslation => '更多 AI 翻译';
+  String get premiumBenefitTranslation => '无限AI翻译——不再每日受限';
 
   @override
-  String get premiumBenefitAnalysis => '更多 AI 句子拆解';
+  String get premiumBenefitAnalysis => '深度句子拆解——每句语法都吃透';
 
   @override
-  String get premiumBenefitWordAnalysis => '更多 AI 单词讲解';
+  String get premiumBenefitWordAnalysis => '丰富单词讲解——在语境中学单词';
 
   @override
-  String get premiumBenefitTranscription => '更多 AI 字幕转录';
+  String get premiumBenefitTranscription => '无限字幕转录——任意音频都能用';
 
   @override
-  String get premiumBenefitSenseGroups => '更多 AI 句子意群拆分';
+  String get premiumBenefitSenseGroups => '智能意群切分——跟读节奏更自然';
 
   @override
   String get premiumSubscribe => '订阅';
@@ -1672,7 +1672,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get asrBackendPlatformDescription => '使用系统自带的语音识别，无需下载';
 
   @override
-  String get asrBackendOffline => 'Echo Loop AI';
+  String get asrBackendOffline => '灵犀AI英语听说 AI';
 
   @override
   String get asrBackendOfflineDescription => '使用应用自带的 AI 模型，支持离线使用，需下载';
@@ -2422,6 +2422,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get privacyPolicy => '隐私政策';
 
   @override
+  String get privacyPolicyLastUpdated => '隐私政策更新日期';
+
+  @override
+  String get termsLastUpdated => '条款更新日期';
+
+  @override
+  String get privacyPolicyContent => '';
+
+  @override
+  String get termsOfServiceContent => '';
+
+  @override
   String get writeFeedback => '意见反馈';
 
   @override
@@ -2435,9 +2447,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get networkError => '无法连接，请检查网络后重试';
-
-  @override
-  String get viewSourceCode => '查看源代码';
 
   @override
   String updateAvailable(String version) {
@@ -2702,6 +2711,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recentCompletionsSummary => '过去24小时';
+
+  @override
+  String todayCompletedTasks(Object count) {
+    return '今日已完成 ($count)任务';
+  }
+
+  @override
+  String get todayCompletedTasksSummary => '今天完成的任务';
+
+  @override
+  String get todayNoTasks => '今天还没有完成任务';
 
   @override
   String get timeAgoJustNow => '刚刚';
@@ -3131,7 +3151,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get guidePlanStartLearningDescription =>
-      '点击这里即可按照学习计划逐步学习。Echo Loop 会自动引导你学习，并及时提醒你复习。';
+      '点击这里即可按照学习计划逐步学习。灵犀AI英语听说 会自动引导你学习，并及时提醒你复习。';
 
   @override
   String get guidePlanPauseLearningTitle => '暂停学习';
@@ -3160,7 +3180,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get guideStudyTasksOverviewDescription =>
-      '包括待学习的新音频、到期的复习任务和已完成的任务等。Echo Loop 会自动帮你安排学习节奏。';
+      '包括待学习的新音频、到期的复习任务和已完成的任务等。灵犀AI英语听说 会自动帮你安排学习节奏。';
 
   @override
   String get guideStudyStatsHeaderTitle => '今日学习统计';
@@ -3550,9 +3570,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingQ3OptionGoogleSearch => 'Google 搜索';
 
   @override
-  String get onboardingQ3OptionGithub => 'GitHub';
-
-  @override
   String get onboardingQ3OptionFriend => '朋友推荐';
 
   @override
@@ -3683,7 +3700,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechPermUnsupportedToast => '当前平台不支持录音';
 
   @override
-  String get authSignInTitle => '登录 Echo Loop';
+  String get authSignInTitle => '登录 灵犀AI英语听说';
 
   @override
   String get authChooseMethod => '选择一种方式继续。';
@@ -4124,7 +4141,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsEnginePlatformDescription => '设备自带，速度快、无需下载，但音质一般。';
 
   @override
-  String get ttsEngineEchoLoop => 'Echo Loop AI (Advanced)';
+  String get ttsEngineEchoLoop => '灵犀AI英语听说 AI (Advanced)';
 
   @override
   String get ttsEngineComingSoon => '即将推出';
@@ -4133,7 +4150,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsEngineEchoLoopDescription => '音质最好，需下载模型，推荐高性能设备使用。';
 
   @override
-  String get ttsEnginePiper => 'Echo Loop AI (Balanced)';
+  String get ttsEnginePiper => '灵犀AI英语听说 AI (Balanced)';
 
   @override
   String get ttsEnginePiperDescription => '音质自然流畅，需下载模型，推荐中等配置设备使用。';
@@ -4184,13 +4201,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsDeleteModel => '删除模型';
 
   @override
-  String get ttsDeleteModelConfirm => '删除 Echo Loop 语音模型？可随时重新下载。';
+  String get ttsDeleteModelConfirm => '删除 灵犀AI英语听说 语音模型？可随时重新下载。';
 
   @override
   String get ttsCancelDownload => '取消';
 
   @override
-  String get ttsDownloadedModelsTitle => '已下载的 Echo Loop 模型';
+  String get ttsDownloadedModelsTitle => '已下载的 灵犀AI英语听说 模型';
 
   @override
   String ttsDownloadedModelsDesc(String size) {
@@ -4198,7 +4215,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get asrDeleteAllModelsConfirm => '删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。';
+  String get asrDeleteAllModelsConfirm => '删除所有已下载的 灵犀AI英语听说 语音识别模型？可随时重新下载。';
 
   @override
   String get asrDownloadedModelsTitle => '已下载的语音识别模型';
@@ -4224,7 +4241,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dictionarySourcesDescription => '关闭的词典不会出现在查词切换器中';
 
   @override
-  String get dictionaryWebAdsNotice => '在线词典可能含其自带广告，与 Echo Loop 无关。';
+  String get dictionaryWebAdsNotice => '在线词典可能含其自带广告，与 灵犀AI英语听说 无关。';
 
   @override
   String get dictSourceLocal => '本地词典';
@@ -4313,4 +4330,257 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dictAiMultiBackground => '背景知识';
+
+  @override
+  String get activationTitle => '激活码兑换';
+
+  @override
+  String get activationSubtitle => '输入激活码解锁高级功能';
+
+  @override
+  String get activationCodeHint => '请输入激活码';
+
+  @override
+  String get activationCodePlaceholder => '例如：ABCD1234';
+
+  @override
+  String get activationButton => '立即激活';
+
+  @override
+  String get activationActivating => '激活中...';
+
+  @override
+  String get activationSuccess => '激活成功！';
+
+  @override
+  String activationSuccessDetail(Object months) {
+    return '享受 $months 个月会员权益';
+  }
+
+  @override
+  String get activationErrorInvalid => '激活码无效，请检查后重新输入';
+
+  @override
+  String get activationErrorUsed => '该激活码已被使用';
+
+  @override
+  String get activationErrorExpired => '该激活码已过期';
+
+  @override
+  String get activationErrorNetwork => '网络错误，请稍后重试';
+
+  @override
+  String get activationAlreadyMember => '您已是会员';
+
+  @override
+  String get activationPeriodMonthly => '月卡';
+
+  @override
+  String get activationPeriodQuarterly => '季卡';
+
+  @override
+  String get activationPeriodHalfYearly => '半年卡';
+
+  @override
+  String get activationPeriodYearly => '年卡';
+
+  @override
+  String get activationMyCodesTitle => '我的激活码';
+
+  @override
+  String get activationMyCodesEmpty => '暂无激活码';
+
+  @override
+  String get activationEnterpriseBanner => '🏢 企业版';
+
+  @override
+  String get activationEnterpriseDesc => '面向学校与机构——批量采购请联系客服';
+
+  @override
+  String get activationEnterpriseContact => '联系销售';
+
+  @override
+  String get activationLearnMore => '了解详情';
+
+  @override
+  String get activationCodeRequired => '需要激活码';
+
+  @override
+  String get activationCodeLengthError => '激活码必须是8位字符';
+
+  @override
+  String get activationRedeemedSuccessfully => '兑换成功';
+
+  @override
+  String get inviteTitle => '邀请好友，双方都得会员';
+
+  @override
+  String get inviteSubtitle => '分享专属链接，好友注册后你们各得会员时长';
+
+  @override
+  String get inviteYourCode => '我的邀请码';
+
+  @override
+  String get inviteCopyCode => '复制邀请码';
+
+  @override
+  String get inviteCopied => '已复制到剪贴板';
+
+  @override
+  String get inviteShareLink => '分享链接';
+
+  @override
+  String get inviteShareApp => '分享 App';
+
+  @override
+  String inviteFriendsCount(Object count) {
+    return '已邀请 $count 位好友';
+  }
+
+  @override
+  String get inviteRewardMonthly => '邀请1人：各得 7 天会员';
+
+  @override
+  String get inviteRewardQuarterly => '邀请3人：各得 30 天会员';
+
+  @override
+  String get inviteRewardHalfYearly => '邀请5人：各得 90 天会员 + 定制贴纸';
+
+  @override
+  String get inviteRewardYearly => '邀请10人：各得 180 天会员 + 实物礼品';
+
+  @override
+  String get inviteMyReward => '我的奖励';
+
+  @override
+  String inviteMyRewardDetail(Object months) {
+    return '已获 $months 个月会员权益';
+  }
+
+  @override
+  String get inviteMyRewardNone => '暂无奖励';
+
+  @override
+  String get inviteLoading => '加载中...';
+
+  @override
+  String get inviteErrorNetwork => '网络错误，请稍后重试';
+
+  @override
+  String get inviteErrorNotLoggedIn => '请先登录后使用邀请功能';
+
+  @override
+  String get inviteEmpty => '还没有好友通过你的链接注册\n快去分享吧！';
+
+  @override
+  String get statsTitle => '激活码统计';
+
+  @override
+  String get statsTotalCodes => '总激活码数';
+
+  @override
+  String get statsUsedCodes => '已激活';
+
+  @override
+  String get statsUnusedCodes => '未使用';
+
+  @override
+  String get statsRedemptionRate => '激活率';
+
+  @override
+  String get statsTotalSeats => '总座位数';
+
+  @override
+  String get statsUsedSeats => '已使用座位';
+
+  @override
+  String get statsPeriodBreakdown => '按套餐类型';
+
+  @override
+  String get statsDailyTrend => '近7天趋势';
+
+  @override
+  String get statsGenerated => '生成';
+
+  @override
+  String get statsActivated => '已激活';
+
+  @override
+  String get statsCreatorStats => '按创建人';
+
+  @override
+  String get statsLoading => '加载中...';
+
+  @override
+  String get statsRefresh => '刷新';
+
+  @override
+  String get statsLastUpdated => '最后更新';
+
+  @override
+  String get statsNoData => '暂无统计数据';
+
+  @override
+  String get webWelcomeTitle => '欢迎来到灵犀AI英语听说';
+
+  @override
+  String get webWelcomeSubtitle => '随时随地，浏览器内即可练习听说';
+
+  @override
+  String get webFeaturesTitle => 'Web 专属能力';
+
+  @override
+  String get webInfoNotice => 'Web 版目前支持录音、转录和设置功能，完整学习功能敬请期待。';
+
+  @override
+  String get webOfflineAsrNotice => 'Web 版当前使用在线转录服务，离线 ASR 功能仅移动端可用。';
+
+  @override
+  String get webLogViewerTitle => '开发者日志';
+
+  @override
+  String get webLogEmpty => '暂无日志';
+
+  @override
+  String get webLoginChip => '已登录';
+
+  @override
+  String get webDevLogs => '开发者日志';
+
+  @override
+  String get webInviteTitle => '我的邀请码';
+
+  @override
+  String webInviteFriends(int count) {
+    return '已邀请 $count 人';
+  }
+
+  @override
+  String webInviteMonths(int months) {
+    return '已获 $months 个月';
+  }
+
+  @override
+  String get webInviteCopy => '复制邀请码';
+
+  @override
+  String get webInvitePending => '开始学习即可生成专属邀请码';
+
+  @override
+  String get webInvitePendingInfo => '将邀请码分享给好友，双方均可获得免费时长';
+
+  @override
+  String get consentDialogTitle => '隐私声明';
+
+  @override
+  String get consentDialogContent => '我们使用分析功能来改善您的体验。您的数据存储在本地，未经您同意不会共享。';
+
+  @override
+  String get consentDialogPrivacyLink => '隐私政策';
+
+  @override
+  String get consentDialogDeny => '拒绝';
+
+  @override
+  String get consentDialogAccept => '允许';
 }

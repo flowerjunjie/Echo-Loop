@@ -1,8 +1,8 @@
 {
   "@@locale": "en",
-  "appTitle": "Echo Loop",
-  "premiumTitle": "Echo Loop Membership",
-  "premiumTagline": "Get more AI-powered learning",
+  "appTitle": "灵犀AI英语听说",
+  "premiumTitle": "灵犀AI英语听说 Membership",
+  "premiumTagline": "Unlock unlimited AI translations, sentence breakdowns, and shadowing feedback — learn at your own pace",
   "aiQuotaExceededTitle": "You've reached your free limit",
   "aiQuotaExceededMessage": "Upgrade to unlock more AI usage and features.",
   "aiQuotaExceededCta": "Upgrade to Premium",
@@ -13,16 +13,18 @@
   "premiumEntryBadgeActive": "Member",
   "premiumEntryBadgeUpgrade": "Upgrade",
   "premiumActive": "You're a member",
-  "premiumBenefitTranslation": "More AI translation",
-  "premiumBenefitAnalysis": "More AI sentence breakdown",
-  "premiumBenefitWordAnalysis": "More AI word explanation",
-  "premiumBenefitTranscription": "More AI subtitle transcription",
-  "premiumBenefitSenseGroups": "More AI sentence chunking",
+  "premiumBenefitTranslation": "Unlimited AI translations — never hit a wall",
+  "premiumBenefitAnalysis": "Deep sentence breakdown — understand every grammar point",
+  "premiumBenefitWordAnalysis": "Rich word explanations — learn words in context",
+  "premiumBenefitTranscription": "Unlimited subtitle transcription — import any audio",
+  "premiumBenefitSenseGroups": "Intelligent chunking — natural speaking rhythm",
   "premiumSubscribe": "Subscribe",
   "premiumStartTrial": "Start {days}-day free trial",
   "@premiumStartTrial": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "premiumRestore": "Restore Purchases",
@@ -38,13 +40,17 @@
   "premiumRenewsOn": "Renews on {date}",
   "@premiumRenewsOn": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "premiumExpiresOn": "Expires on {date}",
   "@premiumExpiresOn": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "premiumLifetimeAccessNote": "Lifetime access, no renewal needed",
@@ -69,77 +75,109 @@
   "premiumSavePercent": "Save {percent}%",
   "@premiumSavePercent": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "premiumPerMonthEquivalent": "≈ {price}/mo",
   "@premiumPerMonthEquivalent": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumIntroFirstYear": "First year {price}",
   "@premiumIntroFirstYear": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumIntroFirstMonth": "First month {price}",
   "@premiumIntroFirstMonth": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumIntroFirstPeriod": "First period {price}",
   "@premiumIntroFirstPeriod": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerYear": "{price}/yr",
   "@premiumRenewalPricePerYear": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerMonth": "{price}/mo",
   "@premiumRenewalPricePerMonth": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerPeriod": "{price}",
   "@premiumRenewalPricePerPeriod": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumTryFreeThen": "Try free for {days} days, then {renewal}",
   "@premiumTryFreeThen": {
     "placeholders": {
-      "days": { "type": "int" },
-      "renewal": { "type": "String" }
+      "days": {
+        "type": "int"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumOfferThen": "{intro}, then {renewal}",
   "@premiumOfferThen": {
     "placeholders": {
-      "intro": { "type": "String" },
-      "renewal": { "type": "String" }
+      "intro": {
+        "type": "String"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumSpecialOfferPercent": "Special offer: {percent}% off your first {period}",
   "@premiumSpecialOfferPercent": {
     "placeholders": {
-      "percent": { "type": "int" },
-      "period": { "type": "String" }
+      "percent": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
     }
   },
   "premiumSpecialOfferIntro": "Special offer: {intro}, then {renewal}",
   "@premiumSpecialOfferIntro": {
     "placeholders": {
-      "intro": { "type": "String" },
-      "renewal": { "type": "String" }
+      "intro": {
+        "type": "String"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumOfferPeriodYear": "year",
@@ -239,20 +277,26 @@
   "loopCountValue": "{count}x",
   "@loopCountValue": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "loopIntervalValue": "{seconds}s",
   "@loopIntervalValue": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "sleepTimer": "Sleep timer",
   "sleepTimerMinutes": "{count} min",
   "@sleepTimerMinutes": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sleepTimerRemaining": "Time remaining",
@@ -260,7 +304,9 @@
   "sleepTimerA11yActive": "Sleep timer, {time} remaining, tap to adjust",
   "@sleepTimerA11yActive": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "fullText": "Full Text",
@@ -361,7 +407,9 @@
   "publishedOn": "Published {date}",
   "@publishedOn": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "discoverEntryTitleA": "Discover Curated Resources",
@@ -435,8 +483,12 @@
   "stepProgress": "{completed}/{total} completed",
   "@stepProgress": {
     "placeholders": {
-      "completed": { "type": "int" },
-      "total": { "type": "int" }
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stepBlindListening": "Blind Listening",
@@ -469,13 +521,17 @@
   "reviewUnlockIn": "Unlocks in {days} days",
   "@reviewUnlockIn": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "reviewUnlockInHours": "Unlocks in {hours} hours",
   "@reviewUnlockInHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "reviewUnlocked": "Unlocked",
@@ -487,13 +543,17 @@
   "reviewCountdown": "Available in {days} days",
   "@reviewCountdown": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "reviewCountdownHours": "Available in {hours} hours",
   "@reviewCountdownHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "blindListenBriefingTitle": "Blind Listening",
@@ -501,7 +561,9 @@
   "blindListenBriefingReviewSubtitle": "Review {round} - Blind Listening",
   "@blindListenBriefingReviewSubtitle": {
     "placeholders": {
-      "round": { "type": "int" }
+      "round": {
+        "type": "int"
+      }
     }
   },
   "blindListenBriefingTip": "Challenge yourself: listen without subtitles and grasp the main idea",
@@ -510,14 +572,18 @@
   "blindListenPassLabel": "Pass {count}",
   "@blindListenPassLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "blindListenComplete": "Blind Listen Complete",
   "blindListenPassInfo": "Listened {count} time(s)",
   "@blindListenPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectDifficulty": "How did it feel?",
@@ -535,13 +601,17 @@
   "audioDuration": "Duration: {duration}",
   "@audioDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "estimatedMinutes": "Est. {minutes} min",
   "@estimatedMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "estimatedLessThanOneMinute": "Est. < 1 min",
@@ -558,7 +628,9 @@
   "audioWillBeKept": "{count} audio files in this collection will be kept in the library",
   "@audioWillBeKept": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "done": "Done",
@@ -566,13 +638,17 @@
   "deleteAudioConfirm": "Permanently delete \"{name}\"?",
   "@deleteAudioConfirm": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "deleteAudioConfirmKeepFile": "Are you sure you want to delete \"{name}\"? The audio file is shared by other entries and will be kept.",
   "@deleteAudioConfirmKeepFile": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "uploadTranscript": "Upload Transcript",
@@ -582,13 +658,17 @@
   "sentenceCountLabel": "{count} sentences",
   "@sentenceCountLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "wordCountLabel": "{count} words",
   "@wordCountLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noTranscriptWarning": "This audio has no transcript yet",
@@ -596,15 +676,23 @@
   "intensiveListenProgress": "Sentence {current}/{total}",
   "@intensiveListenProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPlayCount": "Round {current}/{total}",
   "@intensiveListenPlayCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPeek": "Peek",
@@ -628,13 +716,17 @@
   "intensiveListenPauseBetweenPlays": "Next play in {seconds}s",
   "@intensiveListenPauseBetweenPlays": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseBetweenSentences": "Next sentence in {seconds}s",
   "@intensiveListenPauseBetweenSentences": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenCompleteTitle": "Intensive Listening Complete",
@@ -650,7 +742,9 @@
   "intensiveListenBriefingSentenceCount": "{count} sentences",
   "@intensiveListenBriefingSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenNoSubtitle": "No Subtitle Available",
@@ -660,7 +754,9 @@
   "intensiveListenRepeatCountValue": "{count} time(s)",
   "@intensiveListenRepeatCountValue": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseLabel": "Pause between sentences",
@@ -674,32 +770,42 @@
   "intensiveListenPauseFixedUnit": "{seconds}s",
   "@intensiveListenPauseFixedUnit": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseMultiplierValue": "{value}x",
   "@intensiveListenPauseMultiplierValue": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "intensiveListenPauseMultiplierLabel": "Multiplier",
   "blindListenCountdown": "Next play in {seconds}s",
   "@blindListenCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "difficultyLabel": "Difficulty: {difficulty}",
   "@difficultyLabel": {
     "placeholders": {
-      "difficulty": { "type": "String" }
+      "difficulty": {
+        "type": "String"
+      }
     }
   },
   "continueToStep": "Continue: {step}",
   "@continueToStep": {
     "placeholders": {
-      "step": { "type": "String" }
+      "step": {
+        "type": "String"
+      }
     }
   },
   "completeFirstStudy": "Complete Initial Learning",
@@ -707,9 +813,15 @@
   "stepProgressLabel": "Step {current}/{total} ({stage})",
   "@stepProgressLabel": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" },
-      "stage": { "type": "String" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stage": {
+        "type": "String"
+      }
     }
   },
   "manageTags": "Manage Tags",
@@ -731,27 +843,39 @@
   "listenAndRepeatProgress": "Sentence {current}/{total}",
   "@listenAndRepeatProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPlayCount": "Round {current}/{total}",
   "@listenAndRepeatPlayCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPauseBetweenPlays": "Repeat time {seconds}s",
   "@listenAndRepeatPauseBetweenPlays": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPauseBetweenSentences": "Next sentence in {seconds}s",
   "@listenAndRepeatPauseBetweenSentences": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatListenHint": "Listen then repeat",
@@ -774,13 +898,17 @@
   "listenAndRepeatRecognitionPassed": "Matched {percent}% of the target words.",
   "@listenAndRepeatRecognitionPassed": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRecognitionBelowThreshold": "Matched {percent}% of the target words.",
   "@listenAndRepeatRecognitionBelowThreshold": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRecognitionNoEnglish": "No English speech detected",
@@ -797,13 +925,17 @@
   "listenAndRepeatBriefingDifficultCount": "{count} difficult sentences",
   "@listenAndRepeatBriefingDifficultCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatBriefingPlayCount": "{count} plays per sentence",
   "@listenAndRepeatBriefingPlayCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRemoveDifficult": "Marked difficult, tap to remove",
@@ -818,70 +950,92 @@
   "sentenceDuration": "{duration}s",
   "@sentenceDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "difficultSentenceCount": "{count} difficult sentences",
   "@difficultSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPassInfo": "Practiced {count}x",
   "@intensiveListenPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "shadowingPassInfo": "Practiced {count}x",
   "@shadowingPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "retellBriefingTitle": "Paragraph Retelling",
   "retellBriefingSubtitle": "Listen to a paragraph, then retell in your own words. Keywords help you recall the content.",
   "retellBriefingTargetDuration": "Paragraph duration",
   "retellBriefingParagraphCount": "Will be divided into {count} paragraphs",
   "@retellBriefingParagraphCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "retellBriefingSeconds": "{seconds}s",
   "@retellBriefingSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellBriefingSentenceLevel": "Per Sentence",
   "retellBriefingSentenceCount": "{count} sentences total",
   "@retellBriefingSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "retellTitle": "Paragraph Retelling",
   "retellParagraphProgress": "Paragraph {current}/{total}",
   "@retellParagraphProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "retellParagraphDuration": "{duration}s",
   "@retellParagraphDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "durationMinutesSeconds": "{minutes}m {seconds}s",
   "@durationMinutesSeconds": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "seconds": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellPreListenHint": "Listen first, then retell",
@@ -890,14 +1044,20 @@
   "retellRetellingCountdown": "Retell {seconds}s",
   "@retellRetellingCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellRepeatInfo": "Round {current}/{total}",
   "@retellRepeatInfo": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "retellCompleteFirstStudy": "Complete Initial Learning",
@@ -920,31 +1080,34 @@
   "retellPassInfo": "Practiced {count}x",
   "@retellPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "retellNoDifficultSentences": "No sentences to retell. Complete intensive listening first.",
-
   "retellKeywordMethod": "Visible words",
   "retellKeywordMethodOff": "Off",
   "retellKeywordMethodRandom": "Random",
   "retellKeywordMethodAi": "AI",
   "retellKeywordMethodAiComingSoon": "Coming soon",
   "retellKeywordRatio": "Visible ratio",
-
   "pauseModeSmart": "Auto",
   "pauseModeFixed": "Fixed",
   "pauseModeMultiplier": "Multiplier",
   "fixedPauseSeconds": "Fixed pause",
   "pauseMultiplier": "Multiplier",
   "settingsSessionOnly": "Settings apply to current session only",
-
   "reviewDifficultPracticeTitle": "Difficult Sentence Practice",
   "reviewDifficultPracticeProgress": "Sentence {current}/{total}",
   "@reviewDifficultPracticeProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "reviewDifficultPracticeBlindListen": "Listening...",
@@ -956,10 +1119,11 @@
   "reviewDifficultPracticeAdvancing": "Next sentence in {seconds}s",
   "@reviewDifficultPracticeAdvancing": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
-
   "aiSectionTitle": "AI",
   "speechRecognition": "Speech Recognition",
   "speechRecognitionNotConfigured": "Not configured",
@@ -969,12 +1133,14 @@
   "asrEngine": "Speech Engine",
   "asrBackendPlatform": "Apple AI",
   "asrBackendPlatformDescription": "Uses the built-in system speech recognition, no download needed",
-  "asrBackendOffline": "Echo Loop AI",
+  "asrBackendOffline": "灵犀AI英语听说 AI",
   "asrBackendOfflineDescription": "Uses the app's AI model, works offline, requires download",
   "asrModelTier": "Model: {tier} (auto-selected for your device)",
   "@asrModelTier": {
     "placeholders": {
-      "tier": { "type": "String" }
+      "tier": {
+        "type": "String"
+      }
     }
   },
   "asrModelFastDescription": "Fastest. Best for low-end devices.",
@@ -984,19 +1150,25 @@
   "speechModelSize": "Model size: ~{size}",
   "@speechModelSize": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelApproxSize": "~{size}",
   "@speechModelApproxSize": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelReady": "Ready · {size}",
   "@speechModelReady": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelStatusReady": "Ready",
@@ -1004,7 +1176,9 @@
   "speechModelDownloading": "Downloading... {progress}",
   "@speechModelDownloading": {
     "placeholders": {
-      "progress": { "type": "String" }
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "speechModelDownloadFailed": "Download failed. Tap to retry.",
@@ -1022,7 +1196,9 @@
   "deleteModel": "Delete Model ({size})",
   "@deleteModel": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "deleteModelAction": "Delete Model",
@@ -1030,7 +1206,9 @@
   "deleteModelConfirmMessage": "This will free up {size} of storage space.",
   "@deleteModelConfirmMessage": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "disableSpeechRecognitionTitle": "Disable Speech Recognition?",
@@ -1048,7 +1226,6 @@
   "speechRecognitionNotEnabled": "Voice recognition not enabled. Enable in Settings.",
   "retryDownload": "Retry",
   "downloadingSpeechModel": "Downloading Speech Recognition Model",
-
   "developer": "Developer",
   "developerOptionsEnabled": "Developer options enabled",
   "developerOptionsDisable": "Disable developer options",
@@ -1058,7 +1235,6 @@
   "timeMachineSelectDate": "Select date",
   "timeMachineSelectTime": "Select time",
   "timeMachineReset": "Use system time",
-
   "manageSubtitles": "Manage Subtitles",
   "localUpload": "Local Upload",
   "aiTranscription": "Cloud Transcription",
@@ -1070,12 +1246,20 @@
   "localTranscriptionForegroundHint": "Keep the app open and on-screen until it finishes — transcription pauses if you switch apps or lock the screen.",
   "localTranscriptionProgressPercent": "{percent}% done",
   "@localTranscriptionProgressPercent": {
-    "placeholders": { "percent": { "type": "int" } }
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   },
   "localTranscriptionModelRequiredTitle": "Speech model needed",
   "localTranscriptionModelRequiredMessage": "On-device transcription needs to download the {modelName} speech model once (offline afterwards).",
   "@localTranscriptionModelRequiredMessage": {
-    "placeholders": { "modelName": { "type": "String" } }
+    "placeholders": {
+      "modelName": {
+        "type": "String"
+      }
+    }
   },
   "deleteSubtitle": "Delete Subtitle",
   "startTranscription": "Start Transcription",
@@ -1092,11 +1276,19 @@
   "transcriptionEmptyResultHint": "The audio may contain too much background noise.",
   "transcriptionErrorFileTooLarge": "File too large (max {maxMb}MB)",
   "@transcriptionErrorFileTooLarge": {
-    "placeholders": { "maxMb": { "type": "int" } }
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
   },
   "transcriptionErrorTooLong": "Audio too long (max {maxMin} minutes)",
   "@transcriptionErrorTooLong": {
-    "placeholders": { "maxMin": { "type": "int" } }
+    "placeholders": {
+      "maxMin": {
+        "type": "int"
+      }
+    }
   },
   "deleteSubtitleConfirm": "Are you sure you want to delete the subtitle?",
   "deleteSubtitleWarning": "Deleting the subtitle will also clear all bookmarked sentences and learning progress for this audio.",
@@ -1117,7 +1309,9 @@
   "currentSubtitleAi": "Current: AI ({language})",
   "@currentSubtitleAi": {
     "placeholders": {
-      "language": { "type": "String" }
+      "language": {
+        "type": "String"
+      }
     }
   },
   "noSubtitleYet": "No subtitle yet",
@@ -1130,62 +1324,94 @@
   "transcriptionFailedMessage": "Error: {message}",
   "@transcriptionFailedMessage": {
     "placeholders": {
-      "message": { "type": "String" }
+      "message": {
+        "type": "String"
+      }
     }
   },
-
   "todayStudyTime": "Today: {time}",
   "@todayStudyTime": {
     "description": "Today's study time label",
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "studyTimeMinutes": "{minutes} min",
   "@studyTimeMinutes": {
     "description": "Study time in minutes",
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "studyTimeHoursMinutes": "{hours}h {minutes}m",
   "@studyTimeHoursMinutes": {
     "description": "Study time in hours and minutes",
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "studyTasks": "Study Tasks",
   "continueLearningHero": "Continue Learning",
   "startButton": "Start",
   "continueButton": "Continue",
   "streakDays": "{count}d streak",
   "@streakDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todayStudyTimeShort": "Today",
   "weekStudyTimeShort": "Week",
   "readyToReview": "Ready to Review ({count})",
   "@readyToReview": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "upcomingReviews": "Upcoming Reviews ({count})",
   "@upcomingReviews": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "upcomingReviewsSummary": "{count} review tasks will unlock later",
   "@upcomingReviewsSummary": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "firstStudySection": "Initial Learning ({count})",
   "@firstStudySection": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "completedSection": "Completed ({count})",
   "@completedSection": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "noStudyTasks": "No study tasks yet",
   "noStudyTasksHint": "Import audio files to start learning.",
@@ -1194,33 +1420,56 @@
   "allDoneHint": "Great work today. Come back later for reviews.",
   "overdueDays": "Due {count}d ago",
   "@overdueDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "overdueHours": "Due {count}h ago",
   "@overdueHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "reviewDue": "Review due",
   "availableInDays": "in {count}d",
   "@availableInDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "availableInHours": "in {count}h",
   "@availableInHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "subStageLabelFirstLearn": "Initial Learning - {subStage}",
   "@subStageLabelFirstLearn": {
-    "placeholders": { "subStage": { "type": "String" } }
+    "placeholders": {
+      "subStage": {
+        "type": "String"
+      }
+    }
   },
   "subStageLabelReview": "{reviewName} - {subStage}",
   "@subStageLabelReview": {
     "placeholders": {
-      "reviewName": { "type": "String" },
-      "subStage": { "type": "String" }
+      "reviewName": {
+        "type": "String"
+      },
+      "subStage": {
+        "type": "String"
+      }
     }
   },
-
   "favoritesSentences": "Sentences",
   "favoritesVocabulary": "Vocabulary",
   "favoritesNoSentences": "No saved sentences yet",
@@ -1229,7 +1478,11 @@
   "favoritesNoVocabularyHint": "Tap a word during learning to look it up and save it",
   "favoritesBookmarkCount": "{count} sentences",
   "@favoritesBookmarkCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "favoritesVocabularySaved": "Saved",
   "favoritesVocabularyRemoved": "Removed",
@@ -1237,39 +1490,53 @@
   "undo": "Undo",
   "favoritesSaveVocabulary": "Save",
   "favoritesUnsaveVocabulary": "Remove",
-
   "bookmarkReviewTitle": "Bookmark Review",
   "bookmarkReviewStart": "Start Review",
   "bookmarkReviewStartCount": "Start Review ({count})",
   "@bookmarkReviewStartCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bookmarkReviewComplete": "Review Complete",
   "bookmarkReviewAgain": "Review Again",
   "bookmarkReviewAudioSkipped": "Audio unavailable, skipping this sentence",
   "bookmarkReviewFromAudio": "From: {name}",
   "@bookmarkReviewFromAudio": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "difficultPracticeSettings": "Practice Settings",
   "difficultPracticeSettingsHint": "Settings apply to this session only",
   "difficultPracticeBlindListenRepeat": "Blind listen repeats",
   "difficultPracticeShadowReadingRepeat": "Shadow reading repeats",
-
   "inputWordsShort": "Input",
   "outputWordsShort": "Output",
   "listenTimeWords": "Listen: {time} · {words}",
   "@listenTimeWords": {
     "placeholders": {
-      "time": { "type": "String" },
-      "words": { "type": "String" }
+      "time": {
+        "type": "String"
+      },
+      "words": {
+        "type": "String"
+      }
     }
   },
   "speakTimeWords": "Speak: {time} · {words}",
   "@speakTimeWords": {
     "placeholders": {
-      "time": { "type": "String" },
-      "words": { "type": "String" }
+      "time": {
+        "type": "String"
+      },
+      "words": {
+        "type": "String"
+      }
     }
   },
   "learnedWordFormsShort": "Vocab",
@@ -1277,15 +1544,17 @@
   "learnedWordsEmptyHint": "No learned words yet. Finish some listening first.",
   "learnedWordsSortTimeAsc": "Oldest Learned",
   "learnedWordsSortTimeDesc": "Recently Learned",
-
   "bookmarkReviewProgress": "Sentence {current}/{total}",
   "@bookmarkReviewProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "flashcardTitle": "Flashcards",
   "flashcardViewAnswer": "Ready? View answer",
   "flashcardTapToFlip": "Tap to flip back",
@@ -1293,18 +1562,30 @@
   "flashcardProgress": "{current}/{total}",
   "@flashcardProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "flashcardComplete": "Review Complete",
   "flashcardWordsReviewed": "Reviewed {count} words",
   "@flashcardWordsReviewed": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "flashcardWordsRemoved": "Unsaved {count} words",
   "@flashcardWordsRemoved": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "flashcardPracticeAgain": "Practice Again",
   "flashcardFinish": "Done",
@@ -1363,17 +1644,21 @@
   "autoCompletedNoDifficultReview": "0 difficult sentences, skipped",
   "termsOfService": "Terms of Service",
   "privacyPolicy": "Privacy Policy",
+  "privacyPolicyLastUpdated": "Last updated",
+  "termsLastUpdated": "Last updated",
+  "privacyPolicyContent": "",
+  "termsOfServiceContent": "",
   "writeFeedback": "Write Feedback",
   "rateUs": "Rate Us",
   "joinCommunity": "Join Community",
   "joinCommunityInviteSubtitle": "Find study buddies, share resources, request features",
   "networkError": "Unable to connect. Please check your network and try again.",
-  "viewSourceCode": "View Source Code",
-
   "updateAvailable": "New Version v{version}",
   "@updateAvailable": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "updateNow": "Update Now",
@@ -1390,18 +1675,23 @@
   "demoModeSubtitle": "Use demo data for screenshots and presentations",
   "practiceRemoveMark": "Unmark",
   "practiceAddMark": "Re-mark",
-
   "blindListenSegmentProgress": "Paragraph {current}/{total}",
   "@blindListenSegmentProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "blindListenSegmentDuration": "{duration}s",
   "@blindListenSegmentDuration": {
     "placeholders": {
-      "duration": {"type": "int"}
+      "duration": {
+        "type": "int"
+      }
     }
   },
   "blindListenListeningHint": "Listen carefully...",
@@ -1409,8 +1699,12 @@
   "blindListenRepeatInfo": "Round {current}/{total}",
   "@blindListenRepeatInfo": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "blindListenSettingsTitle": "Listening Settings",
@@ -1425,34 +1719,38 @@
   "blindListenParagraphCount": "{count} paragraphs",
   "@blindListenParagraphCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "resetLearningProgress": "Reset Progress",
   "resetLearningProgressConfirmTitle": "Reset Learning Progress?",
   "resetLearningProgressConfirmMessage": "This will clear all learning progress for \"{name}\". This action cannot be undone.",
   "@resetLearningProgressConfirmMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "resetLearningProgressDone": "Learning progress has been reset",
-
   "pauseLearning": "Pause Learning",
   "resumeLearning": "Resume Learning",
   "pausedChipLabel": "Paused",
   "pauseLearningConfirmTitle": "Pause Learning?",
   "pauseLearningConfirmMessage": "Review scheduling for this audio will stop. You can resume anytime.",
-
   "reviewReminderBody": "{audioName} · Review round {round} is ready",
   "@reviewReminderBody": {
     "placeholders": {
-      "audioName": { "type": "String" },
-      "round": { "type": "int" }
+      "audioName": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      }
     }
   },
-
   "stageBlindListen": "Blind Listen",
   "stageIntensiveListen": "Intensive Listen",
   "stageListenAndRepeat": "Shadowing",
@@ -1460,11 +1758,12 @@
   "stageReviewDifficultPractice": "Difficult Drill",
   "stageBookmarkReview": "Sentence Review",
   "stageFlashcard": "Word Review",
-
   "stageBreakdownTitle": "{date}",
   "@stageBreakdownTitle": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "stageBreakdownToday": " (Today)",
@@ -1478,7 +1777,6 @@
   "chartLegendSpeaking": "Speaking",
   "chartLegendOther": "Other",
   "chartLegendOtherHint": "Thinking, pauses, etc.",
-
   "reminderSectionTitle": "Reminders",
   "reminderSettings": "Review Reminder",
   "savedReviewReminderSection": "Saved Review Reminder",
@@ -1488,7 +1786,6 @@
   "audioReviewReminderSection": "Audio Review Reminder",
   "audioReviewReminderToggle": "Audio Due Reminder",
   "audioReviewReminderDescription": "Get notified when it's time to review, helping you stay on track",
-
   "notificationPromptTitle": "Lock in what you've learned",
   "notificationPromptBody": "Memory sticks when you review at the right moments. We'll nudge you only when it matters.",
   "notificationPromptTitleLearning": "Review while it's fresh",
@@ -1501,28 +1798,44 @@
   "notificationDisabledBannerCta": "Open Settings",
   "notificationNotGrantedBanner": "Allow notifications to receive daily review reminders.",
   "notificationNotGrantedBannerCta": "Turn on",
-
   "recentCompletions": "Recently Completed ({count})",
   "@recentCompletions": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recentCompletionsSummary": "Past 24 hours",
+  "todayCompletedTasks": "Completed Today ({count})",
+  "@todayCompletedTasks": {
+    "description": "Title for the today completed tasks collapsible section in the study tab."
+  },
+  "todayCompletedTasksSummary": "Tasks finished today",
+  "@todayCompletedTasksSummary": {
+    "description": "Subtitle for the today completed tasks section."
+  },
+  "todayNoTasks": "No tasks completed yet today",
+  "@todayNoTasks": {
+    "description": "Empty state message when no tasks completed today."
+  },
   "timeAgoJustNow": "Just now",
   "timeAgoMinutes": "{minutes}m ago",
   "@timeAgoMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "timeAgoHours": "{hours}h ago",
   "@timeAgoHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
-
   "exportAudio": "Export Audio",
   "exportAudioFile": "Audio",
   "exportSubtitleFile": "Subtitle",
@@ -1532,28 +1845,36 @@
   "pdfExportFailed": "Failed to export PDF: {error}",
   "@pdfExportFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "pdfMetaDuration": "Duration {duration}",
   "@pdfMetaDuration": {
     "description": "PDF title meta line: audio duration (duration is preformatted mm:ss)",
     "placeholders": {
-      "duration": {"type": "String"}
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "pdfMetaSentences": "{count, plural, =1{1 sentence} other{{count} sentences}}",
   "@pdfMetaSentences": {
     "description": "PDF title meta line: sentence count",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "pdfMetaWords": "{count, plural, =1{1 word} other{{count} words}}",
   "@pdfMetaWords": {
     "description": "PDF title meta line: word count",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "pdfAppendixTitle": "Appendix · Sentence Analysis",
@@ -1589,7 +1910,6 @@
   "@pdfExportReminderConfirm": {
     "description": "Dismiss button for the first-time PDF export reminder"
   },
-
   "exportData": "Export Data",
   "exportDataSubtitle": "Export all data to a ZIP file",
   "importData": "Import Data",
@@ -1628,16 +1948,29 @@
   "exportingResources": "Backing up offline dictionaries...",
   "importingResources": "Restoring offline dictionaries...",
   "backupFailed": "Backup failed: {error}",
-  "@backupFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "restoreFailed": "Restore failed: {error}",
-  "@restoreFailed": {"placeholders": {"error": {"type": "String"}}},
-
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "activityCalendar": "Activity Calendar",
   "noActivityThisMonth": "No learning activity this month",
   "monthlySummaryTitle": "{month} Stats",
   "@monthlySummaryTitle": {
     "placeholders": {
-      "month": { "type": "String" }
+      "month": {
+        "type": "String"
+      }
     }
   },
   "monthlyTotal": "Total",
@@ -1682,14 +2015,15 @@
   "transcriptionSignInRequiredMessage": "AI transcription uses the cloud transcription service. Sign in to transcribe audio with AI.",
   "senseGroupNotAvailable": "Sense group playback is not available for this audio yet",
   "wordTimestampsNotFound": "Word-level timestamps not found. Please restart the app to retry.",
-
   "recycleBinTitle": "Recycle Bin",
   "recycleBinEmpty": "No removed items",
   "recycleBinClearAll": "Clear All",
   "recycleBinClearAllConfirm": "Permanently delete all {count} items? This cannot be undone.",
   "@recycleBinClearAllConfirm": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recycleBinRestore": "Restore",
@@ -1699,32 +2033,44 @@
   "recycleBinItemCount": "{count} items",
   "@recycleBinItemCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "filesSelected": "{count} files selected",
   "@filesSelected": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "processingFileOf": "Processing {current} of {total}...",
   "@processingFileOf": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "multipleAudioAdded": "{count} audio files added",
   "@multipleAudioAdded": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duplicatesSkipped": "Skipped {count} duplicates",
   "@duplicatesSkipped": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duplicatesSkippedDetail": "The following audio files are already in this collection and were skipped:",
@@ -1759,7 +2105,7 @@
   "guidePlanFreePlayTitle": "Free Play",
   "guidePlanFreePlayDescription": "A flexible, all-in-one audio player for free practice. Learn at your own pace.",
   "guidePlanStartLearningTitle": "Follow the plan",
-  "guidePlanStartLearningDescription": "Tap here to follow the learning plan step by step. Echo Loop will guide you and remind you to review at the right time.",
+  "guidePlanStartLearningDescription": "Tap here to follow the learning plan step by step. 灵犀AI英语听说 will guide you and remind you to review at the right time.",
   "guidePlanPauseLearningTitle": "Pause learning",
   "guidePlanPauseLearningDescription": "If you no longer want to study this audio, tap here to pause anytime. Review reminders will stop, and you can resume with one tap later.",
   "guideRetellSkipTitle": "Skip this retell",
@@ -1768,14 +2114,16 @@
   "guideMainShellVisitLibraryTitle": "Start from Library",
   "guideMainShellVisitLibraryDescription": "Tap here to learn how to use this app.",
   "guideStudyTasksOverviewTitle": "Your study tasks",
-  "guideStudyTasksOverviewDescription": "This area includes new audio to learn, due reviews, completed tasks, and more. Echo Loop will pace your learning for you.",
+  "guideStudyTasksOverviewDescription": "This area includes new audio to learn, due reviews, completed tasks, and more. 灵犀AI英语听说 will pace your learning for you.",
   "guideStudyStatsHeaderTitle": "Today at a glance",
   "guideStudyStatsHeaderDescription": "Your listening time, speaking practice time, and new vocabulary for today are all summarized here. Tap a card or bar for a more detailed breakdown.",
   "guideStudyStreakDescription": "Tap here to open your activity calendar. Check in every day and build a steady learning habit.",
   "guideFavoritesSentencesListDescription": "Your saved sentences, grouped by source audio. Tap {dumbbellIcon} to review every saved sentence from that audio at once.",
   "@guideFavoritesSentencesListDescription": {
     "placeholders": {
-      "dumbbellIcon": {"type": "String"}
+      "dumbbellIcon": {
+        "type": "String"
+      }
     }
   },
   "guideFavoritesSentencesReviewDescription": "Tap here to review every saved sentence at once.",
@@ -1798,7 +2146,6 @@
   "resetNewUserGuideDone": "New user guide has been reset",
   "resetOnboarding": "Reset Onboarding Survey",
   "resetOnboardingDone": "Onboarding reset; please restart the app to retake the survey",
-
   "discoverOfficialCollections": "Discover Curated Collections",
   "discoverEmpty": "No curated collections yet",
   "discoverLoadFailed": "Failed to load, tap to retry",
@@ -1807,7 +2154,9 @@
   "discoverPodcastEntrySubtitle": "{count} podcasts. Subscribe to keep new episodes in your library.",
   "@discoverPodcastEntrySubtitle": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "discoverPodcastTitle": "Curated Podcasts",
@@ -1835,7 +2184,9 @@
   "removeOfficialConfirmTitle": "Remove \"{name}\"?",
   "@removeOfficialConfirmTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "removeOfficialConfirmMessage": "All audios, subtitles, and learning records in this collection will be deleted. This cannot be undone.",
@@ -1846,13 +2197,17 @@
   "downloadCompleted": "{name} downloaded",
   "@downloadCompleted": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadFailed": "{name} download failed, please retry",
   "@downloadFailed": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "updateOfficialSubtitle": "Update Subtitle",
@@ -1863,7 +2218,9 @@
   "downloadInProgressSnackbar": "Downloading {name}, please wait",
   "@downloadInProgressSnackbar": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadLoading": "Loading",
@@ -1883,8 +2240,12 @@
   "onboardingProgress": "{current} of {total}",
   "@onboardingProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onboardingNext": "Next",
@@ -1926,7 +2287,6 @@
   "onboardingQ3OptionBilibili": "Bilibili",
   "onboardingQ3OptionBaiduSearch": "Baidu search",
   "onboardingQ3OptionGoogleSearch": "Google search",
-  "onboardingQ3OptionGithub": "GitHub",
   "onboardingQ3OptionFriend": "Friend or family",
   "onboardingQ3OptionOther": "Other",
   "onboardingPermissionsHint": "To ensure the best experience, we'll request these permissions",
@@ -1934,7 +2294,6 @@
   "onboardingPermissionsMicrophone": "Microphone",
   "onboardingPermissionsSpeech": "Speech recognition",
   "playbackSection": "Playback",
-  "playbackSettings": "Playback Settings",
   "learningSection": "Learning",
   "learningSettings": "Learning Settings",
   "speakingPracticeSection": "Speaking practice",
@@ -1957,13 +2316,17 @@
   "silenceThresholdValue": "{seconds}s",
   "@silenceThresholdValue": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "silenceSkipped": "Skipped {seconds}s of silence part",
   "@silenceSkipped": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "speechPermDialogTitleRequest": "Permissions Required",
@@ -1980,7 +2343,7 @@
   "speechPermActionGrant": "Grant",
   "speechPermActionOpenSettings": "Open Settings",
   "speechPermUnsupportedToast": "Recording is not supported on this platform",
-  "authSignInTitle": "Sign in to Echo Loop",
+  "authSignInTitle": "Sign in to 灵犀AI英语听说",
   "authChooseMethod": "Choose how you want to continue.",
   "authContinueWithEmail": "Continue with Email Code",
   "authContinueWithApple": "Continue with Apple",
@@ -2008,7 +2371,9 @@
   "authResendOtpCountdown": "{seconds}s until resend",
   "@authResendOtpCountdown": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "authOtpResent": "A new code has been sent.",
@@ -2036,7 +2401,9 @@
   "authCheckEmailMessage": "We sent a 6-digit code to {email}.",
   "@authCheckEmailMessage": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "authResetEmailSent": "If an account exists, a reset link has been sent.",
@@ -2098,7 +2465,6 @@
   "audioImportComplete": "Import complete",
   "audioImportCanceled": "Audio import canceled",
   "cancelDownload": "Cancel Download",
-
   "subscribePodcast": "Subscribe Podcast",
   "subscribePodcastOptionDescription": "Add with Apple Podcasts or RSS",
   "podcastUrlLabel": "Apple Podcasts or RSS URL",
@@ -2106,21 +2472,37 @@
   "podcastSubscribing": "Fetching podcast feed…",
   "podcastSubscribeFailed": "Failed to subscribe: {error}",
   "@podcastSubscribeFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "podcastRefreshFailed": "Failed to refresh: {error}",
   "@podcastRefreshFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "podcastAlreadySubscribed": "Already subscribed — see collection \"{name}\"",
   "@podcastAlreadySubscribed": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "podcastRefreshFeed": "Refresh Feed",
   "podcastUnsubscribe": "Unsubscribe",
   "podcastUnsubscribeConfirmTitle": "Unsubscribe from {name}?",
   "@podcastUnsubscribeConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "podcastUnsubscribeConfirmMessage": "All episodes and downloaded audio files in this collection will be deleted.",
   "podcastFeedInfo": "Feed Info",
@@ -2138,7 +2520,11 @@
   "podcastOpenLinkFailed": "Could not open link",
   "podcastLastRefreshed": "Last refreshed: {time}",
   "@podcastLastRefreshed": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "podcastEpisodeGuid": "GUID",
   "podcastEnclosureUrl": "Audio URL",
@@ -2148,10 +2534,10 @@
   "ttsEnginePlatform": "System Speech",
   "ttsEnginePlatformApple": "Apple AI",
   "ttsEnginePlatformDescription": "Built into your device. Fast, no download, but average quality.",
-  "ttsEngineEchoLoop": "Echo Loop AI (Advanced)",
+  "ttsEngineEchoLoop": "灵犀AI英语听说 AI (Advanced)",
   "ttsEngineComingSoon": "Coming soon",
   "ttsEngineEchoLoopDescription": "Best sound quality. Needs a model download; recommended for high-performance devices.",
-  "ttsEnginePiper": "Echo Loop AI (Balanced)",
+  "ttsEnginePiper": "灵犀AI英语听说 AI (Balanced)",
   "ttsEnginePiperDescription": "Natural, smooth sound. Needs a model download; recommended for mid-range devices.",
   "ttsModel": "Model",
   "ttsModelHighQuality": "High quality",
@@ -2168,21 +2554,25 @@
   "ttsVoiceFemale": "Female",
   "ttsVoiceMale": "Male",
   "ttsDeleteModel": "Delete model",
-  "ttsDeleteModelConfirm": "Delete the Echo Loop voice model? You can re-download it anytime.",
+  "ttsDeleteModelConfirm": "Delete the 灵犀AI英语听说 voice model? You can re-download it anytime.",
   "ttsCancelDownload": "Cancel",
-  "ttsDownloadedModelsTitle": "Downloaded Echo Loop models",
+  "ttsDownloadedModelsTitle": "Downloaded 灵犀AI英语听说 models",
   "ttsDownloadedModelsDesc": "Not in use · {size}",
   "@ttsDownloadedModelsDesc": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
-  "asrDeleteAllModelsConfirm": "Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.",
+  "asrDeleteAllModelsConfirm": "Delete all downloaded 灵犀AI英语听说 speech recognition models? You can re-download them anytime.",
   "asrDownloadedModelsTitle": "Downloaded speech recognition models",
   "asrDownloadedModelsDesc": "Not in use · {size}",
   "@asrDownloadedModelsDesc": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "dictionarySettings": "Dictionary Settings",
@@ -2190,19 +2580,27 @@
   "dictionaryDefaultDescription": "Dictionary shown by default when looking up a word",
   "dictionarySources": "Dictionary Sources",
   "dictionarySourcesDescription": "Disabled dictionaries won't appear in the lookup switcher",
-  "dictionaryWebAdsNotice": "Online dictionaries may show their own ads, unrelated to Echo Loop.",
+  "dictionaryWebAdsNotice": "Online dictionaries may show their own ads, unrelated to 灵犀AI英语听说.",
   "dictSourceLocal": "Local Dictionary",
   "dictSourceAi": "AI Dictionary",
   "dictSourceCambridge": "Cambridge",
   "dictSourceAlwaysOn": "Always on",
   "dictSourceCannotDisable": "{name} is a base source and can't be disabled",
   "@dictSourceCannotDisable": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "dictDefaultBadge": "Default",
   "dictSwitcherSemantics": "Switch dictionary, currently {name}",
   "@dictSwitcherSemantics": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "cambridgeNotFound": "Not found in Cambridge",
   "dictTryOtherSource": "Try another dictionary",
@@ -2227,5 +2625,135 @@
   "dictAiMultiNaturalness": "Correction",
   "dictAiMultiPronunciationTips": "Pronunciation",
   "dictAiMultiSimilarExpressions": "Similar Expressions",
-  "dictAiMultiBackground": "Background Knowledge"
+  "dictAiMultiBackground": "Background Knowledge",
+  "activationTitle": "Activate Code",
+  "activationSubtitle": "Enter your activation code to unlock premium features",
+  "activationCodeHint": "Enter activation code",
+  "activationCodePlaceholder": "e.g. ABCD1234",
+  "activationButton": "Activate",
+  "activationActivating": "Activating...",
+  "activationSuccess": "Activated successfully!",
+  "activationSuccessDetail": "Enjoy {months} months of premium features",
+  "activationErrorInvalid": "Invalid activation code, please check and try again",
+  "activationErrorUsed": "This activation code has already been used",
+  "activationErrorExpired": "This activation code has expired",
+  "activationErrorNetwork": "Network error, please try again later",
+  "activationAlreadyMember": "You are already a member",
+  "activationPeriodMonthly": "Monthly",
+  "activationPeriodQuarterly": "Quarterly",
+  "activationPeriodHalfYearly": "Half Year",
+  "activationPeriodYearly": "Yearly",
+  "activationMyCodesTitle": "My Activation Codes",
+  "activationMyCodesEmpty": "No activation codes yet",
+  "activationEnterpriseBanner": "🏢 Enterprise Edition",
+  "activationEnterpriseDesc": "For schools and organizations — contact us for bulk licensing",
+  "activationEnterpriseContact": "Contact Sales",
+  "activationLearnMore": "Learn More",
+  "activationCodeRequired": "Activation code required",
+  "activationCodeLengthError": "Activation code must be 8 characters",
+  "activationRedeemedSuccessfully": "Redeemed successfully",
+  "inviteTitle": "Invite Friends, Both Get Premium",
+  "inviteSubtitle": "Share your invite link, both of you get membership when they sign up",
+  "inviteYourCode": "My Invite Code",
+  "inviteCopyCode": "Copy Invite Code",
+  "inviteCopied": "Copied to clipboard",
+  "inviteShareLink": "Share Link",
+  "inviteShareApp": "Share App",
+  "inviteFriendsCount": "Invited {count} friends",
+  "inviteRewardMonthly": "1 friend: both get 7 days premium",
+  "inviteRewardQuarterly": "3 friends: both get 30 days premium",
+  "inviteRewardHalfYearly": "5 friends: both get 90 days premium + sticker",
+  "inviteRewardYearly": "10 friends: both get 180 days premium + merch",
+  "inviteMyReward": "My Rewards",
+  "inviteMyRewardDetail": "Earned {months} months of premium",
+  "inviteMyRewardNone": "No rewards yet",
+  "inviteLoading": "Loading...",
+  "inviteErrorNetwork": "Network error, please try again",
+  "inviteErrorNotLoggedIn": "Please log in to use invite feature",
+  "inviteEmpty": "No friends signed up yet\nStart sharing now!",
+  "statsTitle": "Activation Statistics",
+  "statsTotalCodes": "Total Codes",
+  "statsUsedCodes": "Activated",
+  "statsUnusedCodes": "Unused",
+  "statsRedemptionRate": "Redemption Rate",
+  "statsTotalSeats": "Total Seats",
+  "statsUsedSeats": "Used Seats",
+  "statsPeriodBreakdown": "By Package Type",
+  "statsDailyTrend": "7-Day Trend",
+  "statsGenerated": "Generated",
+  "statsActivated": "Activated",
+  "statsCreatorStats": "By Creator",
+  "statsLoading": "Loading statistics...",
+  "statsRefresh": "Refresh",
+  "statsLastUpdated": "Last updated",
+  "statsNoData": "No statistics available",
+  "webWelcomeTitle": "Welcome to 灵犀AI English",
+  "@webWelcomeTitle": {
+    "description": "Web版首页欢迎标题"
+  },
+  "webWelcomeSubtitle": "Practice listening and speaking anytime, anywhere in your browser",
+  "@webWelcomeSubtitle": {
+    "description": "Web版首页欢迎副标题"
+  },
+  "webFeaturesTitle": "Web Features",
+  "@webFeaturesTitle": {
+    "description": "Web版功能卡片标题"
+  },
+  "webInfoNotice": "Web version currently supports recording, transcription, and settings. Full learning features coming soon.",
+  "@webInfoNotice": {
+    "description": "Web版功能说明"
+  },
+  "webOfflineAsrNotice": "Web version currently uses online transcription service; offline ASR is mobile-only.",
+  "@webOfflineAsrNotice": {
+    "description": "Web版离线ASR限制提示"
+  },
+  "webLogViewerTitle": "Developer Logs",
+  "@webLogViewerTitle": {
+    "description": "日志查看页标题"
+  },
+  "webLogEmpty": "No logs yet",
+  "@webLogEmpty": {
+    "description": "无日志时显示"
+  },
+  "webLoginChip": "Signed in",
+  "@webLoginChip": {
+    "description": "Web版首页已登录状态芯片文字"
+  },
+  "webDevLogs": "Developer Logs",
+  "@webDevLogs": {
+    "description": "Web版首页开发者日志按钮提示文字"
+  },
+  "webInviteTitle": "Your Invite Code",
+  "@webInviteTitle": {
+    "description": "Web版邀请码区域标题"
+  },
+  "webInviteFriends": "{count} friend(s) signed up",
+  "@webInviteFriends": {
+    "description": "已邀请好友数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "webInviteMonths": "{months} month(s) earned",
+  "@webInviteMonths": {
+    "description": "已获得月数",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "webInviteCopy": "Copy Invite Code",
+  "@webInviteCopy": {
+    "description": "复制邀请码按钮文字"
+  },
+  "webInvitePending": "Start a study session to generate your invite code",
+  "webInvitePendingInfo": "Share this code with friends to earn free months",
+  "consentDialogTitle": "Privacy Notice",
+  "consentDialogContent": "We use analytics to improve your experience. Your data is stored locally and never shared without your consent.",
+  "consentDialogPrivacyLink": "Privacy Policy",
+  "consentDialogDeny": "Decline",
+  "consentDialogAccept": "Allow"
 }

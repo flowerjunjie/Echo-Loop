@@ -1,4 +1,6 @@
 import 'package:echo_loop/database/enums.dart';
+import 'package:echo_loop/models/stage_settings_overrides.dart'
+    show BriefingPauseChoice;
 import 'package:echo_loop/widgets/review/review_briefing_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +18,7 @@ void main() {
                 context: context,
                 stage: LearningStage.review2,
                 subStage: SubStageType.reviewDifficultPractice,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),
@@ -43,7 +45,7 @@ void main() {
                 stage: LearningStage.firstLearn,
                 subStage: SubStageType.reviewDifficultPractice,
                 defaultPlaybackSpeed: 0.8,
-                onStartPractice: (_, _) {},
+                onStartPractice: (double speed, BriefingPauseChoice pause) {},
               );
             },
             child: const Text('Open'),

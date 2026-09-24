@@ -7,24 +7,28 @@ import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
 import '../features/usage/usage_event.dart';
 import '../features/usage/usage_providers.dart';
-import '../config/api_config.dart';
 import '../database/daos/stage_completion_dao.dart';
+import '../database/providers.dart';
 import '../database/enums.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/audio_library_provider.dart';
 import '../providers/learning_plan_provider.dart';
 import '../providers/learning_progress_provider.dart';
 import '../providers/new_user_guide_provider.dart';
+import '../features/subscription/config/ai_trial_limits.dart';
+import '../features/subscription/providers/ai_trial_usage_provider.dart';
+import '../features/subscription/providers/subscription_controller.dart';
 import '../providers/study_stats_provider.dart';
 import '../providers/study_task_provider.dart';
 import '../providers/time_provider.dart';
-import '../router/app_router.dart';
+import '../router/app_router.dart' if (dart.library.html) '../router/web_safe_routes.dart';
 import '../theme/app_theme.dart';
 import '../widgets/speech_permission_dialog.dart';
 import '../widgets/guide_flow.dart';
 import '../widgets/learning_progress_icon.dart';
 import '../widgets/study/study_stats_header.dart';
 
+import '../../../config/app_config.dart';
 /// 学习任务列表页
 ///
 /// 页面结构（从上到下）：
@@ -60,6 +64,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         audioLibraryState.isLoading || progressState.isLoading;
 
     final recentCompletionsAsync = ref.watch(recentCompletionsProvider);
+    final todayCompletedCountAsync = ref.watch(todayCompletedTaskCountProvider);
 
     final readyReviews = tasks
         .where((t) => t.type == StudyTaskType.reviewReady)
@@ -70,6 +75,24 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final firstStudies = tasks
         .where((t) => t.type == StudyTaskType.firstStudy)
         .toList();
+
+    // AI 每日免费配额 chip（紧邻 streak 徽章显示）
+    final trialUsed = ref.watch(aiTrialUsageProvider);
+    final trialLimits = ref.watch(aiTrialLimitsProvider);
+    final totalUsed = trialUsed.values.fold<int>(0, (sum, c) => sum + c);
+    final totalLimit = trialLimits.values.fold<int>(0, (sum, c) => sum + c);
+    final isPremium = ref.watch(subscriptionControllerProvider).isActive;
+    int quotaRemaining = isPremium ? -1 : totalLimit - totalUsed;
+    String quotaLabel = isPremium
+        ? '无限AI'
+        : '今日AI：$totalUsed/$totalLimit';
+    Color quotaColor = isPremium
+        ? Colors.green
+        : quotaRemaining >= 2
+            ? Colors.green
+            : quotaRemaining == 1
+                ? Colors.orange
+                : Colors.red;
 
     // 判断空状态类型
     final hasAnyTask = tasks.isNotEmpty || completedAudios.isNotEmpty;
@@ -156,7 +179,38 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.studyTasks),
-          actions: [GuideTarget(step: stepStreakChip, child: streakChip)],
+          actions: [
+            // AI 每日配额 chip（紧跟 streak 徽章）
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.s),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: quotaColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.psychology_rounded,
+                      size: 14,
+                      color: quotaColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      quotaLabel,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: quotaColor,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            GuideTarget(step: stepStreakChip, child: streakChip),
+          ],
         ),
         // 仅在「正在预热且尚无任何任务可展示」时显示骨架，避免冷启动闪空态；
         // 已有任务时即使触发运行期 reload（如官方合集后台同步）也保留任务，不闪骨架。
@@ -243,6 +297,21 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                         ],
                       ),
                     ),
+
+                  // 今日完成任务（折叠区，仅在当天有完成时显示）
+                  ...todayCompletedCountAsync.when(
+                        data: (count) => count > 0
+                            ? [
+                                _TodayCompletedSection(
+                                  count: count,
+                                  l10n: l10n,
+                                ),
+                                const SizedBox(height: AppSpacing.m),
+                              ]
+                            : <Widget>[],
+                        loading: () => const [],
+                        error: (_, __) => const [],
+                      ),
 
                   // 最近完成（过去24小时，默认折叠）
                   ...recentCompletionsAsync.whenOrNull(
@@ -441,7 +510,7 @@ class _TaskCard extends ConsumerWidget {
                 },
               );
           if (!context.mounted) return;
-          context.push(AppRoutes.audioLearningPlan(task.audioId));
+          context.push(AppRoutes.audioPlayer(task.audioId));
         },
         child: IntrinsicHeight(
           child: Row(
@@ -516,10 +585,7 @@ class _TaskCard extends ConsumerWidget {
                                         );
                                     if (!allowed || !context.mounted) return;
                                     context.push(
-                                      AppRoutes.audioLearningPlan(
-                                        task.audioId,
-                                        autoStart: true,
-                                      ),
+                                      AppRoutes.audioPlayer(task.audioId),
                                     );
                                   },
                             child: Text(_actionLabel(l10n, task)),
@@ -594,7 +660,7 @@ class _CompletedSection extends ConsumerWidget {
                 title: Text(audio.audioName),
                 contentPadding: EdgeInsets.zero,
                 onTap: () {
-                  context.push(AppRoutes.audioLearningPlan(audio.audioId));
+                  context.push(AppRoutes.audioPlayer(audio.audioId));
                 },
               ),
             )
@@ -679,7 +745,7 @@ class _RecentCompletionTile extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          context.push(AppRoutes.audioLearningPlan(completion.audioId));
+          context.push(AppRoutes.audioPlayer(completion.audioId));
         },
         child: IntrinsicHeight(
           child: Row(
@@ -790,8 +856,11 @@ class _CommunityInviteCard extends ConsumerWidget {
                   .read(analyticsServiceProvider)
                   .track(Events.communityInviteTapped);
               final isZh = Localizations.localeOf(context).languageCode == 'zh';
-              final path = isZh ? '/zh-CN/social' : '/en/social';
-              launchUrl(Uri.parse('$apiBaseUrl$path'));
+              final path = isZh ? '/zh-CN/social/' : '/en/social/';
+              launchUrl(
+                Uri.parse(webPath(path)),
+                mode: LaunchMode.externalApplication,
+              );
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -1186,3 +1255,154 @@ String _statusText(
   }
   return '';
 }
+
+// ---------------------------------------------------------------------------
+//  今日完成任务折叠区
+// ---------------------------------------------------------------------------
+
+/// 今日已完成任务数折叠区
+///
+/// 展示当天已完成的子步骤数量，点击可展开查看今日完成明细。
+class _TodayCompletedSection extends ConsumerWidget {
+  final int count;
+  final AppLocalizations l10n;
+
+  const _TodayCompletedSection({
+    required this.count,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final now = ref.watch(nowProvider)();
+    final todayCompletionsAsync = ref.watch(todayCompletionsProvider);
+
+    return Card(
+      child: Column(
+        children: [
+          // 标题行
+          InkWell(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            onTap: () {
+              ref.read(analyticsServiceProvider).track(
+                Events.todayTasksViewed,
+                {EventParams.completedCount: count},
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.m,
+                12,
+                AppSpacing.m,
+                12,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.task_alt,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.todayCompletedTasks(count),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 展开后的明细列表
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return todayCompletionsAsync.when(
+                loading: () => const _TodayCompletionsLoading(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (completions) {
+                  if (completions.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.m,
+                        vertical: 12,
+                      ),
+                      child: Center(
+                        child: Text(
+                          l10n.todayNoTasks,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: completions
+                        .map(
+                          (c) => _RecentCompletionTile(
+                            completion: c,
+                            l10n: l10n,
+                            now: now,
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 今日完成明细 FutureProvider（当天0点至今）
+final todayCompletionsProvider = FutureProvider<List<RecentCompletion>>((ref) {
+  ref.watch(learningProgressNotifierProvider.select((s) => s.progressMap));
+  final dao = ref.watch(stageCompletionDaoProvider);
+  final now = ref.watch(nowProvider)();
+  final startOfDay = DateTime(now.year, now.month, now.day);
+  return dao.getRecentCompletions(startOfDay);
+});
+
+/// 今日完成加载态骨架屏
+class _TodayCompletionsLoading extends StatelessWidget {
+  const _TodayCompletionsLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.m),
+      child: Column(
+        children: [
+          _SkeletonRow(widthFactors: [0.9]),
+          SizedBox(height: AppSpacing.s),
+          _SkeletonRow(widthFactors: [0.75]),
+        ],
+      ),
+    );
+  }
+}
+

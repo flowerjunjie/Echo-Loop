@@ -1,4 +1,4 @@
-/// Piper VITS（Echo Loop TTS 平衡档）模型下载状态机 Provider（多音色）。
+/// Piper VITS（灵犀AI英语听说 TTS 平衡档）模型下载状态机 Provider（多音色）。
 ///
 /// 管理 9 个 Piper 音色各自的下载/重试/取消/删除与就绪状态——与 Kokoro 不同，
 /// Piper 每音色是一个独立模型，故下载单元是「音色」（key=voiceId）。每个音色一个

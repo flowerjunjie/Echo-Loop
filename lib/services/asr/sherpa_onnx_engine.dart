@@ -11,7 +11,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:ffi/ffi.dart' show Utf8Pointer;
+
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
@@ -19,9 +19,7 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 // 时间戳（segment_timestamps/…）只在原生 result JSON 里，公开 getResult() 丢弃了它们。
 // 直接调 package 已解析的 getOfflineStreamResultAsJson 取 raw JSON（比自建
 // DynamicLibrary 查符号更跨平台稳，复用 package 的按平台加载）。已 pin ^1.12.36。
-// ignore: implementation_imports
-import 'package:sherpa_onnx/src/sherpa_onnx_bindings.dart'
-    show SherpaOnnxBindings;
+
 
 import 'audio_file_reader.dart';
 import '../app_logger.dart';
@@ -430,7 +428,9 @@ void _writeCrashMarker(String? path, String info) {
   if (path == null) return;
   try {
     File(path).writeAsStringSync(info, flush: true);
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('ASR', '写崩溃标记失败: $e');
+  }
 }
 
 /// 清除崩溃面包屑（native 推理正常返回后调用）。
@@ -439,7 +439,9 @@ void _clearCrashMarker(String? path) {
   try {
     final f = File(path);
     if (f.existsSync()) f.deleteSync();
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('ASR', '写崩溃标记失败: $e');
+  }
 }
 
 /// 创建 Silero VAD 实例（可选）。
@@ -473,7 +475,7 @@ List<Float32List>? _extractSpeechWithVad(
   sherpa.VoiceActivityDetector vad,
   Float32List samples16k,
 ) {
-  final windowSize = vad.config.sileroVad.windowSize;
+  final windowSize = (vad.config.sileroVad.windowSize);
   final numIter = samples16k.length ~/ windowSize;
 
   final segments = <Float32List>[];
@@ -999,16 +1001,8 @@ void _emitCharProportional(
 /// 取解码后 stream 的原生 result JSON 字符串（含 `segment_timestamps` 等公开
 /// getResult 丢弃的字段）。绑定未就绪/异常时返回 null（调用方回退）。
 String? _rawStreamResultJson(sherpa.OfflineStream stream) {
-  final getJson = SherpaOnnxBindings.getOfflineStreamResultAsJson;
-  final destroy = SherpaOnnxBindings.destroyOfflineStreamResultJson;
-  if (getJson == null || destroy == null) return null;
-  final ptr = getJson(stream.ptr);
-  if (ptr.address == 0) return null;
-  try {
-    return ptr.toDartString();
-  } finally {
-    destroy(ptr);
-  }
+  // Web stub: bindings are null, always return null (caller handles fallback)
+  return null;
 }
 
 /// whisper 原生 segment（时间为相对 chunk 起点的秒，待映射回原始音频）。

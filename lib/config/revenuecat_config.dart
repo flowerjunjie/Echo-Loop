@@ -30,11 +30,11 @@ const _revenueCatApiKeyGoogle = String.fromEnvironment(
 
 /// RevenueCat 中代表 Plus 会员的 entitlement identifier。
 ///
-/// 必须与 RevenueCat 后台 Entitlements 里配置的标识一致（当前后台为 `Echo Loop Plus`）。
+/// 必须与 RevenueCat 后台 Entitlements 里配置的标识一致（当前后台为 `灵犀AI英语听说 Plus`）。
 /// 可通过 `--dart-define=REVENUECAT_ENTITLEMENT_ID=xxx` 覆盖。
 const revenueCatEntitlementId = String.fromEnvironment(
   'REVENUECAT_ENTITLEMENT_ID',
-  defaultValue: 'Echo Loop Plus',
+  defaultValue: '灵犀AI英语听说 Plus',
 );
 
 /// 当前平台应使用的 RevenueCat API Key（不可用平台返回空串）。

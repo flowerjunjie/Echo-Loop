@@ -16,12 +16,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/premium_feature.dart';
 
 /// 各 AI 功能的永久免费试用次数（缺省 0）。
+/// AI功能的免费试用次数配置。
+///
+/// 每个功能提供 **3次免费试用**，用尽后需订阅会员才能继续使用。
+/// 试用次数永久累计（不重置），帮助用户充分体验后再付费。
 const Map<PremiumFeature, int> kAiTrialLimits = {
-  PremiumFeature.aiTranslation: 0,
-  PremiumFeature.aiAnalysis: 0,
-  PremiumFeature.aiSenseGroup: 0,
-  PremiumFeature.aiWordAnalysis: 0,
-  PremiumFeature.aiTranscription: 0,
+  PremiumFeature.aiTranslation: 3,    // AI句子翻译：3次免费
+  PremiumFeature.aiAnalysis: 3,        // AI句子解析：3次免费
+  PremiumFeature.aiSenseGroup: 3,      // AI意群切分：3次免费
+  PremiumFeature.aiWordAnalysis: 3,   // AI单词解析：3次免费
+  PremiumFeature.aiTranscription: 3, // AI字幕转录：3次免费
 };
 
 /// 某功能的永久免费试用次数（未配置视为 0）。

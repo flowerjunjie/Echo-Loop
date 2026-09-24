@@ -15,7 +15,7 @@ enum TtsEngineKind {
   /// 平台 TTS（flutter_tts，封装系统 TTS）。本期唯一可用。
   platform,
 
-  /// Echo Loop TTS（本地 Kokoro 82M）。质量最佳，CPU 推理偏慢。
+  /// 灵犀AI英语听说 TTS（本地 Kokoro 82M）。质量最佳，CPU 推理偏慢。
   echoLoop,
 
   /// Piper VITS（本地，均衡档）。质量优于系统 TTS、速度远快于 Kokoro；
@@ -32,7 +32,7 @@ enum TtsAccent {
   uk,
 }
 
-/// Echo Loop（Kokoro）模型精度变体。
+/// 灵犀AI英语听说（Kokoro）模型精度变体。
 ///
 /// 同一 Kokoro 82M 模型的两种打包：fp32 未量化（推理快、效果好，Apple/ARM 上
 /// 显著快于 int8）；int8 量化（体积小、内存占用低，面向低内存设备）。详见

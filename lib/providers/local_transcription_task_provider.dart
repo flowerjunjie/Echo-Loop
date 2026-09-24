@@ -25,7 +25,8 @@ import '../models/word_timestamp.dart';
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
-import '../services/asr/sherpa_onnx_engine.dart';
+import '../services/asr/sherpa_onnx_engine.dart'
+    if (dart.library.html) '../services/asr/sherpa_onnx_engine_web_stub.dart';
 import '../utils/srt_generator.dart';
 import '../utils/synthetic_word_timestamps.dart';
 import '../utils/transcript_stats.dart';
@@ -264,7 +265,9 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
       if (tempWav != null) {
         try {
           if (await tempWav.exists()) await tempWav.delete();
-        } catch (_) {}
+        } catch (e) {
+    AppLogger.log('Transcription', '$e');
+  }
       }
       _cancelled.remove(audioId);
       _cancelSignals.remove(audioId);
@@ -297,22 +300,19 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
     state = Map.of(state)..[audioId] = taskState;
   }
 
-  /// 按所选档位构建引擎配置（复用评分侧同款逻辑：modelDir + 可选 VAD 路径）。
+  /// 按所选档位构建引擎配置（modelDir + 线程数）。
+  ///
+  /// VAD 已移除：不再创建 Silero VAD（native crash 面，见 §7.4）。
   Future<AsrModelConfig> _buildModelConfig(
     AsrModelManager modelManager,
     AsrModelInfo model,
   ) async {
     final modelDir = await modelManager.modelDir(model.id);
-    String? vadPath;
-    if (await modelManager.isModelDownloaded(vadModelId)) {
-      final vadDir = await modelManager.modelDir(vadModelId);
-      vadPath = p.join(vadDir, 'silero_vad.onnx');
-    }
     return AsrModelConfig(
       model: model,
       modelDir: modelDir,
       numThreads: AsrModelConfig.recommendedThreads(),
-      vadModelPath: vadPath,
+      vadModelPath: null,
     );
   }
 

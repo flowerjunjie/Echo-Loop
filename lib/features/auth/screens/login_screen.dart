@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../analytics/analytics_providers.dart';
@@ -17,7 +17,7 @@ import '../../../theme/app_theme.dart';
 import '../auth_form_utils.dart';
 import '../google_services_availability.dart';
 import '../providers/auth_providers.dart';
-
+import '../../../config/app_config.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
     super.key,
@@ -176,9 +176,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _isGoogleSignInUnavailable(Object error) {
     if (error is AuthException) {
-      return error.message == 'Google OAuth client is not configured.' ||
-          error.message == 'Google identity token is missing.' ||
-          error.message == 'Google access token is missing.';
+      return error.toString() == 'Google OAuth client is not configured.' ||
+          error.toString() == 'Google identity token is missing.' ||
+          error.toString() == 'Google access token is missing.';
     }
     if (error is GoogleSignInException) {
       return error.code ==
@@ -252,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _openPolicy(String path) async {
-    await launchUrl(Uri.parse('https://www.echo-loop.top$path'));
+    await launchUrl(Uri.parse(webPath(path)));
   }
 
   void _showAuthError(Object error) {

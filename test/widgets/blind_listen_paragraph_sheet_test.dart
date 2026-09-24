@@ -1,4 +1,6 @@
 import 'package:echo_loop/models/sentence.dart';
+import 'package:echo_loop/models/stage_settings_overrides.dart'
+    show BriefingPauseChoice;
 import 'package:echo_loop/widgets/blind_listen_paragraph_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +32,7 @@ void main() {
               showBlindListenParagraphSheet(
                 context: context,
                 sentences: sentences,
-                onStartPractice: (_, _, _) {},
+                onStartPractice: (_, BriefingPauseChoice pauseChoice, double speed) {},
               );
             },
             child: const Text('Open'),
@@ -65,7 +67,7 @@ void main() {
               showBlindListenParagraphSheet(
                 context: context,
                 sentences: sentences,
-                onStartPractice: (_, _, speed) {
+                onStartPractice: (_, BriefingPauseChoice pauseChoice, double speed) {
                   selectedSpeed = speed;
                 },
               );

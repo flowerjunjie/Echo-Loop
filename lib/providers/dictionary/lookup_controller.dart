@@ -99,10 +99,7 @@ class DictionaryLookupState {
 /// 查词请求上下文（鉴权 + 目标语言），收敛为单一 provider 便于测试覆盖
 @riverpod
 DictionaryLookupContext dictionaryLookupContext(Ref ref) {
-  final accessToken = ref
-      .watch(supabaseSessionProvider)
-      .valueOrNull
-      ?.accessToken;
+  final accessToken = ref.watch(authSessionProvider)?.accessToken;
   final targetLanguage = ref.watch(
     appSettingsProvider.select((s) => s.nativeLanguage),
   );

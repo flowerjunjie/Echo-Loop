@@ -754,39 +754,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   Widget _buildProgressBar(ListeningPracticeState playerState) {
     final engineNotifier = ref.read(audioEngineProvider.notifier);
     final controller = ref.read(listeningPracticeProvider.notifier);
-    final engine = ref.watch(audioEngineProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: StreamBuilder<Duration>(
-        stream: engineNotifier.absolutePositionStream,
-        builder: (context, snapshot) {
-          // 恢复断点/详情页返回时，provider 可能已先 seek 成功，但 positionStream
-          // 还未来得及发下一帧。这里直接读引擎当前绝对位置作为首帧真相源，避免
-          // 进度条短暂回到 0:00。
-          final position =
-              _seekPreviewPosition ?? engineNotifier.absoluteCurrentPosition;
-          final total = engine.totalDuration ?? Duration.zero;
-
-          // 时间标签直接用 ProgressBar 内置的 sides 布局放在进度条两侧同一行，
-          // 节省竖向空间；右侧显示剩余时间（-0:04 形式）。
-          return ProgressBar(
-            progress: position,
-            total: total,
-            onSeek: (duration) {
-              final token = ++_seekPreviewToken;
-              setState(() {
-                _seekPreviewPosition = duration;
-              });
-              unawaited(_settleSeekPreview(token, duration, controller));
-            },
-            barHeight: 3,
-            thumbRadius: 8,
-            thumbGlowRadius: 14,
-            timeLabelTextStyle: AppTextStyles.caption(context),
-            timeLabelLocation: TimeLabelLocation.sides,
-            timeLabelType: TimeLabelType.remainingTime,
-          );
+      child: _PositionIndicator(
+        engine: engineNotifier,
+        seekPreviewPosition: _seekPreviewPosition,
+        total: ref.read(audioEngineProvider).totalDuration,
+        onSeek: (duration) {
+          final token = ++_seekPreviewToken;
+          setState(() {
+            _seekPreviewPosition = duration;
+          });
+          unawaited(_settleSeekPreview(token, duration, controller));
         },
       ),
     );
@@ -950,6 +930,58 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
         const SizedBox(width: 3),
         Text(label, style: captionStyle),
       ],
+    );
+  }
+}
+
+/// 进度条独立组件。
+///
+/// 将 StreamBuilder 从主 [PlayerScreen] 中分离出来，
+/// 避免 positionStream 每帧触发整个播放器页面重建。
+/// 通过外部 state 管理 seek preview 位置，仅监听自身需要的 stream。
+class _PositionIndicator extends ConsumerWidget {
+  const _PositionIndicator({
+    required this.engine,
+    required this.seekPreviewPosition,
+    required this.total,
+    required this.onSeek,
+  });
+
+  /// 音频引擎实例，用于获取当前位置和订阅 stream。
+  final AudioEngine engine;
+
+  /// 用户拖动预览位置（null 表示正常播放模式）。
+  final Duration? seekPreviewPosition;
+
+  /// 音频总时长。
+  final Duration? total;
+
+  /// 用户拖动结束后的回调。
+  final ValueChanged<Duration> onSeek;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<Duration>(
+      stream: engine.absolutePositionStream,
+      builder: (context, snapshot) {
+        // 恢复断点/详情页返回时，provider 可能已先 seek 成功，但 positionStream
+        // 还未来得及发下一帧。这里直接读引擎当前绝对位置作为首帧真相源，避免
+        // 进度条短暂回到 0:00。
+        final position =
+            seekPreviewPosition ?? engine.absoluteCurrentPosition;
+        final total = this.total ?? Duration.zero;
+        return ProgressBar(
+          progress: position,
+          total: total,
+          onSeek: onSeek,
+          barHeight: 3,
+          thumbRadius: 8,
+          thumbGlowRadius: 14,
+          timeLabelTextStyle: AppTextStyles.caption(context),
+          timeLabelLocation: TimeLabelLocation.sides,
+          timeLabelType: TimeLabelType.remainingTime,
+        );
+      },
     );
   }
 }

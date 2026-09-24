@@ -51,7 +51,9 @@ Future<AnalyticsService> initAnalyticsService(
   required String userId,
 }) async {
   final consent = ConsentManager(prefs);
-  final channel = _createChannel();
+  // 先确定 geo，再创建对应通道（中国/全球 PostHog 分开上报）
+  final isChina = await resolveIsMainlandChina(prefs);
+  final channel = _createChannel(isChina);
 
   // 初始化通道。匿名阶段不做 identify，让 PostHog SDK 自己维护匿名 distinct id；
   // 本地生成的匿名 UUID 仅作为事件级属性保留，供登录后与真实账号关联排查。
@@ -95,15 +97,21 @@ Future<bool> resolveIsMainlandChina(SharedPreferences prefs) async {
   return Platform.localeName.contains('CN');
 }
 
-/// 根据配置选择分析通道
+/// 根据 geo 和配置选择分析通道
 ///
-/// 当前策略：PostHog 全平台统一上报。
+/// 中国大陆 → PostHog CN host；全球 → PostHog US host。
 /// 如需切回 Firebase/友盟，修改此函数即可。
-AnalyticsChannel _createChannel() {
+/// 创建分析通道
+///
+/// **China fallback 策略**：cn.posthog.com 当前 DNS 不可达（2026-08-30 验证），
+/// 所有区域统一使用 globalHost。待 PostHog 中国区部署就绪后解除此限制。
+AnalyticsChannel _createChannel(bool isChina) {
   if (kDebugMode) return LogOnlyChannel();
-  if (PostHogChannel.isConfigured) return PostHogChannel();
-  // PostHog 未配置（缺少 POSTHOG_API_KEY dart-define）时降级到日志
-  return LogOnlyChannel();
+  if (!PostHogChannel.isConfigured) return LogOnlyChannel();
+  // TODO: 解除 China fallback，恢复双节点路由
+  final host = PostHogChannel.globalHost;
+  final apiKey = PostHogChannel.globalApiKey;
+  return PostHogChannel(apiKey: apiKey, host: host);
 }
 
 // 以下通道备用，当前未启用

@@ -100,19 +100,19 @@ DetectionResult detectTailMatch(
       return const DetectionResult(description: 'A:末尾未匹配');
     }
     return DetectionResult(
-      description: 'A:尾部连续${consecutiveTail}词<$minConsecutive,未触发',
+      description: 'A:尾部连续\$1词<$minConsecutive,未触发',
     );
   }
 
   final uniqueStart = tokens.length - consecutiveTail;
   if (!_isSubsequenceUnique(tokens, uniqueStart)) {
-    return DetectionResult(description: 'A:尾部连续${consecutiveTail}词但非唯一');
+    return DetectionResult(description: 'A:尾部连续\$1词但非唯一');
   }
 
   return DetectionResult(
     threshold: triggerDuration,
     description:
-        'A:尾部连续${consecutiveTail}词且唯一→${triggerDuration.inMilliseconds}ms',
+        'A:尾部连续\$1词且唯一→${triggerDuration.inMilliseconds}ms',
   );
 }
 
@@ -133,30 +133,30 @@ DetectionResult detectOverallMatchRate(
     return const DetectionResult(description: 'B:无匹配');
   }
 
-  final pct = (ctx.matchRate * 100).toInt();
+  // final _pct = (ctx.matchRate * 100).toInt();
   if (ctx.matchRate >= 1.0) {
     return DetectionResult(
       threshold: perfectDuration,
-      description: 'B:匹配率${pct}%→${perfectDuration.inMilliseconds}ms',
+      description: 'B:匹配率\$1%→${perfectDuration.inMilliseconds}ms',
     );
   }
   if (strictPerfectOnly) {
-    return DetectionResult(description: 'B:匹配率${pct}%<100%,严格模式不触发');
+    return DetectionResult(description: 'B:匹配率\$1%<100%,严格模式不触发');
   }
   if (ctx.matchRate >= 0.95) {
     return DetectionResult(
       threshold: nearPerfectDuration,
-      description: 'B:匹配率${pct}%→${nearPerfectDuration.inMilliseconds}ms',
+      description: 'B:匹配率\$1%→${nearPerfectDuration.inMilliseconds}ms',
     );
   }
   if (ctx.matchRate >= 0.90) {
     return DetectionResult(
       threshold: highMatchDuration,
-      description: 'B:匹配率${pct}%→${highMatchDuration.inMilliseconds}ms',
+      description: 'B:匹配率\$1%→${highMatchDuration.inMilliseconds}ms',
     );
   }
 
-  return DetectionResult(description: 'B:匹配率${pct}%<90%,未触发');
+  return DetectionResult(description: 'B:匹配率\$1%<90%,未触发');
 }
 
 /// 检测 C：末尾 N 词命中数。
@@ -190,7 +190,7 @@ DetectionResult detectTailHitCount(SpeechMatchContext ctx, {int tailSize = 5}) {
   return DetectionResult(
     threshold: threshold,
     description:
-        'C:尾部${effectiveTailSize}词命中$tailMatchCount→${threshold.inSeconds}s',
+        'C:尾部\$1词命中$tailMatchCount→${threshold.inSeconds}s',
   );
 }
 
@@ -218,10 +218,10 @@ DetectionResult detectNearCompletion(
     return const DetectionResult(description: 'E:无匹配');
   }
 
-  final pct = (ctx.matchRate * 100).toInt();
+  // final _pct = (ctx.matchRate * 100).toInt();
   if (ctx.matchRate < minMatchRate) {
     final minPct = (minMatchRate * 100).toInt();
-    return DetectionResult(description: 'E:匹配率${pct}%<$minPct%,未触发');
+    return DetectionResult(description: 'E:匹配率\$1%<$minPct%,未触发');
   }
 
   final tokens = ctx.referenceTokens;
@@ -241,14 +241,14 @@ DetectionResult detectNearCompletion(
   if (tailMatchCount < requiredHits) {
     return DetectionResult(
       description:
-          'E:末尾${effectiveTailSize}词命中$tailMatchCount<$requiredHits,未触发',
+          'E:末尾\$1词命中$tailMatchCount<$requiredHits,未触发',
     );
   }
 
   return DetectionResult(
     threshold: triggerDuration,
     description:
-        'E:匹配率${pct}% + 末尾$tailMatchCount/${effectiveTailSize}'
+        'E:匹配率\$1% + 末尾$tailMatchCount/\$1'
         '→${triggerDuration.inMilliseconds}ms',
   );
 }
@@ -309,7 +309,7 @@ DetectionResult detectRemainingByPosition(
   final seconds = baseSeconds + remaining * secondsPerWord;
   return DetectionResult(
     threshold: Duration(seconds: seconds),
-    description: 'D:匹配$bestSubLen词,剩余$remaining词→${seconds}s',
+    description: 'D:匹配$bestSubLen词,剩余$remaining词→\$1s',
   );
 }
 
@@ -363,9 +363,9 @@ DetectionResult combineDetections(
   }
 
   final matched = ctx.lcsPairs.length;
-  final total = ctx.referenceTokens.length;
+  // final _total = ctx.referenceTokens.length;
   final pct = (ctx.matchRate * 100).toInt();
-  final summary = '匹配$matched/${total}词($pct%)';
+  final summary = '匹配$matched/\$1词($pct%)';
 
   if (winner == null) {
     return DetectionResult(
@@ -441,8 +441,9 @@ Duration computeRetellDynamicFallback({
   final scale = capMs / 30000; // 缩放因子，各阈值按 cap/30s 等比缩放
 
   if (referenceDuration <= Duration.zero) return Duration(milliseconds: capMs);
-  if (matchRate != null && matchRate < 0.8)
+  if (matchRate != null && matchRate < 0.8) {
     return Duration(milliseconds: capMs);
+  }
 
   final refSec = referenceDuration.inMilliseconds / 1000.0;
   final speedFactor = refSec <= 3

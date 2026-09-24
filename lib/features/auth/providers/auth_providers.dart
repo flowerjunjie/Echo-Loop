@@ -2,360 +2,403 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// 条件导入：Web 平台使用真实 web.window.sessionStorage，非 Web 平台使用 stub。
+// 避免 dart:js_interop 被带入 VM 测试（会因 platform 不支持而编译失败）。
+import 'package:web/web.dart' as web
+    if (dart.library.html) 'web_stub.dart';
 
-import '../../../analytics/analytics_providers.dart';
-import '../../../config/auth_config.dart' as auth_config;
+import '../../../config/api_config.dart' as api_config;
 import '../../../services/app_logger.dart';
-import '../../../services/user_id_service.dart';
-import '../apple_sign_in_credentials.dart';
-import '../google_sign_in_credentials.dart';
+import '../../../services/backend_dio.dart';
 
-/// 认证仓库接口。
-///
-/// 所有认证动作最终都应通过这层进入 Supabase，避免页面分散直连 SDK，
-/// 从而保证登录方式再多，状态来源仍只有一份。
+// ─── Simple local types ───
+
+class AuthResponse {
+  final String? userId;
+  final String? email;
+  final String? accessToken;
+  final String? refreshToken;
+  final String? proxyToken; // NEW: for transcription API auth
+
+  AuthResponse({this.userId, this.email, this.accessToken, this.refreshToken, this.proxyToken});
+
+  Map<String, dynamic> toJson() => {
+    'userId': userId,
+    'email': email,
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'proxyToken': proxyToken,
+  };
+
+  factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
+    userId: json['userId']?.toString(),
+    email: json['email']?.toString(),
+    accessToken: json['accessToken']?.toString(),
+    refreshToken: json['refreshToken']?.toString(),
+    proxyToken: json['proxyToken']?.toString(),
+  );
+
+  AuthResponse copyWith({String? userId, String? email, String? accessToken, String? refreshToken, String? proxyToken}) {
+    return AuthResponse(
+      userId: userId ?? this.userId,
+      email: email ?? this.email,
+      accessToken: accessToken ?? this.accessToken,
+      refreshToken: refreshToken ?? this.refreshToken,
+      proxyToken: proxyToken ?? this.proxyToken,
+    );
+  }
+}
+
+class AuthException implements Exception {
+  final String message;
+  const AuthException(this.message);
+  @override
+  String toString() => 'AuthException: $message';
+}
+
 abstract class AuthRepository {
   Future<void> sendEmailOtp(String email);
-
-  Future<AuthResponse> verifyEmailOtp({
-    required String email,
-    required String token,
-  });
-
-  Future<AuthResponse> signInWithApple();
-
-  Future<AuthResponse> signInWithGoogle();
-
-  /// 邮箱+密码登录。
-  ///
-  /// 仅用于审核员预建账号的隐藏入口，账号在 Supabase 后台手动创建。
-  Future<AuthResponse> signInWithPassword({
-    required String email,
-    required String password,
-  });
-
+  Future<AuthResponse> verifyEmailOtp({required String email, required String token, String? inviteCode});
+  Future<void> signInWithApple();
+  Future<void> signInWithGoogle();
+  Future<void> signInWithPassword({required String email, required String password});
   Future<void> signOut();
 }
 
-class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(
-    this._auth, {
-    AppleSignInCredentialsProvider appleCredentialsProvider =
-        const NativeAppleSignInCredentialsProvider(),
-    GoogleSignInCredentialsProvider? googleCredentialsProvider,
-  }) : _appleCredentialsProvider = appleCredentialsProvider,
-       _googleCredentialsProvider =
-           googleCredentialsProvider ?? NativeGoogleSignInCredentialsProvider();
+// Self-hosted auth with proxy token support for transcription API
+class SelfHostedAuthRepository implements AuthRepository {
+  SelfHostedAuthRepository() : _apiDio = createBackendDio(baseUrl: api_config.apiBaseUrl);
 
-  final GoTrueClient _auth;
-  final AppleSignInCredentialsProvider _appleCredentialsProvider;
-  final GoogleSignInCredentialsProvider _googleCredentialsProvider;
+  final Dio _apiDio;
 
   @override
-  Future<void> sendEmailOtp(String email) {
-    return _auth.signInWithOtp(email: email, shouldCreateUser: true);
-  }
-
-  @override
-  Future<AuthResponse> verifyEmailOtp({
-    required String email,
-    required String token,
-  }) {
-    return _auth.verifyOTP(email: email, token: token, type: OtpType.email);
-  }
-
-  @override
-  Future<AuthResponse> signInWithApple() async {
-    final rawNonce = _generateRawNonce();
-    final credential = await _appleCredentialsProvider.getCredential(
-      nonce: _sha256Hex(rawNonce),
-    );
-    final idToken = credential.identityToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw const AuthException('Apple identity token is missing.');
+  Future<void> sendEmailOtp(String email) async {
+    try {
+      // Log operation type only — never log PII (email) in plain text.
+      AppLogger.log('Auth', 'Sending OTP to masked email (${email.length} chars)');
+      await _apiDio.post('/api/auth/send-otp', data: {'email': email});
+      AppLogger.log('Auth', 'Email OTP sent via self-hosted server');
+    } catch (e) {
+      AppLogger.log('Auth', 'sendEmailOtp error: $e');
+      throw AuthException(e.toString());
     }
+  }
 
-    final response = await _auth.signInWithIdToken(
-      provider: OAuthProvider.apple,
-      idToken: idToken,
-      nonce: rawNonce,
-    );
+  @override
+  Future<AuthResponse> verifyEmailOtp({required String email, required String token, String? inviteCode}) async {
+    try {
+      // Log operation only — never log PII (email/userId) in plain text.
+      AppLogger.log('Auth', 'Verifying OTP\$1');
+      final reqBody = <String, dynamic>{'email': email, 'token': token};
+      if (inviteCode != null && inviteCode.isNotEmpty) {
+        reqBody['inviteCode'] = inviteCode.trim().toUpperCase();
+      }
+      final response = await _apiDio.post('/api/auth/verify-otp', data: reqBody);
+      final data = response.data as Map<String, dynamic>;
+      AppLogger.log('Auth', 'Self-hosted OTP verified, userId=${data['userId']}');
+      return AuthResponse(
+        userId: data['userId']?.toString(),
+        email: email,
+        accessToken: data['accessToken']?.toString(),
+        refreshToken: data['refreshToken']?.toString(),
+        proxyToken: null,
+      );
+    } on DioException catch (e) {
+      throw AuthException(e.response?.data?['error']?.toString() ?? e.message ?? 'Unknown error');
+    } catch (e) {
+      throw AuthException(e.toString());
+    }
+  }
 
-    final userMetadata = _appleUserMetadata(credential);
-    if (userMetadata.isNotEmpty) {
+  @override
+  Future<void> signInWithApple() async {
+    throw UnimplementedError('Apple Sign-In not yet implemented for self-hosted auth');
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    throw UnimplementedError('Google Sign-In not yet implemented for self-hosted auth');
+  }
+
+  @override
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    throw UnimplementedError('Password login not yet implemented for self-hosted auth');
+  }
+
+  @override
+  Future<void> signOut() => Future.value();
+}
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) => SelfHostedAuthRepository());
+
+// ─── Session State ───
+
+const _sessionKey = 'echo_loop_auth_session';
+const _inviteCodeKey = 'echo_loop_invite_code';
+
+/// Web 端 auth 数据读写（sessionStorage，tab 关闭自动清除），非 Web 端通过 SP 操作
+class AuthSessionNotifier extends StateNotifier<AuthResponse?> {
+  AuthSessionNotifier() : super(null) {
+    _restoreSession();
+  }
+
+  /// 从存储中读取 session（Web 读 sessionStorage，移动端读 SP）
+  Future<void> _restoreSession() async {
+    try {
+      final json = await _readSessionFromStorage();
+      if (json != null && json.isNotEmpty) {
+        final data = jsonDecode(json) as Map<String, dynamic>;
+        state = AuthResponse.fromJson(data);
+      }
+    } catch (e) {
+      AppLogger.log('Auth', 'restore session failed: $e');
+    }
+  }
+
+  /// 写 session 到存储（Web 写 sessionStorage，移动端写 SP）
+  Future<void> setSession(AuthResponse response) async {
+    state = response;
+    try {
+      _writeSessionToStorage(response.toJson().toString());
+    } catch (e) {
+      AppLogger.log('Auth', 'persist session failed: $e');
+    }
+  }
+
+  /// 清空 session（Web 清除 sessionStorage key，移动端 remove SP key）
+  Future<void> clearSession() async {
+    state = null;
+    try {
+      _clearSessionFromStorage();
+    } catch (e) {
+      AppLogger.log('Auth', 'clear session failed: $e');
+    }
+  }
+
+  /// 读取 session JSON 字符串（Web 从 sessionStorage，非 Web 从 SP）
+  static Future<String?> _readSessionFromStorage() async {
+    if (kIsWeb) {
       try {
-        await _auth.updateUser(UserAttributes(data: userMetadata));
-      } catch (error, stackTrace) {
-        AppLogger.log(
-          'Auth',
-          'Apple user metadata update failed: $error\n$stackTrace',
-        );
+        return web.window.sessionStorage.getItem(_sessionKey);
+      } catch (e) {
+        AppLogger.log('Auth', '从 sessionStorage 读取 session 失败: $e');
+        return null;
+      }
+    } else {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString(_sessionKey);
+      } catch (e) {
+        return null;
       }
     }
-
-    return response;
   }
 
-  @override
-  Future<AuthResponse> signInWithGoogle() async {
-    final credential = await _googleCredentialsProvider.getCredentials();
-    try {
-      AppLogger.log('AuthGoogle', 'Supabase signInWithIdToken start');
-      final response = await _auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: credential.idToken,
-        accessToken: credential.accessToken,
-      );
-      AppLogger.log(
-        'AuthGoogle',
-        'Supabase signInWithIdToken success userId=${response.user?.id}',
-      );
-      return response;
-    } on AuthException catch (error) {
-      AppLogger.log(
-        'AuthGoogle',
-        'Supabase signInWithIdToken failed message=${error.message} '
-            'status=${error.statusCode} code=${error.code}',
-      );
-      rethrow;
+  /// 写入 session JSON 字符串到存储
+  static void _writeSessionToStorage(String json) {
+    if (kIsWeb) {
+      try {
+        web.window.sessionStorage.setItem(_sessionKey, json);
+        AppLogger.log('Auth', 'session 写入 sessionStorage');
+      } catch (e) {
+        AppLogger.log('Auth', '写入 sessionStorage 失败: $e');
+      }
+    } else {
+      try {
+        SharedPreferences.getInstance().then((prefs) => prefs.setString(_sessionKey, json));
+      } catch (e) {
+        AppLogger.log('Auth', '写入 SP 失败: $e');
+      }
     }
   }
 
-  @override
-  Future<AuthResponse> signInWithPassword({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      AppLogger.log('AuthPassword', 'Supabase signInWithPassword start');
-      final response = await _auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      AppLogger.log(
-        'AuthPassword',
-        'Supabase signInWithPassword success userId=${response.user?.id}',
-      );
-      return response;
-    } on AuthException catch (error) {
-      AppLogger.log(
-        'AuthPassword',
-        'Supabase signInWithPassword failed message=${error.message} '
-            'status=${error.statusCode} code=${error.code}',
-      );
-      rethrow;
+  /// 清除存储中的 session
+  static void _clearSessionFromStorage() {
+    if (kIsWeb) {
+      try {
+        web.window.sessionStorage.removeItem(_sessionKey);
+        AppLogger.log('Auth', 'session 从 sessionStorage 清除');
+      } catch (e) {
+        AppLogger.log('Auth', '清除 sessionStorage 失败: $e');
+      }
+    } else {
+      try {
+        SharedPreferences.getInstance().then((prefs) => prefs.remove(_sessionKey));
+      } catch (e) {
+        AppLogger.log('Auth', '清除 SP 失败: $e');
+      }
     }
   }
 
-  @override
-  Future<void> signOut() {
-    return _auth.signOut();
+  // ─── 邀请码读写（与 session 同平台策略）──────────────────────────────────────
+
+  /// 读取待处理的邀请码（Web 读 sessionStorage，移动端读 SP）
+  static Future<String?> _readInviteCode() async {
+    if (kIsWeb) {
+      try {
+        return web.window.sessionStorage.getItem(_inviteCodeKey);
+      } catch (e) {
+        return null;
+      }
+    } else {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString(_inviteCodeKey);
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  /// 写入待处理的邀请码
+  static void _writeInviteCode(String code) {
+    if (kIsWeb) {
+      try {
+        web.window.sessionStorage.setItem(_inviteCodeKey, code);
+      } catch (e) {
+        AppLogger.log('Auth', '写入邀请码到 sessionStorage 失败: $e');
+      }
+    } else {
+      try {
+        SharedPreferences.getInstance().then((prefs) => prefs.setString(_inviteCodeKey, code));
+      } catch (e) {
+        AppLogger.log('Auth', '写入邀请码到 SharedPreferences 失败: $e');
+      }
+    }
+  }
+
+  /// 清除待处理的邀请码
+  static Future<void> _clearInviteCode() async {
+    if (kIsWeb) {
+      try {
+        web.window.sessionStorage.removeItem(_inviteCodeKey);
+      } catch (e) {
+        AppLogger.log('Auth', '清除 sessionStorage 邀请码失败: $e');
+      }
+    } else {
+      try {
+        await SharedPreferences.getInstance().then((prefs) => prefs.remove(_inviteCodeKey));
+      } catch (e) {
+        AppLogger.log('Auth', '清除 SharedPreferences 邀请码失败: $e');
+      }
+    }
   }
 }
 
-const _nonceCharacters =
-    '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+final authSessionProvider = StateNotifierProvider<AuthSessionNotifier, AuthResponse?>((ref) => AuthSessionNotifier());
 
-String _generateRawNonce({int length = 32, Random? random}) {
-  final generator = random ?? Random.secure();
-  return List.generate(
-    length,
-    (_) => _nonceCharacters[generator.nextInt(_nonceCharacters.length)],
-  ).join();
-}
-
-String _sha256Hex(String input) {
-  return sha256.convert(utf8.encode(input)).toString();
-}
-
-Map<String, String> _appleUserMetadata(
-  AuthorizationCredentialAppleID credential,
-) {
-  final givenName = credential.givenName?.trim();
-  final familyName = credential.familyName?.trim();
-  final parts = [
-    if (givenName != null && givenName.isNotEmpty) givenName,
-    if (familyName != null && familyName.isNotEmpty) familyName,
-  ];
-  final fullName = parts.join(' ').trim();
-
-  return {
-    if (fullName.isNotEmpty) 'full_name': fullName,
-    if (givenName != null && givenName.isNotEmpty) 'given_name': givenName,
-    if (familyName != null && familyName.isNotEmpty) 'family_name': familyName,
-  };
-}
-
-/// 默认认证仓库。
-///
-/// 未配置 Supabase 时调用动作会立刻抛错，避免页面误以为认证成功。
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  if (!auth_config.isAuthConfigured) {
-    throw AuthException('Supabase auth is not configured.');
-  }
-  return SupabaseAuthRepository(Supabase.instance.client.auth);
+final isAuthenticatedProvider = Provider<bool>((ref) {
+  final session = ref.watch(authSessionProvider);
+  return session != null && session.userId != null;
 });
 
-/// 统一认证控制器。
-///
-/// 页面只调用这里暴露的方法，不直接操作 `Supabase.instance.client.auth`。
-/// 真正的登录态仍以 `supabaseSessionProvider` 为唯一事实来源。
-class AuthAnalyticsSync {
-  AuthAnalyticsSync(this._ref);
-
-  final Ref _ref;
-
-  /// 将当前登录用户同步到分析系统。
-  ///
-  /// 匿名阶段不应调用；调用方需先确保 [user] 非空。
-  Future<void> syncSignedInUser(User user) async {
-    final analytics = _ref.read(analyticsServiceProvider);
-    await analytics.setUserId(user.id);
-    await analytics.registerSuperProperties({'supabase_user_id': user.id});
-
-    final resolvedEmail = user.email;
-    if (resolvedEmail != null && resolvedEmail.isNotEmpty) {
-      await analytics.setUserProperty('email', resolvedEmail);
-    }
-
-    final anonymousId = _ref.read(userIdProvider);
-    await analytics.setUserProperty('app_anonymous_id', anonymousId);
-  }
-
-  /// 根据 session 变化同步分析身份。
-  ///
-  /// 仅在"已登录 -> 已登出"时 reset，避免匿名启动阶段反复生成新 distinct id。
-  Future<void> syncSessionChange({
-    required Session? previous,
-    required Session? current,
-  }) async {
-    final previousUser = previous?.user;
-    final currentUser = current?.user;
-
-    if (currentUser != null) {
-      await syncSignedInUser(currentUser);
-      return;
-    }
-
-    if (previousUser != null) {
-      await _ref
-          .read(analyticsServiceProvider)
-          .unregisterSuperProperty('supabase_user_id');
-      await _ref.read(analyticsServiceProvider).setUserId(null);
-    }
-  }
-}
-
-final authAnalyticsSyncProvider = Provider<AuthAnalyticsSync>((ref) {
-  return AuthAnalyticsSync(ref);
-});
+// ─── Auth Controller ───
 
 class AuthController {
-  AuthController(this._ref);
-
+  AuthController(this._ref) {
+    // 从存储恢复待处理的邀请码（deep link 中获取的）
+    unawaited(_restorePendingInviteCode());
+  }
   final Ref _ref;
-
   AuthRepository get _repository => _ref.read(authRepositoryProvider);
+  final Dio _apiDio = createBackendDio(baseUrl: api_config.apiBaseUrl);
+  String? _pendingInviteCode;
 
-  Future<void> requestEmailOtp(String email) {
-    return _repository.sendEmailOtp(email);
-  }
-
-  Future<void> verifyEmailOtp({
-    required String email,
-    required String token,
-  }) async {
-    final response = await _repository.verifyEmailOtp(
-      email: email,
-      token: token,
-    );
-    final user = response.user;
-    if (user != null) {
-      await _ref.read(authAnalyticsSyncProvider).syncSignedInUser(user);
+  Future<void> _restorePendingInviteCode() async {
+    try {
+      _pendingInviteCode = await AuthSessionNotifier._readInviteCode();
+    } catch (e) {
+      AppLogger.log('Auth', '恢复待处理邀请码失败: $e');
     }
   }
 
-  Future<void> signInWithApple() async {
-    final response = await _repository.signInWithApple();
-    final user = response.user;
-    if (user != null) {
-      await _ref.read(authAnalyticsSyncProvider).syncSignedInUser(user);
-    }
+  Future<void> requestEmailOtp(String email) => _repository.sendEmailOtp(email);
+
+  /// 存储 deep link 中的邀请码（注册/登录前调用，登录成功后自动清除）。
+  void setPendingInviteCode(String code) {
+    if (code.isEmpty) return;
+    _pendingInviteCode = code.trim().toUpperCase();
+    // 持久化到存储，确保 app 重启后仍有效
+    AuthSessionNotifier._writeInviteCode(_pendingInviteCode!);
+    AppLogger.log('Auth', 'pending invite code set: $_pendingInviteCode');
   }
 
-  Future<void> signInWithGoogle() async {
-    final response = await _repository.signInWithGoogle();
-    final user = response.user;
-    if (user != null) {
-      await _ref.read(authAnalyticsSyncProvider).syncSignedInUser(user);
-    }
-  }
-
-  Future<void> signInWithPassword({
-    required String email,
-    required String password,
-  }) async {
-    final response = await _repository.signInWithPassword(
-      email: email,
-      password: password,
-    );
-    final user = response.user;
-    if (user != null) {
-      await _ref.read(authAnalyticsSyncProvider).syncSignedInUser(user);
+  Future<AuthResponse?> verifyEmailOtp({required String email, required String token}) async {
+    try {
+      final response = await _repository.verifyEmailOtp(
+        email: email,
+        token: token,
+        inviteCode: _pendingInviteCode,
+      );
+      // 登录成功后清除待处理的邀请码
+      if (response.userId != null) {
+        _pendingInviteCode = null;
+        await AuthSessionNotifier._clearInviteCode();
+        AppLogger.log('Auth', 'invite code consumed: clear pending');
+      }
+      if (response.userId != null) {
+        AppLogger.log('Auth', 'User logged in: ${response.userId}');
+        await _ref.read(authSessionProvider.notifier).setSession(response);
+        // Fetch proxy token after successful login
+        if (response.accessToken != null && response.accessToken!.isNotEmpty) {
+          _fetchAndStoreProxyToken(response);
+        }
+      }
+      return response;
+    } on AuthException catch (e) {
+      AppLogger.log('Auth', 'OTP verification failed: ${e.message}');
+      return null;
+    } catch (e) {
+      AppLogger.log('Auth', 'OTP verification failed: $e');
+      return null;
     }
   }
 
   Future<void> signOut() async {
+    AppLogger.log('Auth', 'Signing out user');
     await _repository.signOut();
-    await _ref.read(analyticsServiceProvider).setUserId(null);
+    await _ref.read(authSessionProvider.notifier).clearSession();
+  }
+
+  Future<void> signInWithApple() async {
+    throw AuthException('Apple Sign-In not implemented for self-hosted auth');
+  }
+
+  Future<void> signInWithGoogle() async {
+    throw AuthException('Google Sign-In not implemented for self-hosted auth');
+  }
+
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    throw AuthException('Password login not implemented for self-hosted auth');
+  }
+
+  // Fetch proxy token and update session state after login
+  Future<void> _fetchAndStoreProxyToken(AuthResponse baseAuth) async {
+    try {
+      final proxyResp = await _apiDio.get(
+        '/api/v2/user-audio/proxy-token',
+        options: Options(headers: {'Authorization': 'Bearer ${baseAuth.accessToken!}'}),
+      );
+      final proxyToken = proxyResp.data['proxyToken'];
+      if (proxyToken != null) {
+        AppLogger.log('Auth', 'Proxy token fetched successfully, updating session');
+        final updatedSession = baseAuth.copyWith(proxyToken: proxyToken);
+        // Update storage and Riverpod state
+        AuthSessionNotifier._writeSessionToStorage(updatedSession.toJson().toString());
+        await _ref.read(authSessionProvider.notifier).setSession(updatedSession);
+      } else {
+        AppLogger.log('Auth', 'Warning: proxy token response was empty');
+      }
+    } catch (e) {
+      AppLogger.log('Auth', 'Warning: Could not fetch proxy token after login: $e');
+      // Don't fail authentication if proxy token fetch fails
+    }
   }
 }
 
-final authControllerProvider = Provider<AuthController>((ref) {
-  return AuthController(ref);
-});
-
-/// 当前 Supabase Session 的响应式来源。
-///
-/// 首值：启动时 SDK 已恢复的 `currentSession`（可能为 null）。
-/// 后续：`onAuthStateChange` 的每个事件（signedIn / signedOut / tokenRefreshed
-/// 等都会带 `session`）。
-///
-/// Supabase 未配置（`isAuthConfigured == false`）时永远 emit `null`，
-/// 等价于匿名态，调用方无需特殊判断。
-final supabaseSessionProvider = StreamProvider<Session?>((ref) {
-  if (!auth_config.isAuthConfigured) {
-    return Stream<Session?>.value(null);
-  }
-
-  final auth = Supabase.instance.client.auth;
-  final controller = StreamController<Session?>();
-  controller.add(auth.currentSession);
-
-  final sub = auth.onAuthStateChange.listen(
-    (event) => controller.add(event.session),
-    onError: controller.addError,
-  );
-
-  ref.onDispose(() {
-    sub.cancel();
-    controller.close();
-  });
-
-  return controller.stream;
-});
-
-/// 当前是否已登录的便捷 Provider。
-///
-/// UI 层 `ref.watch(isAuthenticatedProvider)` 比 `watch(supabaseSessionProvider)
-/// .valueOrNull != null` 更直观。
-final isAuthenticatedProvider = Provider<bool>((ref) {
-  final session = ref.watch(supabaseSessionProvider).valueOrNull;
-  return session != null;
-});
+final authControllerProvider = Provider<AuthController>((ref) => AuthController(ref));

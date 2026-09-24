@@ -65,7 +65,7 @@ void main() {
     );
     subscription = container.listen(
       subtitleEditorControllerProvider(audioItem),
-      (_, _) {},
+      (_, __) {},
       fireImmediately: true,
     );
   });
@@ -108,7 +108,7 @@ void main() {
     );
     final localSubscription = localContainer.listen(
       subtitleEditorControllerProvider(missingAudioItem),
-      (_, _) {},
+      (_, __) {},
       fireImmediately: true,
     );
 
@@ -337,7 +337,7 @@ void main() {
     );
     final localSubscription = localContainer.listen(
       subtitleEditorControllerProvider(localAudioItem),
-      (_, _) {},
+      (_, __) {},
       fireImmediately: true,
     );
 
@@ -972,7 +972,7 @@ void main() {
       final c = saveContainer();
       addTearDown(c.dispose);
       // 保持监听，避免 autoDispose 在 await 期间销毁控制器。
-      c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+      c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
       final notifier = c.read(
         subtitleEditorControllerProvider(audioItem).notifier,
       );
@@ -1012,7 +1012,7 @@ void main() {
     test('拖动词边界后保存：同时更新词级字幕和句子 SRT', () async {
       final c = saveContainer();
       addTearDown(c.dispose);
-      c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+      c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
       final notifier = c.read(
         subtitleEditorControllerProvider(audioItem).notifier,
       );
@@ -1045,7 +1045,7 @@ void main() {
       final c = saveContainer();
       addTearDown(c.dispose);
       // 保持监听，避免 autoDispose 在 await 期间销毁控制器。
-      c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+      c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
       final notifier = c.read(
         subtitleEditorControllerProvider(audioItem).notifier,
       );
@@ -1070,7 +1070,7 @@ void main() {
       final c = saveContainer();
       addTearDown(c.dispose);
       // 保持监听，避免 autoDispose 在 await 期间销毁控制器。
-      c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+      c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
       final notifier = c.read(
         subtitleEditorControllerProvider(audioItem).notifier,
       );
@@ -1121,7 +1121,7 @@ void main() {
           ],
         );
         addTearDown(c.dispose);
-        c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+        c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
         final notifier = c.read(
           subtitleEditorControllerProvider(audioItem).notifier,
         );
@@ -1216,7 +1216,7 @@ void main() {
         ],
       );
       addTearDown(c.dispose);
-      c.listen(subtitleEditorControllerProvider(audioItem), (_, _) {});
+      c.listen(subtitleEditorControllerProvider(audioItem), (_, __) {});
       final notifier = c.read(
         subtitleEditorControllerProvider(audioItem).notifier,
       );

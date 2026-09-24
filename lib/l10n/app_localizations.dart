@@ -63,7 +63,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,34 +86,34 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('zh'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop'**
+  /// **'灵犀AI英语听说'**
   String get appTitle;
 
   /// No description provided for @premiumTitle.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop Membership'**
+  /// **'灵犀AI英语听说 Membership'**
   String get premiumTitle;
 
   /// No description provided for @premiumTagline.
   ///
   /// In en, this message translates to:
-  /// **'Get more AI-powered learning'**
+  /// **'Unlock unlimited AI translations, sentence breakdowns, and shadowing feedback — learn at your own pace'**
   String get premiumTagline;
 
   /// No description provided for @aiQuotaExceededTitle.
@@ -179,31 +179,31 @@ abstract class AppLocalizations {
   /// No description provided for @premiumBenefitTranslation.
   ///
   /// In en, this message translates to:
-  /// **'More AI translation'**
+  /// **'Unlimited AI translations — never hit a wall'**
   String get premiumBenefitTranslation;
 
   /// No description provided for @premiumBenefitAnalysis.
   ///
   /// In en, this message translates to:
-  /// **'More AI sentence breakdown'**
+  /// **'Deep sentence breakdown — understand every grammar point'**
   String get premiumBenefitAnalysis;
 
   /// No description provided for @premiumBenefitWordAnalysis.
   ///
   /// In en, this message translates to:
-  /// **'More AI word explanation'**
+  /// **'Rich word explanations — learn words in context'**
   String get premiumBenefitWordAnalysis;
 
   /// No description provided for @premiumBenefitTranscription.
   ///
   /// In en, this message translates to:
-  /// **'More AI subtitle transcription'**
+  /// **'Unlimited subtitle transcription — import any audio'**
   String get premiumBenefitTranscription;
 
   /// No description provided for @premiumBenefitSenseGroups.
   ///
   /// In en, this message translates to:
-  /// **'More AI sentence chunking'**
+  /// **'Intelligent chunking — natural speaking rhythm'**
   String get premiumBenefitSenseGroups;
 
   /// No description provided for @premiumSubscribe.
@@ -3089,7 +3089,7 @@ abstract class AppLocalizations {
   /// No description provided for @asrBackendOffline.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop AI'**
+  /// **'灵犀AI英语听说 AI'**
   String get asrBackendOffline;
 
   /// No description provided for @asrBackendOfflineDescription.
@@ -4430,6 +4430,30 @@ abstract class AppLocalizations {
   /// **'Privacy Policy'**
   String get privacyPolicy;
 
+  /// No description provided for @privacyPolicyLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get privacyPolicyLastUpdated;
+
+  /// No description provided for @termsLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get termsLastUpdated;
+
+  /// No description provided for @privacyPolicyContent.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get privacyPolicyContent;
+
+  /// No description provided for @termsOfServiceContent.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get termsOfServiceContent;
+
   /// No description provided for @writeFeedback.
   ///
   /// In en, this message translates to:
@@ -4459,12 +4483,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to connect. Please check your network and try again.'**
   String get networkError;
-
-  /// No description provided for @viewSourceCode.
-  ///
-  /// In en, this message translates to:
-  /// **'View Source Code'**
-  String get viewSourceCode;
 
   /// No description provided for @updateAvailable.
   ///
@@ -4957,6 +4975,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Past 24 hours'**
   String get recentCompletionsSummary;
+
+  /// Title for the today completed tasks collapsible section in the study tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Today ({count})'**
+  String todayCompletedTasks(Object count);
+
+  /// Subtitle for the today completed tasks section.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks finished today'**
+  String get todayCompletedTasksSummary;
+
+  /// Empty state message when no tasks completed today.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks completed yet today'**
+  String get todayNoTasks;
 
   /// No description provided for @timeAgoJustNow.
   ///
@@ -5723,7 +5759,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidePlanStartLearningDescription.
   ///
   /// In en, this message translates to:
-  /// **'Tap here to follow the learning plan step by step. Echo Loop will guide you and remind you to review at the right time.'**
+  /// **'Tap here to follow the learning plan step by step. 灵犀AI英语听说 will guide you and remind you to review at the right time.'**
   String get guidePlanStartLearningDescription;
 
   /// No description provided for @guidePlanPauseLearningTitle.
@@ -5777,7 +5813,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideStudyTasksOverviewDescription.
   ///
   /// In en, this message translates to:
-  /// **'This area includes new audio to learn, due reviews, completed tasks, and more. Echo Loop will pace your learning for you.'**
+  /// **'This area includes new audio to learn, due reviews, completed tasks, and more. 灵犀AI英语听说 will pace your learning for you.'**
   String get guideStudyTasksOverviewDescription;
 
   /// No description provided for @guideStudyStatsHeaderTitle.
@@ -6500,12 +6536,6 @@ abstract class AppLocalizations {
   /// **'Google search'**
   String get onboardingQ3OptionGoogleSearch;
 
-  /// No description provided for @onboardingQ3OptionGithub.
-  ///
-  /// In en, this message translates to:
-  /// **'GitHub'**
-  String get onboardingQ3OptionGithub;
-
   /// No description provided for @onboardingQ3OptionFriend.
   ///
   /// In en, this message translates to:
@@ -6761,7 +6791,7 @@ abstract class AppLocalizations {
   /// No description provided for @authSignInTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to Echo Loop'**
+  /// **'Sign in to 灵犀AI英语听说'**
   String get authSignInTitle;
 
   /// No description provided for @authChooseMethod.
@@ -7613,7 +7643,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsEngineEchoLoop.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop AI (Advanced)'**
+  /// **'灵犀AI英语听说 AI (Advanced)'**
   String get ttsEngineEchoLoop;
 
   /// No description provided for @ttsEngineComingSoon.
@@ -7631,7 +7661,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsEnginePiper.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop AI (Balanced)'**
+  /// **'灵犀AI英语听说 AI (Balanced)'**
   String get ttsEnginePiper;
 
   /// No description provided for @ttsEnginePiperDescription.
@@ -7733,7 +7763,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsDeleteModelConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete the Echo Loop voice model? You can re-download it anytime.'**
+  /// **'Delete the 灵犀AI英语听说 voice model? You can re-download it anytime.'**
   String get ttsDeleteModelConfirm;
 
   /// No description provided for @ttsCancelDownload.
@@ -7745,7 +7775,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsDownloadedModelsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Downloaded Echo Loop models'**
+  /// **'Downloaded 灵犀AI英语听说 models'**
   String get ttsDownloadedModelsTitle;
 
   /// No description provided for @ttsDownloadedModelsDesc.
@@ -7757,7 +7787,7 @@ abstract class AppLocalizations {
   /// No description provided for @asrDeleteAllModelsConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.'**
+  /// **'Delete all downloaded 灵犀AI英语听说 speech recognition models? You can re-download them anytime.'**
   String get asrDeleteAllModelsConfirm;
 
   /// No description provided for @asrDownloadedModelsTitle.
@@ -7805,7 +7835,7 @@ abstract class AppLocalizations {
   /// No description provided for @dictionaryWebAdsNotice.
   ///
   /// In en, this message translates to:
-  /// **'Online dictionaries may show their own ads, unrelated to Echo Loop.'**
+  /// **'Online dictionaries may show their own ads, unrelated to 灵犀AI英语听说.'**
   String get dictionaryWebAdsNotice;
 
   /// No description provided for @dictSourceLocal.
@@ -7975,6 +8005,492 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background Knowledge'**
   String get dictAiMultiBackground;
+
+  /// No description provided for @activationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Code'**
+  String get activationTitle;
+
+  /// No description provided for @activationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your activation code to unlock premium features'**
+  String get activationSubtitle;
+
+  /// No description provided for @activationCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter activation code'**
+  String get activationCodeHint;
+
+  /// No description provided for @activationCodePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ABCD1234'**
+  String get activationCodePlaceholder;
+
+  /// No description provided for @activationButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get activationButton;
+
+  /// No description provided for @activationActivating.
+  ///
+  /// In en, this message translates to:
+  /// **'Activating...'**
+  String get activationActivating;
+
+  /// No description provided for @activationSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated successfully!'**
+  String get activationSuccess;
+
+  /// No description provided for @activationSuccessDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy {months} months of premium features'**
+  String activationSuccessDetail(Object months);
+
+  /// No description provided for @activationErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid activation code, please check and try again'**
+  String get activationErrorInvalid;
+
+  /// No description provided for @activationErrorUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This activation code has already been used'**
+  String get activationErrorUsed;
+
+  /// No description provided for @activationErrorExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This activation code has expired'**
+  String get activationErrorExpired;
+
+  /// No description provided for @activationErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, please try again later'**
+  String get activationErrorNetwork;
+
+  /// No description provided for @activationAlreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already a member'**
+  String get activationAlreadyMember;
+
+  /// No description provided for @activationPeriodMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get activationPeriodMonthly;
+
+  /// No description provided for @activationPeriodQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get activationPeriodQuarterly;
+
+  /// No description provided for @activationPeriodHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Half Year'**
+  String get activationPeriodHalfYearly;
+
+  /// No description provided for @activationPeriodYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get activationPeriodYearly;
+
+  /// No description provided for @activationMyCodesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Activation Codes'**
+  String get activationMyCodesTitle;
+
+  /// No description provided for @activationMyCodesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activation codes yet'**
+  String get activationMyCodesEmpty;
+
+  /// No description provided for @activationEnterpriseBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'🏢 Enterprise Edition'**
+  String get activationEnterpriseBanner;
+
+  /// No description provided for @activationEnterpriseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'For schools and organizations — contact us for bulk licensing'**
+  String get activationEnterpriseDesc;
+
+  /// No description provided for @activationEnterpriseContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Sales'**
+  String get activationEnterpriseContact;
+
+  /// No description provided for @activationLearnMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn More'**
+  String get activationLearnMore;
+
+  /// No description provided for @activationCodeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation code required'**
+  String get activationCodeRequired;
+
+  /// No description provided for @activationCodeLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation code must be 8 characters'**
+  String get activationCodeLengthError;
+
+  /// No description provided for @activationRedeemedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed successfully'**
+  String get activationRedeemedSuccessfully;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Friends, Both Get Premium'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your invite link, both of you get membership when they sign up'**
+  String get inviteSubtitle;
+
+  /// No description provided for @inviteYourCode.
+  ///
+  /// In en, this message translates to:
+  /// **'My Invite Code'**
+  String get inviteYourCode;
+
+  /// No description provided for @inviteCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Invite Code'**
+  String get inviteCopyCode;
+
+  /// No description provided for @inviteCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get inviteCopied;
+
+  /// No description provided for @inviteShareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Link'**
+  String get inviteShareLink;
+
+  /// No description provided for @inviteShareApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share App'**
+  String get inviteShareApp;
+
+  /// No description provided for @inviteFriendsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited {count} friends'**
+  String inviteFriendsCount(Object count);
+
+  /// No description provided for @inviteRewardMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'1 friend: both get 7 days premium'**
+  String get inviteRewardMonthly;
+
+  /// No description provided for @inviteRewardQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'3 friends: both get 30 days premium'**
+  String get inviteRewardQuarterly;
+
+  /// No description provided for @inviteRewardHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'5 friends: both get 90 days premium + sticker'**
+  String get inviteRewardHalfYearly;
+
+  /// No description provided for @inviteRewardYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'10 friends: both get 180 days premium + merch'**
+  String get inviteRewardYearly;
+
+  /// No description provided for @inviteMyReward.
+  ///
+  /// In en, this message translates to:
+  /// **'My Rewards'**
+  String get inviteMyReward;
+
+  /// No description provided for @inviteMyRewardDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned {months} months of premium'**
+  String inviteMyRewardDetail(Object months);
+
+  /// No description provided for @inviteMyRewardNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No rewards yet'**
+  String get inviteMyRewardNone;
+
+  /// No description provided for @inviteLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get inviteLoading;
+
+  /// No description provided for @inviteErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, please try again'**
+  String get inviteErrorNetwork;
+
+  /// No description provided for @inviteErrorNotLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in to use invite feature'**
+  String get inviteErrorNotLoggedIn;
+
+  /// No description provided for @inviteEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends signed up yet\nStart sharing now!'**
+  String get inviteEmpty;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation Statistics'**
+  String get statsTitle;
+
+  /// No description provided for @statsTotalCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Codes'**
+  String get statsTotalCodes;
+
+  /// No description provided for @statsUsedCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated'**
+  String get statsUsedCodes;
+
+  /// No description provided for @statsUnusedCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Unused'**
+  String get statsUnusedCodes;
+
+  /// No description provided for @statsRedemptionRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Redemption Rate'**
+  String get statsRedemptionRate;
+
+  /// No description provided for @statsTotalSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Seats'**
+  String get statsTotalSeats;
+
+  /// No description provided for @statsUsedSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Used Seats'**
+  String get statsUsedSeats;
+
+  /// No description provided for @statsPeriodBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'By Package Type'**
+  String get statsPeriodBreakdown;
+
+  /// No description provided for @statsDailyTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'7-Day Trend'**
+  String get statsDailyTrend;
+
+  /// No description provided for @statsGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get statsGenerated;
+
+  /// No description provided for @statsActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated'**
+  String get statsActivated;
+
+  /// No description provided for @statsCreatorStats.
+  ///
+  /// In en, this message translates to:
+  /// **'By Creator'**
+  String get statsCreatorStats;
+
+  /// No description provided for @statsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading statistics...'**
+  String get statsLoading;
+
+  /// No description provided for @statsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get statsRefresh;
+
+  /// No description provided for @statsLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get statsLastUpdated;
+
+  /// No description provided for @statsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No statistics available'**
+  String get statsNoData;
+
+  /// Web版首页欢迎标题
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to 灵犀AI English'**
+  String get webWelcomeTitle;
+
+  /// Web版首页欢迎副标题
+  ///
+  /// In en, this message translates to:
+  /// **'Practice listening and speaking anytime, anywhere in your browser'**
+  String get webWelcomeSubtitle;
+
+  /// Web版功能卡片标题
+  ///
+  /// In en, this message translates to:
+  /// **'Web Features'**
+  String get webFeaturesTitle;
+
+  /// Web版功能说明
+  ///
+  /// In en, this message translates to:
+  /// **'Web version currently supports recording, transcription, and settings. Full learning features coming soon.'**
+  String get webInfoNotice;
+
+  /// Web版离线ASR限制提示
+  ///
+  /// In en, this message translates to:
+  /// **'Web version currently uses online transcription service; offline ASR is mobile-only.'**
+  String get webOfflineAsrNotice;
+
+  /// 日志查看页标题
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Logs'**
+  String get webLogViewerTitle;
+
+  /// 无日志时显示
+  ///
+  /// In en, this message translates to:
+  /// **'No logs yet'**
+  String get webLogEmpty;
+
+  /// Web版首页已登录状态芯片文字
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get webLoginChip;
+
+  /// Web版首页开发者日志按钮提示文字
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Logs'**
+  String get webDevLogs;
+
+  /// Web版邀请码区域标题
+  ///
+  /// In en, this message translates to:
+  /// **'Your Invite Code'**
+  String get webInviteTitle;
+
+  /// 已邀请好友数
+  ///
+  /// In en, this message translates to:
+  /// **'{count} friend(s) signed up'**
+  String webInviteFriends(int count);
+
+  /// 已获得月数
+  ///
+  /// In en, this message translates to:
+  /// **'{months} month(s) earned'**
+  String webInviteMonths(int months);
+
+  /// 复制邀请码按钮文字
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Invite Code'**
+  String get webInviteCopy;
+
+  /// No description provided for @webInvitePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a study session to generate your invite code'**
+  String get webInvitePending;
+
+  /// No description provided for @webInvitePendingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code with friends to earn free months'**
+  String get webInvitePendingInfo;
+
+  /// No description provided for @consentDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Notice'**
+  String get consentDialogTitle;
+
+  /// No description provided for @consentDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'We use analytics to improve your experience. Your data is stored locally and never shared without your consent.'**
+  String get consentDialogContent;
+
+  /// No description provided for @consentDialogPrivacyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get consentDialogPrivacyLink;
+
+  /// No description provided for @consentDialogDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get consentDialogDeny;
+
+  /// No description provided for @consentDialogAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get consentDialogAccept;
 }
 
 class _AppLocalizationsDelegate
@@ -8004,9 +8520,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

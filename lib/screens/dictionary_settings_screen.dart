@@ -86,7 +86,7 @@ class DictionarySettingsScreen extends ConsumerWidget {
   }
 }
 
-/// 在线词典广告提醒：在线源为第三方网站，可能自带广告，与 Echo Loop 无关。
+/// 在线词典广告提醒：在线源为第三方网站，可能自带广告，与 灵犀AI英语听说 无关。
 class _WebAdsNotice extends StatelessWidget {
   final String text;
   const _WebAdsNotice({required this.text});

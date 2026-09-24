@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('iOS Info.plist 默认显示名使用 Echo Loop', () async {
+  test('iOS Info.plist 默认显示名使用 灵犀AI英语听说', () async {
     final content = await File('ios/Runner/Info.plist').readAsString();
 
     expect(content, contains('<key>CFBundleDisplayName</key>'));
-    expect(content, contains('<string>Echo Loop</string>'));
+    expect(content, contains('<string>灵犀AI英语听说</string>'));
     expect(content, isNot(contains('<string>Fluency</string>')));
   });
 
@@ -19,8 +19,8 @@ void main() {
       'ios/Runner/zh-Hans.lproj/InfoPlist.strings',
     ).readAsString();
 
-    expect(english, contains('"CFBundleName" = "Echo Loop";'));
-    expect(chinese, contains('"CFBundleName" = "Echo Loop";'));
+    expect(english, contains('"CFBundleName" = "灵犀AI英语听说";'));
+    expect(chinese, contains('"CFBundleName" = "灵犀AI英语听说";'));
   });
 
   test('iOS 字幕文档类型声明了 LSHandlerRank', () async {

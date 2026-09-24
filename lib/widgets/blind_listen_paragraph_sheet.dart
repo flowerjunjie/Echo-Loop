@@ -61,7 +61,7 @@ Future<void> showBlindListenParagraphSheet({
     skipLabel: skipLabel,
     onSkip: onSkip,
     // 盲听不显示可见词比例（仅复述用），第三个回调参数忽略
-    onStartPractice: (_, _, _) {},
+    onStartPractice: (x, y, z) {},
     onStartPracticeWithPlaybackSpeed: (duration, pause, _, speed) =>
         onStartPractice(duration, pause, speed),
     onSelectionChanged: onSelectionChanged == null

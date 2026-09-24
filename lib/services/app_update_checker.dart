@@ -30,7 +30,7 @@ const _logTag = 'AppUpdateChecker';
 ///
 /// 版本检查 URL 基于 [apiBaseUrl]（通过 `--dart-define=API_BASE_URL` 配置），
 /// 本地开发时访问 `http://localhost:3000/version.json`，
-/// 生产环境访问 `https://www.echo-loop.top/version.json`。
+/// 生产环境访问 `https://echo-loop.top/version.json`。
 ///
 /// iOS 单独走 App Store Lookup API，[bundleId] 必填。
 class AppUpdateChecker {

@@ -16,6 +16,7 @@ import '../database/app_database.dart' as db;
 import '../models/learning_plan.dart';
 import '../models/learning_progress.dart';
 import '../services/app_logger.dart';
+import '../services/completion_feedback_service.dart';
 import '../utils/difficulty_from_ratio.dart';
 import 'learning_plan_provider.dart';
 import 'learning_settings_provider.dart';
@@ -393,6 +394,14 @@ class LearningProgressNotifier extends _$LearningProgressNotifier {
     }
 
     await _persistProgress(updated);
+
+    // 播放完成反馈（Haptic + 音效）
+    final feedbackType = advancedToNextStage
+        ? CompletionType.stageComplete
+        : CompletionType.success;
+    unawaited(
+      ref.read(completionFeedbackServiceProvider).play(feedbackType),
+    );
 
     AppLogger.log(
       'LearningProgress',

@@ -22,9 +22,18 @@ import '../providers/subscription_availability.dart';
 /// 查看 Paywall 与价格**无需登录**（利于转化、两个入口一致）；登录判定统一收敛到
 /// 购买 / 恢复动作（见 [PaywallScreen]，走全 App 通用的 `ensureSignedInForAction`）。
 ///
+/// [source] 参数用于埋点区分入口来源，可选值：
+/// - 'quota_exceeded'：免费额度用尽触发
+/// - 'upgrade_tapped'：用户主动点击升级入口
+/// - 'subscription_screen'：从订阅设置页进入（默认值）
+///
 /// 当前平台未启用订阅时不导航，仅提示——兜底覆盖所有撞墙入口（转录/意群/词典），
 /// 避免未启用平台的用户被引到无法购买的 Paywall。
-Future<void> openPaywall(BuildContext context, WidgetRef ref) async {
+Future<void> openPaywall(
+  BuildContext context,
+  WidgetRef ref, {
+  String source = 'subscription_screen',
+}) async {
   if (!ref.read(subscriptionAvailabilityProvider)) {
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -32,7 +41,10 @@ Future<void> openPaywall(BuildContext context, WidgetRef ref) async {
     );
     return;
   }
-  await context.push(AppRoutes.paywall);
+  await context.push(
+    AppRoutes.paywall,
+    extra: {'source': source},
+  );
 }
 
 /// 根据 [feature] 是否解锁，在 [child] 与锁定占位间切换的门控组件。

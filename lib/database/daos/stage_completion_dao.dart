@@ -151,6 +151,14 @@ class StageCompletionDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 将升序完成记录折叠为 `stage -> 最终完成时间`。
+
+  /// 统计指定时间之后完成的子步骤总数（用于"今日完成任务"计数）。
+  Future<int> countCompletedSince(DateTime since) async {
+    final query = select(stageCompletions)
+      ..where((t) => t.completedAt.isBiggerOrEqualValue(since));
+    final rows = await query.get();
+    return rows.length;
+  }
   ///
   /// 升序遍历、后写覆盖，故每个 stage 保留其最后一个子步骤的 `completedAt`。
   Map<String, DateTime> _foldStageCompletedAt(List<StageCompletion> rows) {

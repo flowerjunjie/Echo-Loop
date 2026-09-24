@@ -7,6 +7,16 @@
 
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - lib/services/web/**  # Web-platform-only: uses dart:js_interop, skips VM/test analysis
+    - macos/**
+    - linux/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

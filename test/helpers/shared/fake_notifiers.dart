@@ -1548,7 +1548,7 @@ class FakeReviewDifficultPractice extends ReviewDifficultPractice {
       onStateChanged: (_) {},
       callbacks: RepeatFlowCallbacks(
         pauseAudio: () {},
-        playSentence: (_, _) async {},
+        playSentence: (_, __) async {},
         startRecording:
             ({
               required String promptId,

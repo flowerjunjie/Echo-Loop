@@ -51,9 +51,10 @@ class AsrModelConfig {
   /// `sherpa_onnx_engine.dart` 的 `_platformProvider`）。
   final String? provider;
 
-  /// Silero VAD 模型文件路径（可选）。
+  /// Silero VAD 模型文件路径（保留字段但不再使用）。
   ///
-  /// 提供时，转录前先用 VAD 裁掉静音段以加速 whisper 推理。
+  /// VAD 已移除：不再创建 Silero VAD（native crash 面，见 §7.4）。
+  /// 字段保留以避免破坏外部调用者编译。
   final String? vadModelPath;
 
   const AsrModelConfig({

@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵犀AI · 数据看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #fff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --accent: #4f46e5;
+    --accent-light: #eef2ff;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #ea580c;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  /* ── Layout ── */
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+  header .meta { font-size: 13px; color: var(--muted); }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .tab-btn { padding: 8px 18px; font-size: 14px; font-weight: 500; border: none; background: none; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+  .tab-btn.active { color: var(--accent); border-color: var(--accent); }
+  .tab-btn:hover { color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Metric Cards ── */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); border-radius: var(--radius) var(--radius) 0 0; }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.orange::before { background: var(--orange); }
+  .metric-card.red::before { background: var(--red); }
+  .metric-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .metric-value { font-size: 28px; font-weight: 700; letter-spacing: -.5px; line-height: 1.1; }
+  .metric-unit { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+  .metric-target { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .metric-trend { position: absolute; top: 14px; right: 14px; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .metric-trend.up { color: var(--green); background: #f0fdf4; }
+  .metric-trend.down { color: var(--red); background: #fef2f2; }
+
+  /* ── Chart Cards ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 800px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .chart-title .badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
+  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap.tall { height: 340px; }
+
+  /* ── Funnel ── */
+  .funnel { display: flex; flex-direction: column; gap: 6px; }
+  .funnel-row { display: flex; align-items: center; gap: 12px; }
+  .funnel-bar-wrap { flex: 1; }
+  .funnel-bar { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 13px; font-weight: 600; color: #fff; min-width: 60px; transition: width .4s ease; }
+  .funnel-label { width: 90px; font-size: 13px; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .funnel-rate { width: 56px; font-size: 12px; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+  /* ── Tables ── */
+  .table-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; padding: 10px 12px; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfd; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-ok { background: #f0fdf4; color: var(--green); }
+  .tag-warn { background: #fffbeb; color: var(--orange); }
+  .tag-err { background: #fef2f2; color: var(--red); }
+  .tag-info { background: var(--accent-light); color: var(--accent); }
+  input[type="number"], input[type="text"] { border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 13px; width: 80px; outline: none; }
+  input:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+  .btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #4338ca; border-color: #4338ca; color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .actions { display: flex; gap: 8px; margin-bottom: 14px; }
+
+  /* ── Daily Report ── */
+  .report-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; }
+  .report-box h3 { font-size: 15px; margin-bottom: 14px; }
+  .report-table td:first-child { width: 140px; font-weight: 500; color: var(--muted); }
+  .report-table input { width: 80px; }
+  .report-summary { margin-top: 14px; padding: 12px 16px; background: var(--accent-light); border-radius: 8px; font-size: 13px; color: var(--accent); }
+
+  /* ── Section Title ── */
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .section-title span { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transform: translateY(10px); transition: all .3s; z-index: 999; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Empty State ── */
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+  .empty-state svg { margin-bottom: 12px; opacity: .4; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>灵犀AI · 数据看板</h1>
+      <div class="meta">更新时间：<span id="updateTime">--</span> &nbsp;|&nbsp; 数据来源：PostHog / RevenueCat（手动录入）</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm" onclick="exportData()">导出 JSON</button>
+      <button class="btn btn-sm" onclick="importData()">导入 JSON</button>
+      <button class="btn btn-sm" onclick="clearAllData()">清空数据</button>
+    </div>
+  </header>
+
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">总览</button>
+    <button class="tab-btn" onclick="switchTab('funnel')">转化漏斗</button>
+    <button class="tab-btn" onclick="switchTab('retention')">留存分析</button>
+    <button class="tab-btn" onclick="switchTab('revenue')">收入指标</button>
+    <button class="tab-btn" onclick="switchTab('product')">产品指标</button>
+    <button class="tab-btn" onclick="switchTab('events')">事件速查</button>
+    <button class="tab-btn" onclick="switchTab('input')">数据录入</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: OVERVIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-overview" class="tab-panel active">
+    <div class="metrics-grid" id="metricsGrid"></div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">DAU 趋势 <span class="badge">近 7 日</span></div>
+        <div class="chart-wrap"><canvas id="dauChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">新增注册 趋势 <span class="badge">近 7 日</span></div>
+        <div class="chart-wrap"><canvas id="newUsersChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">关键指标仪表盘 <span class="badge">目标对比</span></div>
+        <div class="chart-wrap tall"><canvas id="gaugeChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">渠道来源分布 <span class="badge">本月</span></div>
+        <div class="chart-wrap"><canvas id="channelChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: FUNNEL -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-funnel" class="tab-panel">
+    <div class="chart-card full" style="margin-bottom:24px;">
+      <div class="chart-title">核心转化漏斗 <span class="badge">各环节转化率</span></div>
+      <div id="funnelContainer" style="padding:10px 0;"></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">漏斗各环节绝对值 <span class="badge">近 30 日</span></div>
+        <div class="chart-wrap tall"><canvas id="funnelBarChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">漏斗转化率趋势 <span class="badge">近 7 日</span></div>
+        <div class="chart-wrap tall"><canvas id="funnelRateChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: RETENTION -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-retention" class="tab-panel">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">D1 / D7 / D30 留存率 <span class="badge">目标对比</span></div>
+        <div class="chart-wrap tall"><canvas id="retentionChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">留存率趋势 <span class="badge">近 4 周</span></div>
+        <div class="chart-wrap tall"><canvas id="retentionTrendChart"></canvas></div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="section-title">留存数据明细</div>
+      <table>
+        <thead><tr><th>维度</th><th>当前值</th><th>目标值</th><th>状态</th><th>环比</th></tr></thead>
+        <tbody id="retentionTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: REVENUE -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-revenue" class="tab-panel">
+    <div class="metrics-grid" id="revenueMetrics"></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">月收入趋势 <span class="badge">近 6 月</span></div>
+        <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">付费用户趋势 <span class="badge">近 30 日</span></div>
+        <div class="chart-wrap"><canvas id="payingUsersChart"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">CPA / CAC <span class="badge">vs 目标</span></div>
+        <div class="chart-wrap tall"><canvas id="cacChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">ROI & LTV <span class="badge">健康度</span></div>
+        <div class="chart-wrap tall"><canvas id="roiChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: PRODUCT -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-product" class="tab-panel">
+    <div class="metrics-grid" id="productMetrics"></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">转录成功率 趋势 <span class="badge">近 7 日</span></div>
+        <div class="chart-wrap"><canvas id="transcriptionChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">崩溃率 趋势 <span class="badge">近 7 日</span></div>
+        <div class="chart-wrap"><canvas id="crashChart"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-card full" style="margin-bottom:24px;">
+      <div class="chart-title">NPS 历史 <span class="badge">近 6 期调查</span></div>
+      <div class="chart-wrap"><canvas id="npsChart"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="section-title">产品指标一览</div>
+      <table>
+        <thead><tr><th>指标</th><th>当前值</th><th>目标值</th><th>状态</th><th>负责人</th></tr></thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: EVENTS -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-events" class="tab-panel">
+    <div class="table-card">
+      <div class="section-title">埋点事件速查表 <span>共 <span id="eventCount">0</span> 个</span></div>
+      <input type="text" id="eventSearch" placeholder="搜索事件名…" style="margin-bottom:14px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:13px;" oninput="filterEvents()">
+      <table>
+        <thead><tr><th>事件名</th><th>分类</th><th>触发条件 / 说明</th><th>关键参数</th></tr></thead>
+        <tbody id="eventTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- TAB: INPUT -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="tab-input" class="tab-panel">
+    <!-- 今日日报 -->
+    <div class="report-box">
+      <h3>📊 昨日数据日报</h3>
+      <table class="report-table">
+        <tr><td>新增注册</td><td><input type="number" id="inp-newUser" min="0" value="0"></td></tr>
+        <tr><td>DAU</td><td><input type="number" id="inp-dau" min="0" value="0"></td></tr>
+        <tr><td>D1 留存</td><td><input type="number" id="inp-d1" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>付费用户</td><td><input type="number" id="inp-paying" min="0" value="0"></td></tr>
+        <tr><td>付费转化率</td><td><input type="number" id="inp-convRate" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>月收入</td><td>¥ <input type="number" id="inp-revenue" min="0" value="0"></td></tr>
+        <tr><td>转录成功率</td><td><input type="number" id="inp-transRate" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>崩溃率</td><td><input type="number" id="inp-crashRate" min="0" max="100" value="0" step="0.1"> %</td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveDailyReport()">保存日报</button>
+        <button class="btn" onclick="fillSampleData()">填充示例数据</button>
+      </div>
+      <div class="report-summary" id="dailySummary"></div>
+    </div>
+
+    <!-- 周报 -->
+    <div class="report-box">
+      <h3>📊 上周数据周报</h3>
+      <table class="report-table">
+        <tr><td>周新增注册</td><td><input type="number" id="wnew-newUser" min="0" value="0"></td></tr>
+        <tr><td>周活跃用户</td><td><input type="number" id="wnew-mau" min="0" value="0"></td></tr>
+        <tr><td>7日留存</td><td><input type="number" id="wnew-d7" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>周付费用户</td><td><input type="number" id="wnew-paying" min="0" value="0"></td></tr>
+        <tr><td>付费转化率</td><td><input type="number" id="wnew-convRate" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>周收入</td><td>¥ <input type="number" id="wnew-revenue" min="0" value="0"></td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveWeeklyReport()">保存周报</button>
+      </div>
+    </div>
+
+    <!-- 月报 -->
+    <div class="report-box">
+      <h3>📊 本月数据月报</h3>
+      <table class="report-table">
+        <tr><td>累计注册</td><td><input type="number" id="mnew-totalUser" min="0" value="0"></td></tr>
+        <tr><td>月活用户 (MAU)</td><td><input type="number" id="mnew-mau" min="0" value="0"></td></tr>
+        <tr><td>30日留存</td><td><input type="number" id="mnew-d30" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>付费用户</td><td><input type="number" id="mnew-paying" min="0" value="0"></td></tr>
+        <tr><td>付费转化率</td><td><input type="number" id="mnew-convRate" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>月收入</td><td>¥ <input type="number" id="mnew-revenue" min="0" value="0"></td></tr>
+        <tr><td>ARPU</td><td>¥ <input type="number" id="mnew-arpu" min="0" value="0"></td></tr>
+        <tr><td>LTV</td><td>¥ <input type="number" id="mnew-ltv" min="0" value="0"></td></tr>
+        <tr><td>ROI</td><td><input type="number" id="mnew-roi" min="0" value="0" step="0.01"></td></tr>
+        <tr><td>NPS</td><td><input type="number" id="mnew-nps" min="-100" max="100" value="0"></td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveMonthlyReport()">保存月报</button>
+      </div>
+    </div>
+
+    <!-- 漏斗数据 -->
+    <div class="report-box">
+      <h3>📊 漏斗数据（近 30 日）</h3>
+      <table class="report-table">
+        <tr><td>打开 App 次数</td><td><input type="number" id="funnel-open" min="0" value="0"></td></tr>
+        <tr><td>注册人数</td><td><input type="number" id="funnel-register" min="0" value="0"></td></tr>
+        <tr><td>首次转录人数</td><td><input type="number" id="funnel-transcribe" min="0" value="0"></td></tr>
+        <tr><td>首次跟读人数</td><td><input type="number" id="funnel-repeat" min="0" value="0"></td></tr>
+        <tr><td>关注 Paywall 人数</td><td><input type="number" id="funnel-paywall" min="0" value="0"></td></tr>
+        <tr><td>付费人数</td><td><input type="number" id="funnel-pay" min="0" value="0"></td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveFunnelData()">保存漏斗数据</button>
+      </div>
+    </div>
+
+    <!-- 渠道数据 -->
+    <div class="report-box">
+      <h3>📊 渠道来源占比（合计 100%）</h3>
+      <table class="report-table">
+        <tr><td>自然流量</td><td><input type="number" id="ch-organic" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>朋友圈</td><td><input type="number" id="ch-wechat" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>小红书</td><td><input type="number" id="ch-xhs" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>抖音</td><td><input type="number" id="ch-douyin" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>付费投放</td><td><input type="number" id="ch-paid" min="0" max="100" value="0" step="0.1"> %</td></tr>
+        <tr><td>其他渠道</td><td><input type="number" id="ch-other" min="0" max="100" value="0" step="0.1"> %</td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveChannelData()">保存渠道数据</button>
+      </div>
+      <div class="report-summary" id="channelSummary"></div>
+    </div>
+
+    <!-- 推广费用 -->
+    <div class="report-box">
+      <h3>📊 推广费用 & 获客成本</h3>
+      <table class="report-table">
+        <tr><td>本月推广费用（元）</td><td><input type="number" id="cost-spend" min="0" value="0"></td></tr>
+        <tr><td>新增付费用户数</td><td><input type="number" id="cost-payingNew" min="0" value="0"></td></tr>
+        <tr><td>新增用户总数</td><td><input type="number" id="cost-newTotal" min="0" value="0"></td></tr>
+      </table>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveCostData()">保存并计算</button>
+      </div>
+      <div class="report-summary" id="costSummary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   数据模型 & localStorage 持久化
+   ═══════════════════════════════════════════════════════ */
+const STORAGE_KEY = 'echoLoop_dashboard_data';
+const DEFAULT_DATA = {
+  daily:   { date: '', newUser: 0, dau: 0, d1: 0, paying: 0, convRate: 0, revenue: 0, transRate: 0, crashRate: 0 },
+  weekly:  { newUser: 0, mau: 0, d7: 0, paying: 0, convRate: 0, revenue: 0 },
+  monthly: { totalUser: 0, mau: 0, d30: 0, paying: 0, convRate: 0, revenue: 0, arpu: 0, ltv: 0, roi: 0, nps: 0 },
+  funnel:  { open: 0, register: 0, transcribe: 0, repeat: 0, paywall: 0, pay: 0 },
+  channel: { organic: 0, wechat: 0, xhs: 0, douyin: 0, paid: 0, other: 0 },
+  cost:    { spend: 0, payingNew: 0, newTotal: 0, cpa: 0, cac: 0 },
+  dauHistory:  [],   // [{date, value}] 近 7 日
+  newUserHistory: [],
+  revenueHistory: [], // [{month, value}] 近 6 月
+  retentionHistory: [],
+  transcriptionHistory: [],
+  crashHistory: [],
+  npsHistory: [],
+  payingUsersHistory: [],
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const d = JSON.parse(raw);
+    // 合并默认结构，防止旧数据缺字段
+    for (const k of Object.keys(DEFAULT_DATA)) {
+      if (!(k in d)) d[k] = JSON.parse(JSON.stringify(DEFAULT_DATA[k]));
+    }
+    return d;
+  } catch (_) { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/* ═══════════════════════════════════════════════════════
+   Toast 提示
+   ═══════════════════════════════════════════════════════ */
+function toast(msg, duration = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Tab 切换
+   ═══════════════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(name));
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════
+   图表实例缓存
+   ═══════════════════════════════════════════════════════ */
+const charts = {};
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function newChart(id, config) { destroyChart(id); charts[id] = new Chart(document.getElementById(id), config); }
+
+const CHART_DEFAULTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { labels: { font: { size: 12 } } } },
+  scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f1f5f9' } } },
+};
+
+/* ═══════════════════════════════════════════════════════
+   渲染概览页
+   ═══════════════════════════════════════════════════════ */
+function renderOverview(data) {
+  const { daily, monthly, funnel, cost, channel } = data;
+
+  // 指标卡
+  const metrics = [
+    { label: 'DAU', value: daily.dau, unit: '人', target: '≥500', trend: null, cls: '' },
+    { label: '新增注册', value: daily.newUser, unit: '人', target: '-', trend: null, cls: 'green' },
+    { label: '付费用户', value: monthly.paying, unit: '人', target: '≥5%', trend: null, cls: 'orange' },
+    { label: '付费转化率', value: monthly.convRate, unit: '%', target: '≥5%', trend: null, cls: '' },
+    { label: '月收入', value: '¥' + monthly.revenue.toLocaleString(), unit: '', target: '-', trend: null, cls: 'green' },
+    { label: 'D1 留存', value: daily.d1, unit: '%', target: '≥60%', trend: null, cls: monthly.d30 >= 20 ? 'green' : '' },
+    { label: 'ARPU', value: '¥' + Math.round(monthly.arpu), unit: '/月', target: '≥22.3', trend: null, cls: '' },
+    { label: 'LTV', value: '¥' + Math.round(monthly.ltv), unit: '', target: '≥100', trend: null, cls: monthly.ltv >= 100 ? 'green' : 'red' },
+    { label: 'NPS', value: monthly.nps, unit: '', target: '≥50', trend: null, cls: monthly.nps >= 50 ? 'green' : 'orange' },
+  ];
+  const grid = document.getElementById('metricsGrid');
+  grid.innerHTML = metrics.map(m => `
+    <div class="metric-card ${m.cls}">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value">${m.value}<span class="metric-unit">${m.unit}</span></div>
+      <div class="metric-target">目标 ${m.target}</div>
+    </div>
+  `).join('');
+
+  // DAU 折线
+  const dauLabels = data.dauHistory.map(d => d.date);
+  const dauVals = data.dauHistory.map(d => d.value);
+  newChart('dauChart', {
+    type: 'line',
+    data: { labels: dauLabels.length ? dauLabels : ['--'], datasets: [{ label: 'DAU', data: dauVals.length ? dauVals : [0], borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.08)', fill: true, tension: .4, pointRadius: 4 }] },
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, annotation: {} } },
+  });
+
+  // 新增注册
+  newChart('newUsersChart', {
+    type: 'bar',
+    data: { labels: data.newUserHistory.map(d => d.date), datasets: [{ label: '新增注册', data: data.newUserHistory.map(d => d.value), backgroundColor: '#16a34a', borderRadius: 6 }] },
+    options: CHART_DEFAULTS,
+  });
+
+  // 仪表盘：关键指标 vs 目标
+  const gauges = [
+    { label: 'D1 留存', value: daily.d1, target: 60, max: 100 },
+    { label: '付费转化率', value: monthly.convRate, target: 5, max: 100 },
+    { label: '转录成功率', value: daily.transRate, target: 95, max: 100 },
+    { label: '崩溃率', value: daily.crashRate, target: 1, max: 5, invert: true },
+  ];
+  newChart('gaugeChart', {
+    type: 'bar',
+    data: {
+      labels: gauges.map(g => g.label),
+      datasets: [
+        { label: '当前值', data: gauges.map(g => g.value), backgroundColor: '#4f46e5', borderRadius: 6, stack: 'a' },
+        { label: '目标值', data: gauges.map(g => g.target), backgroundColor: '#e2e8f0', borderRadius: 6, stack: 'a' },
+      ]
+    },
+    options: { ...CHART_DEFAULTS, indexAxis: 'y', plugins: { ...CHART_DEFAULTS.plugins, legend: { position: 'top' } } },
+  });
+
+  // 渠道饼图
+  const chLabels = ['自然流量', '朋友圈', '小红书', '抖音', '付费投放', '其他'];
+  const chVals = [channel.organic, channel.wechat, channel.xhs, channel.douyin, channel.paid, channel.other];
+  const chColors = ['#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#64748b'];
+  newChart('channelChart', {
+    type: 'doughnut',
+    data: { labels: chLabels, datasets: [{ data: chVals.some(v => v > 0) ? chVals : [70, 10, 10, 5, 3, 2], backgroundColor: chColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, legend: { position: 'right', labels: { padding: 12, font: { size: 12 } } } } },
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   漏斗渲染
+   ═══════════════════════════════════════════════════════ */
+function renderFunnel(data) {
+  const { funnel } = data;
+  const steps = [
+    { label: '打开 App', value: funnel.open },
+    { label: '注册', value: funnel.register },
+    { label: '首次转录', value: funnel.transcribe },
+    { label: '首次跟读', value: funnel.repeat },
+    { label: '关注 Paywall', value: funnel.paywall },
+    { label: '付费', value: funnel.pay },
+  ];
+  const maxVal = steps[0].value || 1;
+
+  // 可视化漏斗
+  const container = document.getElementById('funnelContainer');
+  container.innerHTML = steps.map((s, i) => {
+    const width = Math.max(8, (s.value / maxVal) * 100);
+    const rate = i === 0 ? '100%' : (s.value ? (s.value / steps[i-1].value * 100).toFixed(1) + '%' : '--');
+    const color = ['#4f46e5','#6366f1','#818cf8','#a5b4fc','#c7d2fe','#4f46e5'][i];
+    return `<div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${width}%;background:${color};">${s.value} 人</div></div>
+      <div class="funnel-rate">${rate}</div>
+    </div>`;
+  }).join('');
+
+  // 漏斗柱状图
+  newChart('funnelBarChart', {
+    type: 'bar',
+    data: { labels: steps.map(s => s.label), datasets: [{ label: '人数', data: steps.map(s => s.value), backgroundColor: '#4f46e5', borderRadius: 6 }] },
+    options: CHART_DEFAULTS,
+  });
+
+  // 漏斗转化率折线
+  const rates = steps.map((s, i) => i === 0 ? 100 : (steps[i-1].value ? (s.value / steps[i-1].value * 100) : 0));
+  newChart('funnelRateChart', {
+    type: 'line',
+    data: { labels: steps.map(s => s.label), datasets: [{ label: '转化率(%)', data: rates, borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,.1)', fill: true, tension: .3, pointRadius: 5 }] },
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } } } },
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   留存渲染
+   ═══════════════════════════════════════════════════════ */
+function renderRetention(data) {
+  const { daily, monthly } = data;
+  const rows = [
+    { dim: 'D1 留存', value: daily.d1, target: 60, status: daily.d1 >= 60 ? 'ok' : 'warn' },
+    { dim: 'D7 留存', value: monthly.d7 !== undefined ? monthly.d7 : '--', target: 40, status: (monthly.d7 ?? 0) >= 40 ? 'ok' : 'warn' },
+    { dim: 'D30 留存', value: monthly.d30, target: 20, status: monthly.d30 >= 20 ? 'ok' : 'warn' },
+  ];
+  document.getElementById('retentionTable').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.dim}</td>
+      <td><strong>${r.value}%</strong></td>
+      <td>${r.target}%</td>
+      <td><span class="tag ${r.status === 'ok' ? 'tag-ok' : 'tag-warn'}">${r.status === 'ok' ? '达标' : '未达标'}</span></td>
+      <td>--</td>
+    </tr>
+  `).join('');
+
+  // 柱状图：D1/D7/D30 vs 目标
+  newChart('retentionChart', {
+    type: 'bar',
+    data: {
+      labels: ['D1', 'D7', 'D30'],
+      datasets: [
+        { label: '当前值', data: [daily.d1, monthly.d7 ?? 0, monthly.d30], backgroundColor: ['#16a34a','#4f46e5','#7c3aed'], borderRadius: 6 },
+        { label: '目标值', data: [60, 40, 20], backgroundColor: '#e2e8f0', borderRadius: 6 },
+      ]
+    },
+    options: CHART_DEFAULTS,
+  });
+
+  // 留存趋势（模拟 4 周）
+  const weeks = ['第1周', '第2周', '第3周', '第4周'];
+  const d1Arr = data.retentionHistory?.map(d => d.d1) || [55, 58, 61, 63];
+  const d7Arr = data.retentionHistory?.map(d => d.d7) || [35, 38, 40, 42];
+  const d30Arr = data.retentionHistory?.map(d => d.d30) || [18, 19, 20, 21];
+  newChart('retentionTrendChart', {
+    type: 'line',
+    data: {
+      labels: weeks,
+      datasets: [
+        { label: 'D1', data: d1Arr, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.1)', fill: true, tension: .4, pointRadius: 4 },
+        { label: 'D7', data: d7Arr, borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.1)', fill: true, tension: .4, pointRadius: 4 },
+        { label: 'D30', data: d30Arr, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,.1)', fill: true, tension: .4, pointRadius: 4 },
+      ]
+    },
+    options: CHART_DEFAULTS,
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   收入渲染
+   ═══════════════════════════════════════════════════════ */
+function renderRevenue(data) {
+  const { monthly, cost } = data;
+  const metrics = [
+    { label: '月收入', value: '¥' + monthly.revenue.toLocaleString(), unit: '', target: '-', cls: 'green' },
+    { label: 'ARPU', value: '¥' + Math.round(monthly.arpu), unit: '/月', target: '≥22.3', cls: monthly.arpu >= 22.3 ? 'green' : '' },
+    { label: 'LTV', value: '¥' + Math.round(monthly.ltv), unit: '', target: '≥100', cls: monthly.ltv >= 100 ? 'green' : 'red' },
+    { label: 'CPA', value: '¥' + cost.cpa.toFixed(1), unit: '/付费用户', target: '<30', cls: cost.cpa < 30 ? 'green' : 'red' },
+    { label: 'ROI', value: cost.roi?.toFixed(2) ?? '--', unit: '', target: '≥1.5', cls: (cost.roi ?? 0) >= 1.5 ? 'green' : '' },
+  ];
+  document.getElementById('revenueMetrics').innerHTML = metrics.map(m => `
+    <div class="metric-card ${m.cls}">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value">${m.value}<span class="metric-unit">${m.unit}</span></div>
+      <div class="metric-target">目标 ${m.target}</div>
+    </div>
+  `).join('');
+
+  // 月收入趋势
+  const months = data.revenueHistory.map(d => d.month);
+  const revenues = data.revenueHistory.map(d => d.value);
+  newChart('revenueChart', {
+    type: 'line',
+    data: {
+      labels: months.length ? months : ['1月','2月','3月','4月','5月','6月'],
+      datasets: [{ label: '月收入(元)', data: revenues.length ? revenues : [8000,12000,15000,18000,22000,26800], borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.1)', fill: true, tension: .4, pointRadius: 4 }]
+    },
+    options: CHART_DEFAULTS,
+  });
+
+  // 付费用户趋势
+  newChart('payingUsersChart', {
+    type: 'bar',
+    data: { labels: data.payingUsersHistory.map(d=>d.date), datasets: [{ label: '付费用户', data: data.payingUsersHistory.map(d=>d.value), backgroundColor: '#4f46e5', borderRadius: 6 }] },
+    options: CHART_DEFAULTS,
+  });
+
+  // CPA/CAC vs 目标
+  newChart('cacChart', {
+    type: 'bar',
+    data: {
+      labels: ['CPA', 'CAC'],
+      datasets: [
+        { label: '当前值', data: [cost.cpa, cost.cac], backgroundColor: ['#dc2626','#ea580c'], borderRadius: 6 },
+        { label: '目标值', data: [30, 10], backgroundColor: '#e2e8f0', borderRadius: 6 },
+      ]
+    },
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, annotation: {} } },
+  });
+
+  // ROI & LTV 仪表盘
+  newChart('roiChart', {
+    type: 'bar',
+    data: {
+      labels: ['ROI', 'LTV(¥)'],
+      datasets: [
+        { label: '当前值', data: [cost.roi ?? 0, monthly.ltv], backgroundColor: ['#16a34a','#4f46e5'], borderRadius: 6 },
+        { label: '目标值', data: [1.5, 100], backgroundColor: '#e2e8f0', borderRadius: 6 },
+      ]
+    },
+    options: CHART_DEFAULTS,
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   产品指标渲染
+   ═══════════════════════════════════════════════════════ */
+function renderProduct(data) {
+  const { daily, monthly } = data;
+  const metrics = [
+    { label: '转录成功率', value: daily.transRate, unit: '%', target: '≥95%', cls: daily.transRate >= 95 ? 'green' : 'red' },
+    { label: '崩溃率', value: daily.crashRate, unit: '%', target: '<1%', cls: daily.crashRate < 1 ? 'green' : 'red' },
+    { label: 'NPS', value: monthly.nps, unit: '', target: '≥50', cls: monthly.nps >= 50 ? 'green' : 'orange' },
+  ];
+  document.getElementById('productMetrics').innerHTML = metrics.map(m => `
+    <div class="metric-card ${m.cls}">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value">${m.value}<span class="metric-unit">${m.unit}</span></div>
+      <div class="metric-target">目标 ${m.target}</div>
+    </div>
+  `).join('');
+
+  // 转录成功率趋势
+  const transLabels = data.transcriptionHistory.map(d => d.date);
+  const transVals = data.transcriptionHistory.map(d => d.value);
+  newChart('transcriptionChart', {
+    type: 'line',
+    data: { labels: transLabels.length ? transLabels : ['--'], datasets: [{ label: '转录成功率(%)', data: transVals.length ? transVals : [96,97,95,98,96,97,95], borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.08)', fill: true, tension: .4, pointRadius: 4 }] },
+    options: CHART_DEFAULTS,
+  });
+
+  // 崩溃率趋势
+  newChart('crashChart', {
+    type: 'line',
+    data: { labels: data.crashHistory.map(d=>d.date), datasets: [{ label: '崩溃率(%)', data: data.crashHistory.map(d=>d.value), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,.08)', fill: true, tension: .4, pointRadius: 4 }] },
+    options: CHART_DEFAULTS,
+  });
+
+  // NPS 历史
+  newChart('npsChart', {
+    type: 'bar',
+    data: {
+      labels: data.npsHistory.map(d=>d.period),
+      datasets: [{ label: 'NPS', data: data.npsHistory.map(d=>d.value), backgroundColor: d => d.raw >= 50 ? '#16a34a' : d.raw >= 30 ? '#ea580c' : '#dc2626', borderRadius: 6 }]
+    },
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, annotation: {} } },
+  });
+
+  // 产品指标表
+  const rows = [
+    { name: '转录成功率', value: daily.transRate + '%', target: '≥95%', status: daily.transRate >= 95 ? 'ok' : 'err', owner: '技术' },
+    { name: '崩溃率', value: daily.crashRate + '%', target: '<1%', status: daily.crashRate < 1 ? 'ok' : 'err', owner: '技术' },
+    { name: 'NPS', value: monthly.nps.toString(), target: '≥50', status: monthly.nps >= 50 ? 'ok' : 'warn', owner: '产品' },
+    { name: 'DAU', value: daily.dau.toString(), target: '≥500', status: daily.dau >= 500 ? 'ok' : 'warn', owner: '运营' },
+    { name: '付费转化率', value: monthly.convRate + '%', target: '≥5%', status: monthly.convRate >= 5 ? 'ok' : 'warn', owner: '运营' },
+  ];
+  document.getElementById('productTable').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td><strong>${r.value}</strong></td>
+      <td>${r.target}</td>
+      <td><span class="tag ${r.status === 'ok' ? 'tag-ok' : r.status === 'warn' ? 'tag-warn' : 'tag-err'}">${r.status === 'ok' ? '达标' : r.status === 'warn' ? '接近' : '未达标'}</span></td>
+      <td>${r.owner}</td>
+    </tr>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   事件速查表
+   ═══════════════════════════════════════════════════════ */
+const EVENTS_DB = [
+  // 页面浏览
+  { name: '$screen', cat: '页面浏览', desc: '页面切换（PostHog 保留名）', params: '$screen_name, previous_screen' },
+  // 认证
+  { name: 'login_method_selected', cat: '认证', desc: '用户选择登录方式', params: 'method ∈ {apple, google, email}' },
+  // 学习会话
+  { name: 'learning_start', cat: '学习会话', desc: '进入学习页面', params: 'isFreePractice' },
+  { name: 'learning_end', cat: '学习会话', desc: '离开学习页面', params: 'totalDurationMs' },
+  // 盲听
+  { name: 'blind_listen_start', cat: '盲听', desc: '开始全文盲听', params: 'audio_id' },
+  { name: 'blind_listen_complete', cat: '盲听', desc: '盲听一遍完成', params: 'pass_number' },
+  { name: 'blind_listen_difficulty_set', cat: '盲听', desc: '盲听后设置难度', params: 'difficulty' },
+  // 精听
+  { name: 'intensive_listen_start', cat: '精听', desc: '开始逐句精听', params: 'audio_id, total_sentences' },
+  { name: 'intensive_listen_complete', cat: '精听', desc: '精听完成全部句子', params: 'difficult_count, totalDifficultSentences' },
+  // 跟读
+  { name: 'listen_repeat_start', cat: '跟读', desc: '开始跟读', params: 'audio_id' },
+  { name: 'listen_repeat_complete', cat: '跟读', desc: '跟读完成全部句子', params: 'score' },
+  // 复述
+  { name: 'retell_start', cat: '复述', desc: '开始段落复述', params: 'audio_id, total_paragraphs' },
+  { name: 'retell_complete', cat: '复述', desc: '复述完成全部段落', params: 'score' },
+  // 难句补练
+  { name: 'difficult_practice_start', cat: '难句补练', desc: '开始难句补练', params: 'audio_id' },
+  { name: 'difficult_practice_complete', cat: '难句补练', desc: '难句补练完成', params: 'score' },
+  // 学习进度
+  { name: 'first_learn_complete', cat: '学习进度', desc: '首次学习四步骤全部完成', params: 'stage' },
+  { name: 'stage_advance', cat: '学习进度', desc: '学习阶段推进', params: 'fromStage, toStage' },
+  // 内容管理
+  { name: 'collection_create', cat: '内容管理', desc: '创建合集', params: 'collection_id, collection_name' },
+  { name: 'audio_upload', cat: '内容管理', desc: '上传音频', params: 'audio_id' },
+  { name: 'collection_delete', cat: '内容管理', desc: '删除合集', params: 'collection_id' },
+  { name: 'audio_delete', cat: '内容管理', desc: '删除音频', params: 'audio_id' },
+  // AI 功能
+  { name: 'translation_requested', cat: 'AI功能', desc: '请求翻译', params: 'audio_id' },
+  { name: 'translation_succeeded', cat: 'AI功能', desc: '翻译成功返回', params: 'audio_id' },
+  { name: 'analysis_requested', cat: 'AI功能', desc: '请求语法解析', params: 'audio_id' },
+  { name: 'analysis_succeeded', cat: 'AI功能', desc: '语法解析成功返回', params: 'audio_id' },
+  { name: 'sense_group_requested', cat: 'AI功能', desc: '请求意群拆分', params: 'audio_id' },
+  { name: 'sense_group_succeeded', cat: 'AI功能', desc: '意群拆分成功返回', params: 'audio_id' },
+  { name: 'word_analysis_succeeded', cat: 'AI功能', desc: '单词释义成功返回', params: 'word' },
+  // 字幕
+  { name: 'subtitle_uploaded', cat: '字幕', desc: '本地上传字幕成功', params: 'audio_id' },
+  { name: 'transcription_started', cat: '字幕', desc: 'AI 转录任务发起', params: 'audio_id' },
+  { name: 'transcription_complete', cat: '字幕', desc: 'AI 转录任务完成', params: 'audio_id, duration_ms' },
+  { name: 'subtitle_editor_opened', cat: '字幕', desc: '进入字幕编辑器', params: 'audio_id' },
+  // 复习会话
+  { name: 'bookmark_review_start', cat: '复习会话', desc: '收藏句子复习开始', params: 'total_sentences_count' },
+  { name: 'bookmark_review_complete', cat: '复习会话', desc: '收藏句子复习完成', params: 'completed_count' },
+  { name: 'bookmark_toggle', cat: '复习会话', desc: '收藏/取消收藏句子', params: 'action ∈ {add, remove}' },
+  { name: 'flashcard_start', cat: '复习会话', desc: '单词卡片复习开始', params: 'total_cards' },
+  { name: 'flashcard_complete', cat: '复习会话', desc: '单词卡片复习完成', params: 'total_cards' },
+  // 录音
+  { name: 'recording_complete', cat: '录音', desc: '单次录音评估完成', params: 'mode, score' },
+  // 学习 Tab
+  { name: 'today_tasks_viewed', cat: '学习Tab', desc: '查看今日学习任务', params: '' },
+  { name: 'activity_calendar_viewed', cat: '学习Tab', desc: '查看活动日历', params: '' },
+  { name: 'study_task_tapped', cat: '学习Tab', desc: '点击学习任务卡片', params: 'task_type, audio_name' },
+  { name: 'day_breakdown_viewed', cat: '学习Tab', desc: '查看某天阶段明细', params: 'date, streak' },
+  { name: 'community_invite_tapped', cat: '学习Tab', desc: '点击加入学习社群邀请', params: '' },
+  // 复习按钮
+  { name: 'bookmark_review_button_tapped', cat: '复习按钮', desc: '点击句子复习按钮', params: 'audio_id' },
+  { name: 'flashcard_button_tapped', cat: '复习按钮', desc: '点击单词卡片复习按钮', params: 'audio_id' },
+  // 精品合集
+  { name: 'discover_entry_tapped', cat: '精品合集', desc: '点击发现精品合集入口', params: '' },
+  { name: 'official_collection_enroll', cat: '精品合集', desc: '成功添加官方合集', params: 'remote_id, enrolled' },
+  { name: 'official_collection_detail_viewed', cat: '精品合集', desc: '查看官方合集详情', params: 'remote_id, audio_count' },
+  // 查单词
+  { name: 'word_lookup', cat: '查单词', desc: '用户查询单词', params: 'word' },
+  { name: 'word_save', cat: '查单词', desc: '收藏单词', params: 'word' },
+  // 设置
+  { name: 'reminder_updated', cat: '设置', desc: '提醒时间修改', params: 'reminder_enabled, reminder_time' },
+  { name: 'asr_setting_changed', cat: '设置', desc: '语音识别设置变更', params: 'asr_enabled, asr_backend' },
+  { name: 'asr_inference_crash_suspected', cat: '设置', desc: '疑似离线ASR推理崩溃', params: '' },
+  { name: 'theme_mode_changed', cat: '设置', desc: '主题模式切换', params: 'previous_mode, new_mode' },
+  { name: 'app_locale_changed', cat: '设置', desc: 'App 语言切换', params: 'previous_locale, new_locale' },
+  { name: 'native_language_changed', cat: '设置', desc: '母语切换', params: 'previous_language, newLanguage' },
+  { name: 'cache_cleared', cat: '设置', desc: '清除缓存成功', params: 'bytes_freed' },
+  // 复述跳过
+  { name: 'retell_toggle_changed', cat: '复述', desc: '自动跳过复述开关切换', params: 'enabled, source' },
+  { name: 'retell_skipped', cat: '复述', desc: '复述子阶段被跳过', params: 'stage, sub_stage, source' },
+  // Onboarding
+  { name: 'onboarding_survey_shown', cat: 'Onboarding', desc: '进入问卷页', params: '' },
+  { name: 'onboarding_survey_question_answered', cat: 'Onboarding', desc: '单题选择', params: 'question_id, answer_code' },
+  { name: 'onboarding_survey_completed', cat: 'Onboarding', desc: '问卷全部完成', params: 'elapsed_seconds' },
+  // 系统授权
+  { name: 'app_permission_snapshot', cat: '系统授权', desc: '冷启动时上报权限快照', params: 'microphone_status, speech_status, notification_status, network_status' },
+  // 通知权限
+  { name: 'notification_prompt_shown', cat: '通知权限', desc: 'in-app pre-prompt 对话框展示', params: '' },
+  { name: 'notification_prompt_result', cat: '通知权限', desc: '用户对 pre-prompt 的选择', params: 'action ∈ {grant, dismiss}' },
+  { name: 'notification_prompt_skipped', cat: '通知权限', desc: '锚点触发但未弹 pre-prompt', params: 'reason ∈ {already_granted, already_denied, cooldown}' },
+  { name: 'notification_system_result', cat: '通知权限', desc: '系统授权框最终结果', params: 'status ∈ {granted, denied}' },
+  { name: 'notification_settings_open_tapped', cat: '通知权限', desc: '从提醒设置页跳转到系统设置', params: '' },
+  // 邀请裂变
+  { name: 'invite_page_viewed', cat: '邀请裂变', desc: '进入邀请裂变页', params: '' },
+  { name: 'invite_copy_code', cat: '邀请裂变', desc: '复制邀请码', params: '' },
+  { name: 'invite_copy_link', cat: '邀请裂变', desc: '复制邀请链接', params: '' },
+  { name: 'invite_share_tapped', cat: '邀请裂变', desc: '点击分享按钮', params: 'share_channel' },
+  { name: 'invite_attribution_success', cat: '邀请裂变', desc: '成功归因（deep link 注册生效）', params: 'invite_code' },
+];
+
+function renderEvents(filter = '') {
+  const filtered = EVENTS_DB.filter(e =>
+    e.name.toLowerCase().includes(filter.toLowerCase()) ||
+    e.cat.includes(filter) ||
+    e.desc.includes(filter)
+  );
+  document.getElementById('eventCount').textContent = EVENTS_DB.length;
+  document.getElementById('eventTable').innerHTML = filtered.map(e => `
+    <tr>
+      <td><code style="font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">${e.name}</code></td>
+      <td><span class="tag tag-info">${e.cat}</span></td>
+      <td style="font-size:13px;color:var(--muted)">${e.desc}</td>
+      <td><code style="font-size:11px;">${e.params || '—'}</code></td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" class="empty-state">无匹配事件</td></tr>';
+}
+function filterEvents() { renderEvents(document.getElementById('eventSearch').value); }
+
+/* ═══════════════════════════════════════════════════════
+   数据录入 & 计算
+   ═══════════════════════════════════════════════════════ */
+function loadInputs(data) {
+  const d = data.daily, w = data.weekly, m = data.monthly, f = data.funnel, c = data.cost, ch = data.channel;
+  document.getElementById('inp-newUser').value  = d.newUser;
+  document.getElementById('inp-dau').value      = d.dau;
+  document.getElementById('inp-d1').value       = d.d1;
+  document.getElementById('inp-paying').value   = d.paying;
+  document.getElementById('inp-convRate').value = d.convRate;
+  document.getElementById('inp-revenue').value  = d.revenue;
+  document.getElementById('inp-transRate').value= d.transRate;
+  document.getElementById('inp-crashRate').value= d.crashRate;
+
+  document.getElementById('wnew-newUser').value = w.newUser;
+  document.getElementById('wnew-mau').value     = w.mau;
+  document.getElementById('wnew-d7').value      = w.d7;
+  document.getElementById('wnew-paying').value  = w.paying;
+  document.getElementById('wnew-convRate').value= w.convRate;
+  document.getElementById('wnew-revenue').value = w.revenue;
+
+  document.getElementById('mnew-totalUser').value = m.totalUser;
+  document.getElementById('mnew-mau').value       = m.mau;
+  document.getElementById('mnew-d30').value       = m.d30;
+  document.getElementById('mnew-paying').value    = m.paying;
+  document.getElementById('mnew-convRate').value  = m.convRate;
+  document.getElementById('mnew-revenue').value   = m.revenue;
+  document.getElementById('mnew-arpu').value      = m.arpu;
+  document.getElementById('mnew-ltv').value       = m.ltv;
+  document.getElementById('mnew-roi').value       = m.roi;
+  document.getElementById('mnew-nps').value       = m.nps;
+
+  document.getElementById('funnel-open').value   = f.open;
+  document.getElementById('funnel-register').value= f.register;
+  document.getElementById('funnel-transcribe').value = f.transcribe;
+  document.getElementById('funnel-repeat').value = f.repeat;
+  document.getElementById('funnel-paywall').value= f.paywall;
+  document.getElementById('funnel-pay').value    = f.pay;
+
+  document.getElementById('ch-organic').value = ch.organic;
+  document.getElementById('ch-wechat').value  = ch.wechat;
+  document.getElementById('ch-xhs').value     = ch.xhs;
+  document.getElementById('ch-douyin').value  = ch.douyin;
+  document.getElementById('ch-paid').value    = ch.paid;
+  document.getElementById('ch-other').value   = ch.other;
+
+  document.getElementById('cost-spend').value      = c.spend;
+  document.getElementById('cost-payingNew').value  = c.payingNew;
+  document.getElementById('cost-newTotal').value   = c.newTotal;
+}
+
+function saveDailyReport() {
+  const data = loadData();
+  data.daily = {
+    date: new Date().toISOString().slice(0,10),
+    newUser: +document.getElementById('inp-newUser').value || 0,
+    dau: +document.getElementById('inp-dau').value || 0,
+    d1: +document.getElementById('inp-d1').value || 0,
+    paying: +document.getElementById('inp-paying').value || 0,
+    convRate: +document.getElementById('inp-convRate').value || 0,
+    revenue: +document.getElementById('inp-revenue').value || 0,
+    transRate: +document.getElementById('inp-transRate').value || 0,
+    crashRate: +document.getElementById('inp-crashRate').value || 0,
+  };
+  // 追加到历史
+  data.dauHistory.push({ date: data.daily.date, value: data.daily.dau });
+  data.newUserHistory.push({ date: data.daily.date, value: data.daily.newUser });
+  if (data.dauHistory.length > 30) data.dauHistory.shift();
+  if (data.newUserHistory.length > 30) data.newUserHistory.shift();
+  saveData(data);
+  refreshAll(data);
+  document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN');
+  toast('✅ 日报已保存');
+  calcDailySummary(data);
+}
+
+function saveWeeklyReport() {
+  const data = loadData();
+  data.weekly = {
+    newUser: +document.getElementById('wnew-newUser').value || 0,
+    mau: +document.getElementById('wnew-mau').value || 0,
+    d7: +document.getElementById('wnew-d7').value || 0,
+    paying: +document.getElementById('wnew-paying').value || 0,
+    convRate: +document.getElementById('wnew-convRate').value || 0,
+    revenue: +document.getElementById('wnew-revenue').value || 0,
+  };
+  saveData(data);
+  refreshAll(data);
+  toast('✅ 周报已保存');
+}
+
+function saveMonthlyReport() {
+  const data = loadData();
+  const revenue = +document.getElementById('mnew-revenue').value || 0;
+  const paying  = +document.getElementById('mnew-paying').value || 0;
+  data.monthly = {
+    totalUser: +document.getElementById('mnew-totalUser').value || 0,
+    mau: +document.getElementById('mnew-mau').value || 0,
+    d30: +document.getElementById('mnew-d30').value || 0,
+    d7:    +document.getElementById('wnew-d7')?.value || 0,
+    paying: paying,
+    convRate: +document.getElementById('mnew-convRate').value || 0,
+    revenue: revenue,
+    arpu: paying ? Math.round((revenue / paying) * 100) / 100 : 0,
+    ltv:  +document.getElementById('mnew-ltv').value || 0,
+    roi:  +document.getElementById('mnew-roi').value || 0,
+    nps:  +document.getElementById('mnew-nps').value || 0,
+  };
+  const month = new Date().toISOString().slice(0,7);
+  data.revenueHistory.push({ month, value: revenue });
+  if (data.revenueHistory.length > 12) data.revenueHistory.shift();
+  saveData(data);
+  refreshAll(data);
+  toast('✅ 月报已保存');
+}
+
+function saveFunnelData() {
+  const data = loadData();
+  data.funnel = {
+    open:   +document.getElementById('funnel-open').value || 0,
+    register: +document.getElementById('funnel-register').value || 0,
+    transcribe: +document.getElementById('funnel-transcribe').value || 0,
+    repeat: +document.getElementById('funnel-repeat').value || 0,
+    paywall: +document.getElementById('funnel-paywall').value || 0,
+    pay:    +document.getElementById('funnel-pay').value || 0,
+  };
+  saveData(data);
+  refreshAll(data);
+  toast('✅ 漏斗数据已保存');
+}
+
+function saveChannelData() {
+  const data = loadData();
+  data.channel = {
+    organic: +document.getElementById('ch-organic').value || 0,
+    wechat:  +document.getElementById('ch-wechat').value || 0,
+    xhs:     +document.getElementById('ch-xhs').value || 0,
+    douyin:  +document.getElementById('ch-douyin').value || 0,
+    paid:    +document.getElementById('ch-paid').value || 0,
+    other:   +document.getElementById('ch-other').value || 0,
+  };
+  const total = Object.values(data.channel).reduce((a,b)=>a+b,0);
+  const el = document.getElementById('channelSummary');
+  el.textContent = total === 100 ? '✅ 渠道合计 100%，数据有效' : `⚠️ 渠道合计 ${total}%，请检查录入`;
+  saveData(data);
+  toast(total === 100 ? '✅ 渠道数据已保存' : '⚠️ 请检查渠道合计');
+}
+
+function saveCostData() {
+  const data = loadData();
+  const spend  = +document.getElementById('cost-spend').value || 0;
+  const payNew = +document.getElementById('cost-payingNew').value || 0;
+  const newTot = +document.getElementById('cost-newTotal').value || 0;
+  data.cost = {
+    spend, payingNew: payNew, newTotal: newTot,
+    cpa:  payNew  ? spend / payNew  : 0,
+    cac:  newTot  ? spend / newTot  : 0,
+    roi:  spend ? (data.monthly.revenue / spend) : 0,
+  };
+  const el = document.getElementById('costSummary');
+  el.textContent = `CPA = ¥${data.cost.cpa.toFixed(2)}  |  CAC = ¥${data.cost.cac.toFixed(2)}  |  ROI = ${data.cost.roi.toFixed(2)}`;
+  saveData(data);
+  refreshAll(data);
+  toast('✅ 推广成本已保存并计算');
+}
+
+function calcDailySummary(data) {
+  const d = data.daily;
+  const el = document.getElementById('dailySummary');
+  const items = [
+    `新增注册：${d.newUser} 人`,
+    `DAU：${d.dau} 人`,
+    `D1 留存：${d.d1}%`,
+    `付费用户：${d.paying} 人`,
+    `付费转化率：${d.convRate}%`,
+    `月收入：¥${d.revenue.toLocaleString()}`,
+    `转录成功率：${d.transRate}%`,
+    `崩溃率：${d.crashRate}%`,
+  ];
+  el.textContent = '📊 昨日数据日报：' + items.join('  |  ');
+}
+
+function fillSampleData() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('inp-newUser').value    = 28;
+  document.getElementById('inp-dau').value        = 312;
+  document.getElementById('inp-d1').value         = 62;
+  document.getElementById('inp-paying').value     = 18;
+  document.getElementById('inp-convRate').value   = 5.8;
+  document.getElementById('inp-revenue').value    = 4680;
+  document.getElementById('inp-transRate').value  = 96.5;
+  document.getElementById('inp-crashRate').value  = 0.4;
+  toast('✅ 已填充示例数据，请点击"保存日报"');
+}
+
+/* ═══════════════════════════════════════════════════════
+   导出 / 导入 / 清空
+   ═══════════════════════════════════════════════════════ */
+function exportData() {
+  const data = loadData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `echo-loop-dashboard-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('✅ 数据已导出');
+}
+function importData() { document.getElementById('importFile').click(); }
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      saveData(data);
+      refreshAll(data);
+      loadInputs(data);
+      toast('✅ 数据导入成功');
+    } catch (_) { toast('❌ 文件格式错误'); }
+  };
+  reader.readAsText(file);
+}
+function clearAllData() {
+  if (!confirm('确认清空所有数据？此操作不可恢复。')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  const data = loadData();
+  refreshAll(data);
+  loadInputs(data);
+  toast('🗑️ 数据已清空');
+}
+
+/* ═══════════════════════════════════════════════════════
+   总刷新
+   ═══════════════════════════════════════════════════════ */
+function refreshAll(data) {
+  renderOverview(data);
+  renderFunnel(data);
+  renderRetention(data);
+  renderRevenue(data);
+  renderProduct(data);
+}
+
+/* ═══════════════════════════════════════════════════════
+   初始化
+   ═══════════════════════════════════════════════════════ */
+(function init() {
+  const data = loadData();
+  renderEvents();
+  loadInputs(data);
+  refreshAll(data);
+  document.getElementById('updateTime').textContent = data.daily.date || new Date().toLocaleDateString('zh-CN');
+  if (data.daily.date) calcDailySummary(data);
+})();
+</script>
+</body>
+</html>

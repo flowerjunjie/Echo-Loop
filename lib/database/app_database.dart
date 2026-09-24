@@ -2,7 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
+// 条件导入：Web 平台使用 stub（避免 drift/native.dart → dart:ffi 编译错误）
+import 'package:drift/native.dart'
+    if (dart.library.html) 'drift_native_web_stub.dart';
+
+// 条件导入：Web 平台使用 DAO Stub Provider，避免运行时 null 属性访问崩溃
+// ignore: unused_import
+import 'providers.dart' if (dart.library.html) 'providers_web.dart';
 import '../utils/app_data_dir.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,7 +50,7 @@ import 'daos/tts_cache_dao.dart';
 
 part 'app_database.g.dart';
 
-/// Echo Loop 应用数据库
+/// 灵犀AI英语听说 应用数据库
 /// 包含 14 张表：audio_items, collections, collection_audio_items, bookmarks,
 /// playback_states, learning_progresses, stage_completions, tags, audio_item_tags,
 /// sentence_ai_cache, saved_words, learned_word_forms, daily_study_records,

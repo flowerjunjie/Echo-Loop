@@ -178,6 +178,9 @@ class FlashcardNotifier extends _$FlashcardNotifier {
   /// 音频播放状态监听（用于输入时间追踪）
   StreamSubscription<ja.PlayerState>? _inputTimePlayerStateSub;
 
+  /// 标志位，防止 dispose 后未完成的异步操作继续执行
+  bool _disposed = false;
+
   @override
   FlashcardState build() {
     _studyTimeService = ref.read(studyTimeServiceProvider);
@@ -187,6 +190,7 @@ class FlashcardNotifier extends _$FlashcardNotifier {
       config: _buildConfig(),
     );
     ref.onDispose(() {
+      _disposed = true;
       _engine.dispose();
       _inputTimePlayerStateSub?.cancel();
       _saveAndRefreshStudyTime();
@@ -198,6 +202,7 @@ class FlashcardNotifier extends _$FlashcardNotifier {
 
   /// 初始化 Flashcard 会话
   Future<void> initialize(List<FlashcardItem> items) async {
+    if (_disposed) return;
     final sw = Stopwatch()..start();
     // 收藏词复习用前台引擎、不上锁屏：进任务停掉媒体引擎，清除 Free Player 等残留的
     // 锁屏/通知栏卡片（非idle→idle → stopService）。见 ADR-7。
@@ -919,6 +924,7 @@ class FlashcardNotifier extends _$FlashcardNotifier {
 
   /// 停止所有播放（TTS + 音频引擎）
   Future<void> _stopAllPlayback() async {
+    if (_disposed) return;
     await ref.read(ttsControllerProvider.notifier).stop();
     await ref.read(foregroundAudioEngineProvider.notifier).stop();
   }

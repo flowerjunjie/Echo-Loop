@@ -13,6 +13,10 @@ import '../analytics/analytics_observer.dart';
 import '../analytics/analytics_providers.dart';
 import '../features/auth/screens/account_screen.dart';
 import '../features/subscription/screens/paywall_screen.dart';
+import '../features/subscription/screens/activation_code_screen.dart';
+import '../features/subscription/screens/activation_stats_screen.dart';
+import '../features/subscription/screens/enhanced_stats_screen.dart';
+import '../features/subscription/screens/invite_screen.dart';
 import '../features/auth/screens/check_email_screen.dart';
 import '../features/auth/screens/email_sign_in_screen.dart';
 import '../features/auth/screens/login_screen.dart';
@@ -150,6 +154,19 @@ abstract class AppRoutes {
 
   /// 订阅计划介绍 / 购买页（Paywall）
   static const paywall = '/paywall';
+
+  /// 激活码兑换页
+  static const activationCode = '/activation-code';
+
+  /// 邀请裂变页
+  static const invite = '/invite';
+
+  /// 构建带邀请码的邀请页路径
+  static String inviteWithCode(String code) => '/invite?code=$code';
+
+  /// 激活码统计页
+  static const activationStats = '/activation-stats';
+  static const enhancedStats = '/enhanced-stats';
 }
 
 /// GoRouter Provider（keepAlive，不可 invalidate）
@@ -374,7 +391,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.paywall,
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PaywallScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          final source = extra is Map && extra['source'] != null
+              ? extra['source'] as String
+              : 'subscription_screen';
+          return PaywallScreen(source: source);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.activationCode,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ActivationCodeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.invite,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => InviteScreen(
+          inviteCode: state.uri.queryParameters['code'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.activationStats,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ActivationStatsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.enhancedStats,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EnhancedStatsScreen(),
       ),
       // 收藏句子复习（全屏）
       GoRoute(

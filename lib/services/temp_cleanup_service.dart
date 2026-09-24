@@ -97,7 +97,9 @@ Future<CleanupResult> cleanupAllTempFiles() async {
       cachesDir,
       nameFilter: _isOwnCacheTemp,
     )).freedBytes;
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('Cleanup', '$e');
+  }
 
   return CleanupResult(freedBytes: totalBytes);
 }
@@ -117,7 +119,9 @@ Future<Directory?> _getNsTmpDir() async {
     final docsDir = await getApplicationDocumentsDirectory();
     final dir = Directory('${docsDir.parent.path}/tmp');
     if (await dir.exists()) return dir;
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('Cleanup', '$e');
+  }
   return null;
 }
 

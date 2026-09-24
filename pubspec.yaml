@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.26
 
 environment:
-  sdk: ^3.9.2
+  sdk: ">=3.2.0 <3.10.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -85,7 +85,9 @@ dependencies:
   archive: ^4.0.4
   share_plus: ^10.1.4
   table_calendar: ^3.2.0
+  fl_chart: ^0.66.0
   timeago: ^3.7.1
+  # Web 平台本地存储：显式声明，避免测试环境解析为传递依赖
   sherpa_onnx: ^1.12.36
   showcaseview: ^5.0.1
   # 认证：复用 fluency-frontend 的 Supabase 项目（auth.users 共享），
@@ -106,8 +108,26 @@ dependencies:
   # PDF 预览：PdfPreview 组件把 PDF 栅格化在 App 内展示（导出预览页），与 pdf 同作者
   printing: ^5.14.2
   purchases_flutter: ^10.3.0
-  in_app_purchase: ^3.3.0
+  in_app_purchase: ^3.2.3
+  sentry_flutter: ^9.29.0
+  firebase_messaging: ^15.2.10
 
+
+dependency_overrides:
+  sqlite3:
+    path: packages/stub_sqlite3
+  sherpa_onnx:
+    path: packages/stub_sherpa_onnx
+  sherpa_onnx_web:
+    path: packages/stub_sherpa_onnx_web
+  ffi:
+    path: packages/stub_ffi
+  # VM 测试 stub：覆盖 package:web，避免 dart:js_interop 编译失败。
+  # 生产构建（flutter build web）不受影响。
+  flutter_local_notifications:
+    path: packages/stub_local_notifications
+  web:
+    path: packages/stub_web
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -207,6 +227,8 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/icon/app-icon-1024-rounded.png"
   # Web 平台配置
+  flutter_local_notifications:
+    path: packages/stub_local_notifications
   web:
     generate: true
     image_path: "assets/icon/app-icon-1024-rounded.png"

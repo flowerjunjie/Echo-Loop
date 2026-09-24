@@ -142,9 +142,19 @@ jobs:
           flutter build ios --release --no-codesign --flavor=prod \
             --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
             --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }} \
+            --dart-define=APP_WEB_BASE_URL=${{ vars.APP_WEB_BASE_URL }} \
+            --dart-define=PRIVACY_URL=${{ vars.PRIVACY_URL }} \
+            --dart-define=TERMS_URL=${{ vars.TERMS_URL }} \
+            --dart-define=SUPPORT_URL=${{ vars.SUPPORT_URL }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ vars.SUPABASE_PUBLISHABLE_KEY }} \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }}
+            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }} \
+            --dart-define=DISTRIBUTION_CHANNEL=app_store \
+            --dart-define=REVENUECAT_API_KEY_APPLE=${{ secrets.REVENUECAT_API_KEY_APPLE }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=FIREBASE_MESSAGING_ENABLED=true \
+            --dart-define=MODEL_CDN_BASE_URL=${{ vars.MODEL_CDN_BASE_URL }}
 
       - name: Setup Java
         if: matrix.platform == 'android'
@@ -179,4 +189,41 @@ jobs:
             --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }} \
             --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ vars.SUPABASE_PUBLISHABLE_KEY }} \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }}
+            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }} \
+            --dart-define=DISTRIBUTION_CHANNEL=app_store \
+            --dart-define=REVENUECAT_API_KEY_APPLE=${{ secrets.REVENUECAT_API_KEY_APPLE }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=FIREBASE_MESSAGING_ENABLED=true \
+            --dart-define=MODEL_CDN_BASE_URL=${{ vars.MODEL_CDN_BASE_URL }}
+
+  build_web:
+    needs: [analyze, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Web (release)
+        run: |
+          flutter build web --release \
+            --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
+            --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
+      - name: Configure Sentry (optional)
+        run: |
+          if [ -n "${{ secrets.SENTRY_DSN }}" ]; then
+            echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> $GITHUB_ENV
+          fi
+
+      - name: Analyze with Sentry
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos

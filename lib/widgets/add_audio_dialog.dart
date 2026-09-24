@@ -23,6 +23,7 @@ import '../providers/collection_provider.dart';
 import '../providers/audio_library_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'common/secondary_action_button.dart';
+import '../../services/app_logger.dart';
 
 /// 已选中的音频文件信息
 typedef _PickedAudio = ({
@@ -690,7 +691,9 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
     if (!await file.exists()) return;
     try {
       await file.delete();
-    } catch (_) {}
+    } catch (e) {
+    AppLogger.log('Widgets', '$e');
+  }
   }
 
   /// 批量添加音频

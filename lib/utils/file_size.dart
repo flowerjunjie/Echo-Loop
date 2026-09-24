@@ -2,6 +2,7 @@
 library;
 
 import 'dart:io';
+ import '../../services/app_logger.dart';
 
 /// 异步计算目录总大小（字节）。
 Future<int> calculateDirectorySize(Directory dir) async {
@@ -11,10 +12,14 @@ Future<int> calculateDirectorySize(Directory dir) async {
       if (entity is File) {
         try {
           total += await entity.length();
-        } catch (_) {}
+        } catch (e) {
+    AppLogger.log('FileSize', 'calculateDirectorySize failed: $e');
+  }
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.log('FileSize', 'calculateDirectorySize failed: $e');
+  }
   return total;
 }
 

@@ -97,14 +97,6 @@ class AudioListTile extends ConsumerWidget {
       ),
     );
 
-    // 全局上下文：精确订阅所属合集名称
-    final collectionNames = _isCollectionContext
-        ? const <String>[]
-        : _getCollectionNames(ref);
-
-    // 获取音频关联的标签数据
-    final tagData = _getTagData(ref);
-
     // 监听后台转录任务状态
     final transcriptionTask = ref.watch(
       transcriptionTaskManagerProvider.select((map) => map[audioItem.id]),
@@ -168,11 +160,10 @@ class AudioListTile extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 _buildSubtitle(
                                   context,
+                                  ref,
                                   l10n,
                                   theme,
                                   progress,
-                                  collectionNames,
-                                  tagData,
                                   transcriptionTask,
                                   downloadProgress,
                                 ),
@@ -233,56 +224,20 @@ class AudioListTile extends ConsumerWidget {
   ///
   /// - 未学习：音频图标在浅色圆形背景上
   /// - 进行中：环形进度 + 中心音频图标
-  /// - 已完成：满环（绿色）+ 勾号图标
-  /// 获取音频关联的标签数据（名称 + 颜色）
-  List<Tag> _getTagData(WidgetRef ref) {
-    final tagIds = ref.watch(
-      tagListProvider.select((s) => s.audioToTagsMap[audioItem.id]),
-    );
-    if (tagIds == null) return const [];
-
-    final tagState = ref.watch(tagListProvider);
-    final result = <Tag>[];
-    for (final tId in tagIds) {
-      final tag = tagState.tags.where((t) => t.id == tId).firstOrNull;
-      if (tag != null) result.add(tag);
-    }
-    return result;
-  }
-
-  /// 获取音频所属合集名称列表（仅全局上下文使用）
-  List<String> _getCollectionNames(WidgetRef ref) {
-    final collectionIds = ref.watch(
-      collectionListProvider.select(
-        (s) => s.audioToCollectionsMap[audioItem.id],
-      ),
-    );
-    if (collectionIds == null) return const [];
-
-    final collectionState = ref.watch(collectionListProvider);
-    final names = <String>[];
-    for (final cId in collectionIds) {
-      final c = collectionState.rawCollections
-          .where((c) => c.id == cId)
-          .firstOrNull;
-      if (c != null) names.add(c.name);
-    }
-    return names;
-  }
-
   /// 构建标题下方的元数据与状态标签区域。
   ///
   /// 第二行固定显示时长和日期；第三行仅在存在字幕、学习状态或其他标签时显示。
   Widget _buildSubtitle(
     BuildContext context,
+    WidgetRef ref,
     AppLocalizations l10n,
     ThemeData theme,
     LearningProgress? progress,
-    List<String> collectionNames,
-    List<Tag> tagData,
     TranscriptionTaskState? transcriptionTask,
     double? downloadProgress,
   ) {
+    final audioId = audioItem.id;
+    final isCollectionContext = _isCollectionContext;
     // 是否有进行中的转录任务
     final isTranscribing =
         transcriptionTask is TranscriptionHashing ||
@@ -318,8 +273,7 @@ class AudioListTile extends ConsumerWidget {
         isTranscribing ||
         isSuspectEmpty ||
         (progress?.isStarted ?? false) ||
-        collectionNames.isNotEmpty ||
-        tagData.isNotEmpty ||
+        !isCollectionContext ||
         downloadProgress != null;
 
     return Column(
@@ -411,47 +365,11 @@ class AudioListTile extends ConsumerWidget {
                       ),
                     ),
                   ),
-              // 合集标签 chips（仅全局上下文显示）
-              ...collectionNames.map(
-                (name) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    name,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ),
-              // 标签 chips（彩色）
-              ...tagData.map(
-                (tag) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tag.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    tag.name,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: tag.color,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
+              // 合集标签 chips（仅全局上下文显示，由 _CollectionChips 内部订阅）
+              if (!isCollectionContext)
+                _CollectionChips(audioId: audioId, theme: theme),
+              // 标签 chips（彩色，由 _TagChips 内部订阅）
+              _TagChips(audioId: audioId, theme: theme),
               if (downloadProgress != null)
                 _buildDownloadProgress(theme, l10n, downloadProgress),
             ],
@@ -1093,6 +1011,122 @@ class AudioListTile extends ConsumerWidget {
           .read(audioLibraryProvider.notifier)
           .updateAudioItem(audioItem.copyWith(name: name));
     }
+  }
+}
+
+/// 订阅 tag chips 的轻量 ConsumerWidget。
+///
+/// 仅监听 [tagListProvider] 中属于当前 audioId 的子集变化，
+/// 避免 tagListProvider 全局变化时无意义重建父 tile。
+class _TagChips extends ConsumerWidget {
+  const _TagChips({required this.audioId, required this.theme});
+  final String audioId;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagIds = ref.watch(
+      tagListProvider.select((s) => s.audioToTagsMap[audioId]),
+    );
+    if (tagIds == null) return const SizedBox.shrink();
+    final tagState = ref.watch(tagListProvider);
+    final tags = <Tag>[];
+    for (final tId in tagIds) {
+      final tag = tagState.tags.where((t) => t.id == tId).firstOrNull;
+      if (tag != null) tags.add(tag);
+    }
+    if (tags.isEmpty) return const SizedBox.shrink();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: tags.map((tag) => _TagChip(tag: tag, theme: theme)).toList(),
+    );
+  }
+}
+
+/// 单枚标签 chip。
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.tag, required this.theme});
+  final Tag tag;
+  final ThemeData theme;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: tag.color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        tag.name,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: tag.color,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+/// 订阅 collection chips 的轻量 ConsumerWidget。
+///
+/// 仅监听 [collectionListProvider] 中属于当前 audioId 的子集变化。
+class _CollectionChips extends ConsumerWidget {
+  const _CollectionChips({required this.audioId, required this.theme});
+  final String audioId;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final collectionIds = ref.watch(
+      collectionListProvider.select(
+        (s) => s.audioToCollectionsMap[audioId],
+      ),
+    );
+    if (collectionIds == null || collectionIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final collectionState = ref.watch(collectionListProvider);
+    final names = <String>[];
+    for (final cId in collectionIds) {
+      final c = collectionState.rawCollections
+          .where((c) => c.id == cId)
+          .firstOrNull;
+      if (c != null) names.add(c.name);
+    }
+    if (names.isEmpty) return const SizedBox.shrink();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: names
+          .map((name) => _CollectionChip(name: name, theme: theme))
+          .toList(),
+    );
+  }
+}
+
+/// 单枚合集 chip（只读展示）。
+class _CollectionChip extends StatelessWidget {
+  const _CollectionChip({required this.name, required this.theme});
+  final String name;
+  final ThemeData theme;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        name,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: 10,
+        ),
+      ),
+    );
   }
 }
 

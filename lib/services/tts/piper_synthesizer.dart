@@ -9,7 +9,8 @@ library;
 
 import 'dart:isolate';
 
-import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa
+    if (dart.library.html) '../../../packages/stub_sherpa_onnx/lib/sherpa_onnx.dart';
 
 import '../app_logger.dart';
 import 'piper_model_manager.dart' show PiperModelPaths;

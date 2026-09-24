@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -37,6 +36,7 @@ import '../features/subscription/providers/subscription_availability.dart';
 import '../features/subscription/providers/subscription_controller.dart';
 import '../services/app_update_launcher.dart';
 import '../features/subscription/screens/subscription_debug_screen.dart';
+import '../features/subscription/screens/admin_activation_screen.dart';
 import '../router/app_router.dart';
 import '../features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import '../services/app_network_image_cache.dart';
@@ -62,8 +62,9 @@ import 'playback_settings_screen.dart';
 import 'preferences_viewer_screen.dart';
 import 'storage_browser_screen.dart';
 import 'reminder_settings_screen.dart';
-import '../config/api_config.dart';
+import '../config/app_config.dart';
 import '../widgets/app_update_dialog.dart';
+import '../../services/app_logger.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -130,18 +131,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   /// 构建账号分组：登录入口 + 订阅入口（登录 item 下方）。
   Widget _buildAccountSection(BuildContext context, AppLocalizations l10n) {
-    final session = ref.watch(supabaseSessionProvider).valueOrNull;
-    final isSignedIn = session != null;
-    final accountSubtitle = session == null
-        ? null
-        : switch (authDisplayProviderForSession(session)) {
-            AuthDisplayProvider.apple => l10n.authSignedInWithApple,
-            AuthDisplayProvider.google => l10n.authSignedInWithGoogle,
-            AuthDisplayProvider.email ||
-            AuthDisplayProvider.unknown => compactAccountListIdentifier(
-              session.user.email ?? session.user.id,
-            ),
-          };
+    final authResponse = ref.watch(authSessionProvider);
+    final isSignedIn = authResponse?.userId != null;
+    final String? accountSubtitle = isSignedIn
+        ? (authResponse!.email != null
+            ? compactAccountListIdentifier(authResponse.email!)
+            : compactAccountListIdentifier(authResponse.userId!))
+        : null;
 
     return _buildSection(
       context,
@@ -176,6 +172,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         // 当前平台未启用订阅（未注入 RC key）时隐藏入口。
         if (ref.watch(subscriptionAvailabilityProvider))
           _buildSubscriptionTile(context, l10n),
+        // 邀请裂变入口
+        ListTile(
+          leading: Icon(Icons.card_giftcard, color: AppTheme.premiumGold(Theme.of(context).brightness)),
+          title: Text(l10n.inviteTitle),
+          subtitle: Text(l10n.inviteSubtitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push(AppRoutes.invite),
+        ),
+        // 激活码兑换入口（始终可见，方便已有码的用户）
+        ListTile(
+          leading: Icon(Icons.key, color: AppTheme.premiumGold(Theme.of(context).brightness)),
+          title: Text(l10n.activationTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push(AppRoutes.activationCode),
+        ),
       ],
     );
   }
@@ -525,7 +536,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (await imageDir.exists()) {
         freed = await calculateDirectorySize(imageDir);
       }
-    } catch (_) {}
+    } catch (e) {
+    AppLogger.log('Settings', '$e');
+  }
     try {
       await AppNetworkImageCache.instance.emptyCache();
     } catch (_) {
@@ -581,14 +594,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           leading: _emojiIcon('📜'),
           title: Text(l10n.termsOfService),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => launchUrl(Uri.parse('https://www.echo-loop.top/terms')),
+          onTap: () => launchUrl(Uri.parse('termsUrl')),
         ),
         ListTile(
           leading: _emojiIcon('🔒'),
           title: Text(l10n.privacyPolicy),
           trailing: const Icon(Icons.chevron_right),
           onTap: () =>
-              launchUrl(Uri.parse('https://www.echo-loop.top/privacy')),
+              launchUrl(Uri.parse('privacyUrl')),
         ),
         ListTile(
           leading: _emojiIcon('✉️'),
@@ -612,24 +625,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             final isZh = Localizations.localeOf(context).languageCode == 'zh';
-            final path = isZh ? '/zh-CN/social' : '/en/social';
-            launchUrl(Uri.parse('$apiBaseUrl$path'));
+            final path = isZh ? '/zh-CN/social/' : '/en/social/';
+            launchUrl(
+              Uri.parse(webPath(path)),
+              mode: LaunchMode.externalApplication,
+            );
           },
-        ),
-        ListTile(
-          leading: SizedBox(
-            width: 32,
-            height: 32,
-            child: Center(child: FaIcon(FontAwesomeIcons.github, size: 22)),
-          ),
-          title: Text(l10n.viewSourceCode),
-          subtitle: const Text(
-            'github.com/echo-loop/Echo-Loop',
-            style: TextStyle(fontSize: 12),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              launchUrl(Uri.parse('https://github.com/echo-loop/Echo-Loop/')),
         ),
       ],
     );
@@ -876,6 +877,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const SubscriptionDebugScreen(),
+            ),
+          ),
+        ),
+        ListTile(
+          leading: _emojiIcon('🔑'),
+          title: const Text('管理激活码'),
+          subtitle: const Text('生成激活码、查看使用记录'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const AdminActivationScreen(),
             ),
           ),
         ),

@@ -1,6 +1,6 @@
 /// 语音合成（TTS）设置 Provider
 ///
-/// 全局控制 TTS 发音偏好：合成引擎（平台 TTS / 未来 Echo Loop）与口音（美/英）。
+/// 全局控制 TTS 发音偏好：合成引擎（平台 TTS / 未来 灵犀AI英语听说）与口音（美/英）。
 /// 口音全局生效于所有发音场景（闪卡 / 收藏 / 词典单词 / 词典例句）。
 ///
 /// 采用手动 Notifier 模式（对齐 [LearningSettings]）：`build()` 从
@@ -43,13 +43,13 @@ class TtsSettings {
   /// 发音口音（默认美音）。
   final TtsAccent accent;
 
-  /// Echo Loop（Kokoro）美音音色 id（默认 [kokoroDefaultVoiceUs]）。
+  /// 灵犀AI英语听说（Kokoro）美音音色 id（默认 [kokoroDefaultVoiceUs]）。
   final String kokoroVoiceUs;
 
-  /// Echo Loop（Kokoro）英音音色 id（默认 [kokoroDefaultVoiceUk]）。
+  /// 灵犀AI英语听说（Kokoro）英音音色 id（默认 [kokoroDefaultVoiceUk]）。
   final String kokoroVoiceUk;
 
-  /// Echo Loop（Kokoro）选用的模型变体（默认 fp32，速度/效果最佳）。
+  /// 灵犀AI英语听说（Kokoro）选用的模型变体（默认 fp32，速度/效果最佳）。
   final KokoroModelVariant kokoroVariant;
 
   /// Piper（平衡档）美音音色 id（默认 [piperDefaultVoiceUs]）。
@@ -81,7 +81,7 @@ class TtsSettings {
 
   /// 派生引擎无关的发音配置。
   ///
-  /// Echo Loop（Kokoro）带音色（voiceName）+ 变体标签（modelTag，fp32/int8 分桶）；
+  /// 灵犀AI英语听说（Kokoro）带音色（voiceName）+ 变体标签（modelTag，fp32/int8 分桶）；
   /// Piper 带音色（voiceName，即独立模型 id，缓存键据此分桶），无 modelTag；
   /// 平台引擎不带 voiceName/modelTag（用语言标签选系统音色）。语速本期固定 0.45。
   TtsSpeechConfig toSpeechConfig() => TtsSpeechConfig(

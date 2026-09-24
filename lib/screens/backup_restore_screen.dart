@@ -16,6 +16,7 @@ import '../services/backup/backup_manifest.dart';
 import '../services/backup/backup_progress.dart';
 import '../theme/app_theme.dart';
 import '../utils/file_size.dart';
+import '../../services/app_logger.dart';
 
 /// 用户数据备份与恢复页面。
 class BackupRestoreScreen extends ConsumerStatefulWidget {
@@ -503,7 +504,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     try {
       final file = File(path);
       if (await file.exists()) await file.delete();
-    } catch (_) {}
+    } catch (e) {
+    AppLogger.log('BackupRestore', '$e');
+  }
   }
 
   static bool _isBackupFileName(String name) {

@@ -141,6 +141,8 @@ class AudioTranscodeService {
     if (!await file.exists()) return;
     try {
       await file.delete();
-    } catch (_) {}
+    } catch (e) {
+        AppLogger.log('AudioImport', '$e');
+      }
   }
 }

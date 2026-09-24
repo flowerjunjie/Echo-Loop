@@ -560,7 +560,7 @@ class _SentenceListState extends State<_SentenceList> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: widget.sentences.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (a, b) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final theme = Theme.of(context);
         final sentence = widget.sentences[index];

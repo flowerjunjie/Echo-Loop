@@ -53,7 +53,7 @@ class _StubTtsController extends TtsController {
 
 /// 创建测试用内存词典数据库
 Database _createTestDb() {
-  final db = sqlite3.openInMemory();
+  final db = sqlite3.open(':memory:');
   db.execute('''
     CREATE TABLE words (
       word TEXT PRIMARY KEY,

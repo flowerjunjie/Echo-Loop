@@ -57,7 +57,7 @@ typedef _BrandToken = ({FaIconData icon, Color color});
 
 /// 来源渠道 → 平台图标 + 品牌色映射。
 ///
-/// FontAwesome 11.0 已收录 weixin / bilibili / github / youtube / reddit /
+/// FontAwesome 11.0 已收录 weixin / bilibili / youtube / reddit /
 /// xTwitter / tiktok / instagram / google / googlePlay / appStore 等主流品牌图标。
 /// 中国特有的小红书 / 快手 / 百度无官方品牌图标，回退到通用 solid icon。
 /// "抖音"与 TikTok 实质上是同一公司同一 app 国内外双版本，复用 tiktok 图标。
@@ -114,10 +114,6 @@ const _referralBrand = <String, _BrandToken>{
     color: Color(0xFF4285F4),
   ),
   // 通用渠道
-  OnboardingReferralSource.github: (
-    icon: FontAwesomeIcons.github,
-    color: Color(0xFF181717),
-  ),
   OnboardingReferralSource.appStore: (
     icon: FontAwesomeIcons.appStore,
     color: Color(0xFF007AFF),
@@ -753,16 +749,12 @@ class _OnboardingSurveyScreenState
     final isChinese = Localizations.localeOf(context).languageCode == 'zh';
 
     // 按重要度排序的渠道编码列表（locale 完整版本）。
-    // 中文：小红书 → 抖音/快手 → B 站 → 微信 → 应用商店 → 百度 → GitHub → 朋友 → 其他
-    // 英文：App Store → Reddit → YouTube → TikTok/IG → X → Google search → GitHub → Friend → Other
-    // 中文：小红书 → 微信 → GitHub → B 站 → 抖音 → 快手 → 百度搜索 → 应用商店 → 朋友推荐 → 其他
-    //  Google Play 不出现在中文列表，国内基本无法使用。
-    // 英文：Reddit → YouTube → Google search → GitHub → TikTok → X / Twitter → Instagram → Friend → App Store → Google Play → Other
+    // 中文：小红书 → 微信 → B 站 → 抖音 → 快手 → 百度搜索 → 应用商店 → 朋友推荐 → 其他
+    // 英文：App Store → Reddit → YouTube → TikTok/IG → X → Google search → Friend → App Store → Google Play → Other
     final codes = isChinese
         ? const [
             OnboardingReferralSource.xiaohongshu,
             OnboardingReferralSource.wechat,
-            OnboardingReferralSource.github,
             OnboardingReferralSource.bilibili,
             OnboardingReferralSource.douyin,
             OnboardingReferralSource.kuaishou,
@@ -775,7 +767,6 @@ class _OnboardingSurveyScreenState
             OnboardingReferralSource.reddit,
             OnboardingReferralSource.youtube,
             OnboardingReferralSource.googleSearch,
-            OnboardingReferralSource.github,
             OnboardingReferralSource.tiktok,
             OnboardingReferralSource.xTwitter,
             OnboardingReferralSource.instagram,
@@ -829,8 +820,6 @@ class _OnboardingSurveyScreenState
         return l10n.onboardingQ3OptionInstagram;
       case OnboardingReferralSource.googleSearch:
         return l10n.onboardingQ3OptionGoogleSearch;
-      case OnboardingReferralSource.github:
-        return l10n.onboardingQ3OptionGithub;
       case OnboardingReferralSource.appStore:
         return l10n.onboardingQ3OptionAppStore;
       case OnboardingReferralSource.googlePlay:

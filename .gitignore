@@ -57,3 +57,6 @@ METHOD.md
 .claude/scheduled_tasks.lock
 flutter
 flutter/
+
+# codegraph 数据库（build 产物）
+.codegraph/

@@ -1,6 +1,7 @@
 # Echo Loop 任务清单
 
-> 最后更新：2026-09-23 10:00 — code-fix 分支已合入 main（commit 3c24c480，零冲突）。包含 223 commits：编译错误修复 + lint 清理 + FCM token 同步 + Web 版 39 条路由。
+> 最后更新：2026-09-24 22:30 — 验证闭环完成。SDK 恢复 3.35.0（与 lock 对齐，CI 的 3.24.0 因 just_waveform/collection/fake_async 版本 pin 无法 pub get，建议 CI 升 3.35.0）；flutter analyze 0 error；test/services/review_reminder 23/23 + web 测试 40/40 通过。dictionary_service_test 18 个失败为预存设计问题：stub_sqlite3 的 in-memory select 恒返回空（VM 测试环境限制，database 测试已按既有规则用 @TestOn('!vm') 隔离在 browser 平台跑）。
+> 2026-09-23 10:00 — code-fix 分支已合入 main（commit 3c24c480，零冲突）。包含 223 commits：编译错误修复 + lint 清理 + FCM token 同步 + Web 版 39 条路由。
 > 2026-09-04 04:47
 > 2026-09-04 04:47：Phase 1 保命线完成——安全 + 稳定性 P0 修复（commit e33b07a）。
 > 2026-08-31 23:50：专家团全面修复完成。测试编译错误从 103 errors → 0 errors，lib/ 零错误，Web 测试 17/17 通过，database 测试已通过 @TestOn('!vm') 隔离。核心目标 100% 达成。已提交 c1b498e（sqlite3 stub完整接口）。

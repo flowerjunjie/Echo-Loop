@@ -6,8 +6,10 @@ library;
 
 import 'package:timezone/timezone.dart' as tz;
 
-// Re-export dart:ffi to satisfy Pointer/Utf8 dependencies from transitive win32
-export 'dart:ffi';
+// 注：早期版本无条件 `export 'dart:ffi'` 以满足 win32 传递依赖的 Pointer/Utf8，
+// 但本 stub 自身不引用任何 FFI 类型，且在 Web/dart2js 下 `dart:ffi` 不可用会直接
+// 编译失败（Dart library 'dart:ffi' is not available on this platform）。已移除，
+// FFI 兼容由 packages/stub_fie 单独承担。
 
 // ── Platform-specific implementations ────────────────────────────────────────
 

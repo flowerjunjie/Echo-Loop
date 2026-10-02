@@ -126,8 +126,7 @@ dependency_overrides:
   # 生产构建（flutter build web）不受影响。
   flutter_local_notifications:
     path: packages/stub_local_notifications
-  web:
-    path: packages/stub_web
+  web: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

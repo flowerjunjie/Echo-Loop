@@ -8,7 +8,10 @@ abstract class CommonDatabase {
   void dispose();
 }
 
-/// Common prepared statement interface
+/// 预编译语句接口（drift 2.28 需要 dispose）
 abstract class CommonPreparedStatement {
   void execute([List<dynamic>? args]);
+
+  /// 释放预编译语句（drift 2.28 调用）
+  void dispose();
 }

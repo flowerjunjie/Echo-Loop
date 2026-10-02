@@ -25,6 +25,8 @@ class PreparedStatement implements CommonPreparedStatement {
   PreparedStatement._(this.sql);
   @override
   void execute([List<dynamic>? args]) {}
+  @override
+  void dispose() {}
   List<dynamic> select([List<dynamic>? args]) => [];
   void close() {}
 }
@@ -43,6 +45,18 @@ class Database implements CommonDatabase {
   int get lastInsertRowId => 0;
   int get updatedRows => 0;
   PreparedStatement prepare(String sql) => PreparedStatement._(sql);
+
+  /// 数据库句柄（drift 2.28 DatabaseTracker 需要 handle.address）
+  Pointer get handle => const Pointer(0);
+}
+
+/// 数据库句柄类型（stub）
+class Pointer {
+  final int address;
+  const Pointer(this.address);
+
+  /// drift 2.28 DatabaseTracker 使用（从句柄指针重新打开数据库）
+  factory Pointer.fromAddress(int address) => Pointer(address);
 }
 
 /// sqlite3 全局实例 - 实现 CommonDatabase + open/openInMemory
@@ -60,6 +74,9 @@ class _Sqlite3 implements CommonDatabase {
   Database open(String path, {OpenMode mode = OpenMode.readWrite}) =>
       Database(path, mode);
   Database openInMemory() => Database(':memory:');
+
+  /// 从句柄指针打开数据库（drift 2.28 DatabaseTracker 需要）
+  Database fromPointer(Pointer ptr) => Database(':memory:');
 }
 
 /// Jsonb Codec - drift 要求
@@ -74,7 +91,8 @@ class JsonbCodec extends Codec<Object?, Uint8List> {
 class _JsonEncoder extends Converter<Object?, Uint8List> {
   const _JsonEncoder();
   @override
-  Uint8List convert(Object? input) => Uint8List.fromList(utf8.encode(jsonEncode(input)));
+  Uint8List convert(Object? input) =>
+      Uint8List.fromList(utf8.encode(jsonEncode(input)));
 }
 
 class _JsonDecoder extends Converter<Uint8List, Object?> {
@@ -85,5 +103,6 @@ class _JsonDecoder extends Converter<Uint8List, Object?> {
 
 /// 顶层 jsonb 常量
 const jsonb = JsonbCodec();
+
 /// sqlite3.jsonb 别名
 const sqlite3Jsonb = JsonbCodec();

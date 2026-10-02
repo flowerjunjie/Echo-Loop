@@ -134,6 +134,20 @@
 
 ## 进行中
 
+### Web 端与 App 功能对齐（核心学习流 + Podcast + PDF）
+
+Web 端此前 39 条路由，对比 native 缺失核心学习流后段（retell / review-difficult-practice / subtitles-edit）、Podcast 生态、PDF 预览。本轮补齐（web_router + main_web + subtitle_editor_controller + audio_export_service + pdf_preview_screen）：
+
+- [x] 2026-10-02 T1 · 核心学习流路由对齐：注册 `/audio/:audioId/retell`、`/audio/:audioId/review-difficult-practice`（替换旧 `/review-difficult` 硬编码空 id 路径）、`/audio/:audioId/subtitles/edit`；main_web.dart 补 `initialRetellPrefsProvider` + `initialDifficultPracticePrefsProvider` 两条 override（对齐 native main.dart L408-411）。
+- [x] 2026-10-02 T1c · 字幕编辑器 Web 端波形降级：`_loadWaveform` 加 `kIsWeb` 分支，Web 端无本地音频文件（just_waveform 为 native 插件）时直接置「无波形」态，字幕编辑/播放/保存闭环保留（方案 A：波形增强另开 P2）。
+- [x] 2026-10-02 T2 · Podcast 生态：注册 `/discover/podcasts`（OfficialPodcastListScreen）+ `/discover/podcasts/:podcastId`（OfficialPodcastPreviewScreen）；补 `/collections/:collectionId` 清除 podcast 订阅成功后 `AppRoutes.collectionDetail` 跳转 404。
+- [x] 2026-10-02 T3 · PDF 预览：注册 `/pdf-preview`；`audio_export_service.dart` 把 `import 'dart:io'` 换 `universal_io` 让 PdfPreviewScreen 的 web 编译链通过；顺手清 `pdf_preview_screen.dart` pre-existing `unused_import: dart:math`。备份恢复（`/backup-restore`）确认为 Web 平台硬限制（纯本地文件系统，无持续 FS），合理放弃，非缺陷。
+- [x] 2026-10-02 验证：`flutter analyze --no-pub` 对上述 5 个文件均 No issues found（web_router / pdf_preview_screen / audio_export_service / subtitle_editor_controller / main_web 全部通过）。本机 SDK 漂移（3.11.3 vs pubspec <3.10.0）导致默认 pub get 失败，用 `--no-pub` 复用既有 package_config 绕过，CI（固定 3.41.5）不受影响。
+
+下一步建议：
+- [ ] 真机 / 浏览器验证：`flutter run -d chrome` 走 retell / review-difficult / podcast / pdf-preview 四条新路由，确认 UI 渲染与数据链路（API）正常。
+- [ ] P2：Web 端 just_waveform 波形增强（需验证插件浏览器端实现，工作量大，单独立项）。
+
 ### 启动埋点附带 4 类授权状态
 
 - [x] 任务 1：埋点常量、`PermissionSnapshot` helper、权限 probe 与单测。

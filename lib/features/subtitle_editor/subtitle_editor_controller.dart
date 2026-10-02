@@ -25,11 +25,11 @@ enum SubtitleEditorPlaybackMode { idle, sentence, range, word }
 
 final subtitleEditorControllerProvider = StateNotifierProvider.autoDispose
     .family<SubtitleEditorController, SubtitleEditorState, AudioItem>((
-      ref,
-      audioItem,
-    ) {
-      return SubtitleEditorController(ref: ref, audioItem: audioItem);
-    });
+  ref,
+  audioItem,
+) {
+  return SubtitleEditorController(ref: ref, audioItem: audioItem);
+});
 
 @immutable
 class SubtitleEditorState {
@@ -185,10 +185,10 @@ const _sentinel = Object();
 
 class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
   SubtitleEditorController({required Ref ref, required AudioItem audioItem})
-    : _ref = ref,
-      _audioEngine = ref.read(audioEngineProvider.notifier),
-      _engine = const SubtitleEditEngine(),
-      super(SubtitleEditorState(audioItem: audioItem)) {
+      : _ref = ref,
+        _audioEngine = ref.read(audioEngineProvider.notifier),
+        _engine = const SubtitleEditEngine(),
+        super(SubtitleEditorState(audioItem: audioItem)) {
     _positionSub = _audioEngine.absolutePositionStream.listen(_handlePosition);
   }
 
@@ -231,9 +231,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
   Future<bool> hasResettableLearningData() async {
     if (!sentenceCountChanged) return false;
     final audioItemId = state.audioItem.id;
-    final bookmarks = await _ref
-        .read(bookmarkDaoProvider)
-        .getBookmarkedIndices(audioItemId);
+    final bookmarks =
+        await _ref.read(bookmarkDaoProvider).getBookmarkedIndices(audioItemId);
     if (bookmarks.isNotEmpty) return true;
     final progress = await _ref
         .read(learningProgressNotifierProvider.notifier)
@@ -263,9 +262,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
         sentences: sentences,
         words: words,
         selectedSentenceIndex: sentences.isEmpty ? null : 0,
-        playbackPosition: sentences.isEmpty
-            ? Duration.zero
-            : sentences.first.startTime,
+        playbackPosition:
+            sentences.isEmpty ? Duration.zero : sentences.first.startTime,
       );
       unawaited(_loadWaveform());
     } catch (e) {
@@ -365,8 +363,7 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
         : word.copyWith(endTime: clamped);
 
     // 句首词起点 / 句末词终点即句子边界：同步更新句子时间保持不变量。
-    final isSentenceEdge =
-        (edge == BoundaryEdge.start && local == 0) ||
+    final isSentenceEdge = (edge == BoundaryEdge.start && local == 0) ||
         (edge == BoundaryEdge.end && local == view.length - 1);
     final nextSentences = isSentenceEdge
         ? _withSentenceEdge(sentenceIndex, edge, clamped)
@@ -383,9 +380,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
       isDirty: _sentencesChanged(nextSentences) || _wordsDirty,
       playingSentenceIndex: wasPlaying ? null : state.playingSentenceIndex,
       isPlaying: wasPlaying ? false : state.isPlaying,
-      playbackMode: wasPlaying
-          ? SubtitleEditorPlaybackMode.idle
-          : state.playbackMode,
+      playbackMode:
+          wasPlaying ? SubtitleEditorPlaybackMode.idle : state.playbackMode,
     );
   }
 
@@ -401,9 +397,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
   ) {
     final word = view[local];
     if (edge == BoundaryEdge.start) {
-      final lower = local > 0
-          ? view[local - 1].endTime
-          : _prevSentenceEnd(sentenceIndex);
+      final lower =
+          local > 0 ? view[local - 1].endTime : _prevSentenceEnd(sentenceIndex);
       return (lower: lower, upper: word.endTime - kMinWordDuration);
     }
     final upper = local < view.length - 1
@@ -494,9 +489,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
       return _proportionalTokens(tokens, sentence);
     }
     if (range.count == 0) return const [];
-    final slice = state.words
-        .sublist(range.offset, range.offset + range.count)
-        .toList();
+    final slice =
+        state.words.sublist(range.offset, range.offset + range.count).toList();
     for (var i = 0; i < slice.length; i++) {
       slice[i] = _clampWordToSentence(
         slice[i],
@@ -596,8 +590,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
       final nextMs = i == tokens.length - 1
           ? endMs
           : (span <= 0 || totalWeight <= 0
-                ? startMs
-                : startMs + (span * consumed / totalWeight).round());
+              ? startMs
+              : startMs + (span * consumed / totalWeight).round());
       result.add(
         WordTimestamp(
           word: tokens[i],
@@ -691,9 +685,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
       isDirty: _sentencesChanged(nextSentences) || _wordsDirty,
       playingSentenceIndex: wasPlaying ? null : state.playingSentenceIndex,
       isPlaying: wasPlaying ? false : state.isPlaying,
-      playbackMode: wasPlaying
-          ? SubtitleEditorPlaybackMode.idle
-          : state.playbackMode,
+      playbackMode:
+          wasPlaying ? SubtitleEditorPlaybackMode.idle : state.playbackMode,
     );
   }
 
@@ -877,9 +870,8 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
 
   void setWaveformZoomScale(double scale) {
     state = state.copyWith(
-      waveformZoomScale: scale
-          .clamp(1.0, state.maxWaveformZoomScale)
-          .toDouble(),
+      waveformZoomScale:
+          scale.clamp(1.0, state.maxWaveformZoomScale).toDouble(),
     );
   }
 
@@ -942,7 +934,7 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
     final trimmedWords = range == null
         ? state.words
         : (List<WordTimestamp>.of(state.words)
-            ..removeRange(range.offset, range.offset + range.count));
+          ..removeRange(range.offset, range.offset + range.count));
     state = state.copyWith(
       sentences: next,
       selectedSentenceIndex: selectedIndex,
@@ -1108,8 +1100,7 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
   }
 
   Future<void> _stopActivePlayback({required bool invalidateSession}) async {
-    final shouldStop =
-        state.isPlaying ||
+    final shouldStop = state.isPlaying ||
         state.playingSentenceIndex != null ||
         _activePlaybackSessionId != null;
     if (invalidateSession) {
@@ -1245,6 +1236,15 @@ class SubtitleEditorController extends StateNotifier<SubtitleEditorState> {
   Future<void> _loadWaveform() async {
     if (_loadingWaveform) return;
     _loadingWaveform = true;
+    // Web 端无本地音频文件（just_waveform 依赖 native 提取），直接降级为
+    // 「无波形」态：隐藏波形区，字幕编辑/播放/保存闭环仍可用（方案 A，P0 路由对齐）。
+    if (kIsWeb) {
+      if (mounted) {
+        state = state.copyWith(waveformAudioMissing: true, waveform: null);
+      }
+      _loadingWaveform = false;
+      return;
+    }
     try {
       final audioPath = await state.audioItem.getFullAudioPath();
       if (audioPath == null) {

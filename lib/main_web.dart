@@ -19,6 +19,8 @@ import 'router/web_router.dart';
 import 'theme/app_theme.dart';
 import 'providers/package_info_provider.dart';
 import 'providers/privacy_consent_provider.dart';
+import 'providers/retell_prefs_provider.dart';
+import 'providers/difficult_practice_prefs_provider.dart';
 import 'analytics/analytics_providers.dart';
 import 'analytics/consent_manager.dart';
 import 'screens/privacy_consent_screen.dart';
@@ -45,6 +47,12 @@ void main() async {
   if (isFirstLaunch) {
     await prefs.setBool('first_launch_done', true);
   }
+  // 段落复述偏好：启动期同步预读 SP，对齐 native main.dart 的 initialRetellPrefs override
+  final initialRetellPrefs = retellPrefsFromPrefsSync(prefs);
+  // 难句补练偏好：对齐 native main.dart 的 initialDifficultPracticePrefs override
+  final initialDifficultPracticePrefs = difficultPracticePrefsFromPrefsSync(
+    prefs,
+  );
 
   // ── PostHog 埋点初始化 ────────────────────────────────────────
   // Web 端使用 PostHog JS SDK（通过 posthog_flutter web 支持自动加载）
@@ -54,7 +62,8 @@ void main() async {
   final consentManager = ConsentManager(prefs);
   final needsConsent = !consentManager.hasConsented;
 
-  final analyticsService = await initAnalyticsService(prefs, userId: _generateAnonymousUserId());
+  final analyticsService =
+      await initAnalyticsService(prefs, userId: _generateAnonymousUserId());
   initAnalytics(analyticsService);
 
   runApp(
@@ -64,6 +73,12 @@ void main() async {
         overrides: [
           packageInfoProvider.overrideWithValue(packageInfo),
           needsConsentProvider.overrideWithValue(needsConsent),
+          // 注入启动期预读的段落复述偏好初值（Web 端纯 SP，无需 stub）
+          initialRetellPrefsProvider.overrideWithValue(initialRetellPrefs),
+          // 注入启动期预读的难句补练偏好初值（Web 端纯 SP，无需 stub）
+          initialDifficultPracticePrefsProvider.overrideWithValue(
+            initialDifficultPracticePrefs,
+          ),
         ],
         child: const EchoLoopWebApp(),
       ),

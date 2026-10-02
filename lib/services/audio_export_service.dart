@@ -4,9 +4,10 @@
 /// 纯业务逻辑，不依赖 UI 框架或 Riverpod。
 library;
 
-import 'dart:io';
+import 'package:universal_io/io.dart';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -26,6 +27,11 @@ class AudioExportService {
     required bool includeAudio,
     required bool includeTranscript,
   }) async {
+    // Web 端无本地文件系统，文件导出不可用（PDF 预览页仅调用 sanitizeFileName，
+    // 不受影响）。此处显式抛错，避免隐式落到 universal_io 的 File 操作抛 UnsupportedError。
+    if (kIsWeb) {
+      throw UnsupportedError('AudioExportService.exportAudioItem 在 Web 端不可用');
+    }
     if (!includeAudio && !includeTranscript) {
       throw ArgumentError('至少需要选择一项导出内容');
     }

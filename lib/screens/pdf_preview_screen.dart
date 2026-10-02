@@ -9,7 +9,6 @@
 library;
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -36,8 +35,8 @@ import '../widgets/common/anchored_bubble.dart';
 
 /// 预览区构造器（测试注入缝：`PdfPreview` 走 method channel，widget 测试
 /// 中会 MissingPluginException，注入替身即可绕开）
-typedef PdfPreviewBuilder =
-    Widget Function(BuildContext context, Uint8List bytes, int optionsBitmask);
+typedef PdfPreviewBuilder = Widget Function(
+    BuildContext context, Uint8List bytes, int optionsBitmask);
 
 /// 学习材料 PDF 导出预览页
 class PdfPreviewScreen extends ConsumerStatefulWidget {
@@ -96,8 +95,7 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
   @override
   void initState() {
     super.initState();
-    _loader =
-        widget.loader ??
+    _loader = widget.loader ??
         StudyPdfLoader(
           audioItemDao: ref.read(audioItemDaoProvider),
           bookmarkDao: ref.read(bookmarkDaoProvider),
@@ -315,9 +313,8 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
         // subject 决定 iOS 分享面板 LinkPresentation 卡片的标题（不传则
         // metadata.title 为 nil，卡片只剩「PDF · 71 KB」副标题、无文件名）
         subject: document.title,
-        sharePositionOrigin: box != null
-            ? box.localToGlobal(Offset.zero) & box.size
-            : Rect.zero,
+        sharePositionOrigin:
+            box != null ? box.localToGlobal(Offset.zero) & box.size : Rect.zero,
       );
     } catch (e) {
       if (!mounted) return;
@@ -502,6 +499,6 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
     if (builder != null) {
       return builder(context, bytes, _options.bitmask);
     }
-            return const Text("PDF 预览功能临时禁用");
+    return const Text("PDF 预览功能临时禁用");
   }
 }

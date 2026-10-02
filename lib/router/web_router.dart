@@ -18,6 +18,7 @@ import '../screens/learning_plan_screen.dart';
 import '../screens/listen_and_repeat_player_screen.dart';
 import '../screens/player_screen.dart';
 import '../screens/review_difficult_practice_screen.dart';
+import '../screens/retell_player_screen.dart';
 import '../screens/bookmark_review_screen.dart';
 import '../screens/learning_settings_screen.dart';
 import '../screens/log_viewer_screen.dart';
@@ -42,10 +43,15 @@ import '../features/onboarding_survey/screens/onboarding_survey_screen.dart';
 import '../features/subscription/screens/paywall_screen.dart';
 import '../features/official_collections/screens/discover_collections_screen.dart';
 import '../features/official_collections/screens/official_collection_detail_screen.dart';
+import '../features/official_collections/screens/official_podcast_list_screen.dart';
+import '../features/official_collections/screens/official_podcast_preview_screen.dart';
+import '../screens/pdf_preview_screen.dart';
 import '../features/subscription/screens/activation_code_screen.dart';
 import '../features/subscription/screens/activation_stats_screen.dart';
 import '../features/subscription/screens/enhanced_stats_screen.dart';
 import '../features/subscription/screens/invite_screen.dart';
+import '../features/subtitle_editor/subtitle_simple_editor_screen.dart';
+import '../models/audio_item.dart';
 import '../screens/audio_detail_screen.dart';
 
 /// Web 端路由 Provider
@@ -58,13 +64,13 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (context, state) => WebHomeScreen(),
       ),
-      
+
       /// 登录页
       GoRoute(
         path: '/login',
         builder: (context, state) => LoginScreen(),
       ),
-      
+
       /// 邀请码注册
       GoRoute(
         path: '/invite/:code',
@@ -73,13 +79,13 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
           return InviteScreen(inviteCode: code);
         },
       ),
-      
+
       /// 隐私政策
       GoRoute(
         path: '/privacy',
         builder: (context, state) => const PrivacyScreen(),
       ),
-      
+
       /// 服务条款
       GoRoute(
         path: '/terms',
@@ -102,6 +108,20 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/discover',
         builder: (context, state) => const DiscoverCollectionsScreen(),
+      ),
+      // Podcast 列表页（纯 API：discoverPodcastsProvider + podcastRepository，无 FFI 依赖，
+      // 与 native /discover/podcasts 对齐；数据链路在 Web 端经 providers_web stub 覆盖 Drift）
+      GoRoute(
+        path: '/discover/podcasts',
+        builder: (context, state) => const OfficialPodcastListScreen(),
+      ),
+      // Podcast 详情页（纯 API，与 native 对齐：/discover/podcasts/:podcastId）
+      GoRoute(
+        path: '/discover/podcasts/:podcastId',
+        builder: (context, state) {
+          final podcastId = state.pathParameters['podcastId']!;
+          return OfficialPodcastPreviewScreen(podcastId: podcastId);
+        },
       ),
       // 学习设置页（纯 SP 读写，无 drift）
       GoRoute(
@@ -146,17 +166,50 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
       // 全文盲听页（无 drift 导入，provider stub 可覆盖）
       GoRoute(
         path: '/blind-listen',
-        builder: (context, state) => const BlindListenPlayerScreen(audioItemId: ''),
+        builder: (context, state) =>
+            const BlindListenPlayerScreen(audioItemId: ''),
       ),
       // 跟读练习页（无 drift 导入，provider stub 可覆盖）
       GoRoute(
         path: '/listen-and-repeat',
-        builder: (context, state) => const ListenAndRepeatPlayerScreen(audioItemId: ''),
+        builder: (context, state) =>
+            const ListenAndRepeatPlayerScreen(audioItemId: ''),
       ),
-      // 难句补练页（无 drift 导入，provider stub 可覆盖）
+      // 难句补练页（与 native app_router 对齐：/audio/:audioId/review-difficult-practice，
+      // 参数化 audioId；drift 通过 providers_web.dart stub 覆盖，偏好初值经 main_web override 注入）
       GoRoute(
-        path: '/review-difficult',
-        builder: (context, state) => const ReviewDifficultPracticeScreen(audioItemId: ''),
+        path: '/audio/:audioId/review-difficult-practice',
+        builder: (context, state) {
+          final audioId = state.pathParameters['audioId']!;
+          return ReviewDifficultPracticeScreen(
+            collectionId: null,
+            audioItemId: audioId,
+          );
+        },
+      ),
+      // 段落复述页（与 native app_router 对齐：/audio/:audioId/retell，独立音频路径参数传 audioId）
+      // 录音识别在 Web 端走 WebSpeechPracticeBackend（echo-transcribe API），ASR 链路已通
+      GoRoute(
+        path: '/audio/:audioId/retell',
+        builder: (context, state) {
+          final audioId = state.pathParameters['audioId']!;
+          return RetellPlayerScreen(
+            collectionId: null,
+            audioItemId: audioId,
+          );
+        },
+      ),
+      // 字幕编辑页（与 native app_router 对齐：/audio/:audioId/subtitles/edit，走 extra 传 AudioItem。
+      // Web 端波形提取降级：无本地音频文件，just_waveform 走 kIsWeb 分支跳过，字幕编辑/播放/保存闭环仍可用）
+      GoRoute(
+        path: '/audio/:audioId/subtitles/edit',
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is! AudioItem) {
+            throw StateError('Subtitle editor requires AudioItem extra');
+          }
+          return SubtitleSimpleEditorScreen(audioItem: extra);
+        },
       ),
       // 官方合集详情页（纯 API，无 drift 依赖）
       GoRoute(
@@ -177,6 +230,15 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return CollectionDetailScreen(collectionId: id);
+        },
+      ),
+      // 合集详情路由（对齐 native AppRoutes.collectionDetail 生成的 /collections/$collectionId。
+      // podcast 订阅/跳转复用该常量，Web 端若不注册则订阅成功后 navigate 直接 404）
+      GoRoute(
+        path: '/collections/:collectionId',
+        builder: (context, state) {
+          final collectionId = state.pathParameters['collectionId']!;
+          return CollectionDetailScreen(collectionId: collectionId);
         },
       ),
       // ASR 录音测试页面（Web 可用，通过 echo-transcribe API 转录）
@@ -223,8 +285,7 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
         path: '/audio/:audioId/plan',
         builder: (context, state) {
           final audioId = state.pathParameters['audioId']!;
-          final autoStart =
-              state.uri.queryParameters['autoStart'] == 'true';
+          final autoStart = state.uri.queryParameters['autoStart'] == 'true';
           return LearningPlanScreen(
             collectionId: null,
             audioItemId: audioId,
@@ -285,6 +346,16 @@ final webAppRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/enhanced-stats',
         builder: (context, state) => const EnhancedStatsScreen(),
+      ),
+      // 学习材料 PDF 导出预览（与 native 对齐；走 extra 传 AudioItem。
+      // PDF 渲染为纯 Dart pdf 包生成字节流，Web 端可编译；「保存到文件」依赖本地文件系统，
+      // Web 端该操作降级不可用，预览本身正常）
+      GoRoute(
+        path: '/pdf-preview',
+        builder: (context, state) {
+          final audioItem = state.extra! as AudioItem;
+          return PdfPreviewScreen(audioItem: audioItem);
+        },
       ),
       // 新用户引导问卷页（纯 SP 读写，无 drift 依赖）
       GoRoute(

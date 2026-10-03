@@ -143,10 +143,14 @@ Web 端此前 39 条路由，对比 native 缺失核心学习流后段（retell 
 - [x] 2026-10-02 T2 · Podcast 生态：注册 `/discover/podcasts`（OfficialPodcastListScreen）+ `/discover/podcasts/:podcastId`（OfficialPodcastPreviewScreen）；补 `/collections/:collectionId` 清除 podcast 订阅成功后 `AppRoutes.collectionDetail` 跳转 404。
 - [x] 2026-10-02 T3 · PDF 预览：注册 `/pdf-preview`；`audio_export_service.dart` 把 `import 'dart:io'` 换 `universal_io` 让 PdfPreviewScreen 的 web 编译链通过；顺手清 `pdf_preview_screen.dart` pre-existing `unused_import: dart:math`。备份恢复（`/backup-restore`）确认为 Web 平台硬限制（纯本地文件系统，无持续 FS），合理放弃，非缺陷。
 - [x] 2026-10-02 验证：`flutter analyze --no-pub` 对上述 5 个文件均 No issues found（web_router / pdf_preview_screen / audio_export_service / subtitle_editor_controller / main_web 全部通过）。本机 SDK 漂移（3.11.3 vs pubspec <3.10.0）导致默认 pub get 失败，用 `--no-pub` 复用既有 package_config 绕过，CI（固定 3.41.5）不受影响。
+- [x] 2026-10-02 build 解锁（commit 184ac4a4 + 143775a1）：`flutter build web --release` 此前被两处 stub 历史欠账挡死——① `stub_sqlite3/common.dart` 未导出 `jsonb`（drift 2.28 经 `import 'package:sqlite3/common.dart' show jsonb` 取用，常量却在 sqlite3.dart）；② `stub_local_notifications` 无条件 `export 'dart:ffi'`（web/dart2js 下 FFI 不可用直接编译失败，且本 stub 自身不引用任何 FFI 类型）。修复后本地实跑 `flutter build web --release` → **`✓ Built build/web`**（main.dart.js 1.6MB），对齐 CI `build_web` job 同命令。
 
 下一步建议：
-- [ ] 真机 / 浏览器验证：`flutter run -d chrome` 走 retell / review-difficult / podcast / pdf-preview 四条新路由，确认 UI 渲染与数据链路（API）正常。
+- [ ] 真机 / 浏览器验证：`flutter run -d chrome` 走 retell / review-difficult / podcast / pdf-preview 四条新路由，确认 UI 渲染与数据链路（API）正常。本环境 snap cgroup 限制 headless chromium 无法起浏览器，需 CI（ubuntu-latest）或本地有 chrome 的环境跑。
 - [ ] P2：Web 端 just_waveform 波形增强（需验证插件浏览器端实现，工作量大，单独立项）。
+- [ ] P2：PDF 预览真渲染——当前 `_buildPreview` 占位「PDF 预览功能临时禁用」文本（printing 包在 web 端栅格化不可用），需接 web 可用的 PDF 渲染（pdfx/canvas）单独成项。
+- [ ] pre-existing（非本次引入，独立 task）：VM 测试组 `test/features/official_collections/`（podcast 等 9 例）加载时因 provider 树把 win32（file_picker/share_plus/flutter_tts 等 7 多端包传递依赖）的 `dart:ffi` 编译链拉进 VM，撞上 win32-5.15.0 NativeFunction 类型错。CI ubuntu-latest 上该组归 chrome 平台跑（win32 被裁）不受影响；本地 VM 全量跑会复现。已用 `git stash` 验证 4 个 web commit 均未触碰任何 test/helper/provider 文件，确认与本 Sprint 无关。
+
 
 ### 启动埋点附带 4 类授权状态
 

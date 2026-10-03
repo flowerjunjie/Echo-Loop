@@ -9,13 +9,15 @@
 library;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:printing/printing.dart'; // TEMP: commented out due to SDK bug
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:universal_io/io.dart';
 
@@ -499,6 +501,44 @@ class _PdfPreviewScreenState extends ConsumerState<PdfPreviewScreen> {
     if (builder != null) {
       return builder(context, bytes, _options.bitmask);
     }
-    return const Text("PDF 预览功能临时禁用");
+    final mq = MediaQuery.of(context);
+    final targetPixelWidth = math.min(
+      mq.size.width * mq.devicePixelRatio * 1.75,
+      2800.0,
+    );
+    final dpi = targetPixelWidth / PdfPageFormat.a4.width * PdfPageFormat.inch;
+    return InteractiveViewer(
+      maxScale: 4,
+      child: PdfPreview(
+        key: ValueKey(bytes),
+        build: _stableBuildFor(bytes),
+        useActions: false,
+        allowPrinting: false,
+        allowSharing: false,
+        canChangePageFormat: false,
+        canChangeOrientation: false,
+        canDebug: false,
+        dpi: dpi,
+        padding: EdgeInsets.zero,
+        previewPageMargin: EdgeInsets.zero,
+        scrollViewDecoration: const BoxDecoration(color: Colors.white),
+        pdfPreviewPageDecoration: const BoxDecoration(color: Colors.white),
+      ),
+    );
+  }
+
+  /// 当前缓存的 build 回调对应的字节（identity 比较）
+  Uint8List? _buildFnBytes;
+
+  /// 稳定的 build 回调（仅在字节变化时重建，见 [_buildPreview] 说明）
+  Future<Uint8List> Function(PdfPageFormat)? _buildFn;
+
+  /// 取/建稳定 build 回调：同一字节跨重建复用同一引用，避免重复栅格化
+  Future<Uint8List> Function(PdfPageFormat) _stableBuildFor(Uint8List bytes) {
+    if (!identical(_buildFnBytes, bytes)) {
+      _buildFnBytes = bytes;
+      _buildFn = (_) async => bytes;
+    }
+    return _buildFn!;
   }
 }

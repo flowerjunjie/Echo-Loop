@@ -12,6 +12,10 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <title>灵犀AI英语听说</title>
   <link rel="manifest" href="manifest.json">
+  <!-- 离线 PDF 渲染：告诉 printing 包从本地资源加载 pdf.js（默认走 unpkg CDN，
+       内网/离线环境会加载失败）。资源由 web/assets/js/pdf/3.2.146/ 提供，
+       随 build/web/assets/ 一起分发。 -->
+  <script>var dartPdfJsBaseUrl = "assets/js/pdf/3.2.146/";</script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

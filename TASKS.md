@@ -144,11 +144,13 @@ Web 端此前 39 条路由，对比 native 缺失核心学习流后段（retell 
 - [x] 2026-10-02 T3 · PDF 预览：注册 `/pdf-preview`；`audio_export_service.dart` 把 `import 'dart:io'` 换 `universal_io` 让 PdfPreviewScreen 的 web 编译链通过；顺手清 `pdf_preview_screen.dart` pre-existing `unused_import: dart:math`。备份恢复（`/backup-restore`）确认为 Web 平台硬限制（纯本地文件系统，无持续 FS），合理放弃，非缺陷。
 - [x] 2026-10-02 验证：`flutter analyze --no-pub` 对上述 5 个文件均 No issues found（web_router / pdf_preview_screen / audio_export_service / subtitle_editor_controller / main_web 全部通过）。本机 SDK 漂移（3.11.3 vs pubspec <3.10.0）导致默认 pub get 失败，用 `--no-pub` 复用既有 package_config 绕过，CI（固定 3.41.5）不受影响。
 - [x] 2026-10-02 build 解锁（commit 184ac4a4 + 143775a1）：`flutter build web --release` 此前被两处 stub 历史欠账挡死——① `stub_sqlite3/common.dart` 未导出 `jsonb`（drift 2.28 经 `import 'package:sqlite3/common.dart' show jsonb` 取用，常量却在 sqlite3.dart）；② `stub_local_notifications` 无条件 `export 'dart:ffi'`（web/dart2js 下 FFI 不可用直接编译失败，且本 stub 自身不引用任何 FFI 类型）。修复后本地实跑 `flutter build web --release` → **`✓ Built build/web`**（main.dart.js 1.6MB），对齐 CI `build_web` job 同命令。
+- [x] 2026-10-03 T3b · PDF 预览真渲染（P2 完成）：`pdf_preview_screen.dart` 的 `_buildPreview` 由占位「PDF 预览功能临时禁用」文本恢复为 `PdfPreview`（printing 包 web 端走 pdf.js 栅格化）。构造遵循防重复栅格化约定：`key: ValueKey(bytes)` + `_stableBuildFor(bytes)` 稳定 build 回调（同一字节跨重建复用同一引用，避开 printing 5.14.3 dispose 竞态 RangeError）；`dpi` 取「适配屏宽 × 1.75」（上限 2800px）+ 外层 `InteractiveViewer` 双指缩放。
+- [x] 2026-10-03 T3c · 离线 PDF 渲染（P2 完成）：printing 默认从 unpkg.com CDN 自动加载 pdfjs-dist 3.2.146（`_pdfJsCdnPath`），内网/离线环境会加载失败。改为本地资源：① vendor `pdf.min.js`(277K) + `pdf.worker.min.js`(1.1M, Apache-2.0) 到 `web/assets/js/pdf/3.2.146/`（随 `build/web/assets/` 分发，service worker 自动 precache）；② `web/index.html` head 注入 `var dartPdfJsBaseUrl = "assets/js/pdf/3.2.146/";`（printing 读该全局变量定位本地 pdf.js，`<base href="/">` 保证相对路径落到 app 根）。验证：`flutter build web --release` → **`✓ Built build/web`**，`build/web/assets/js/pdf/3.2.146/` 两文件就位，`build/web/index.html` 携带该变量，service worker precache 命中两文件。
 
 下一步建议：
-- [ ] 真机 / 浏览器验证：`flutter run -d chrome` 走 retell / review-difficult / podcast / pdf-preview 四条新路由，确认 UI 渲染与数据链路（API）正常。本环境 snap cgroup 限制 headless chromium 无法起浏览器，需 CI（ubuntu-latest）或本地有 chrome 的环境跑。
+- [ ] 真机 / 浏览器验证：`flutter run -d chrome` 走 retell / review-difficult / podcast / pdf-preview 四条新路由，确认 UI 渲染与数据链路（API）正常；**特别验证 PDF 预览离线渲染**（断网/内网环境栅格化仍出图，不再依赖 unpkg CDN）。本环境 snap cgroup 限制 headless chromium 无法起浏览器，需 CI（ubuntu-latest）或本地有 chrome 的环境跑。
 - [ ] P2：Web 端 just_waveform 波形增强（需验证插件浏览器端实现，工作量大，单独立项）。
-- [ ] P2：PDF 预览真渲染——当前 `_buildPreview` 占位「PDF 预览功能临时禁用」文本（printing 包在 web 端栅格化不可用），需接 web 可用的 PDF 渲染（pdfx/canvas）单独成项。
+- [x] P2：PDF 预览真渲染 + 离线渲染 —— 见上 T3b/T3c（已随 `flutter build web` 验证通过）。
 - [ ] pre-existing（非本次引入，独立 task）：VM 测试组 `test/features/official_collections/`（podcast 等 9 例）加载时因 provider 树把 win32（file_picker/share_plus/flutter_tts 等 7 多端包传递依赖）的 `dart:ffi` 编译链拉进 VM，撞上 win32-5.15.0 NativeFunction 类型错。CI ubuntu-latest 上该组归 chrome 平台跑（win32 被裁）不受影响；本地 VM 全量跑会复现。已用 `git stash` 验证 4 个 web commit 均未触碰任何 test/helper/provider 文件，确认与本 Sprint 无关。
 
 
